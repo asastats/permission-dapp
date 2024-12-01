@@ -1,0 +1,44 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r dapp/requirements.txt
+
+      - name: 'Create env file'
+        run: |
+          touch dapp/.env
+          echo ALGOD_TOKEN_TESTNET="" >> dapp/.env
+          echo ALGOD_ADDRESS_TESTNET="https://testnet-api.4160.nodely.dev" >> dapp/.env
+          echo CREATOR_MNEMONIC_TESTNET=${{ secrets.CREATOR_MNEMONIC_TESTNET }} >> dapp/.env
+          echo USER_MNEMONIC=${{ secrets.USER_MNEMONIC }} >> dapp/.env
+
+      - name: Run Pytest
+        run: |
+          pytest

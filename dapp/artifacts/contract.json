@@ -1,0 +1,34 @@
+{
+  "name": "Permission dApp",
+  "methods": [
+    {
+      "name": "writeBox",
+      "args": [
+        {
+          "type": "byte[32]",
+          "name": "box_name"
+        },
+        {
+          "type": "string",
+          "name": "value"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "deleteBox",
+      "args": [
+        {
+          "type": "byte[32]",
+          "name": "box_name"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ],
+  "networks": {}
+}

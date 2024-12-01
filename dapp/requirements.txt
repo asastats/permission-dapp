@@ -1,0 +1,14 @@
+pyteal>=0.27
+python-dotenv>=1.1
+# development
+pytest>=8.4
+pytest-mock>=3.15
+# linting
+black>=25.9
+pylint>=3.3
+rope>=1.14
+pyflakes>=3.4
+ruff>=0.13.1
+# documentation
+Sphinx>=8.2
+sphinx-rtd-theme>=3.0.2
