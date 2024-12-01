@@ -1,5 +1,4 @@
 import base64
-import datetime
 import json
 import os
 from pathlib import Path
@@ -7,6 +6,7 @@ from pathlib import Path
 from algosdk import transaction
 from algosdk import account, mnemonic
 from algosdk.abi.contract import Contract
+from algosdk.error import AlgodHTTPError
 from algosdk.v2client import algod
 
 from algosdk.atomic_transaction_composer import (
@@ -117,125 +117,6 @@ def create_app(
     return app_id
 
 
-# opt-in to application
-def opt_in_app(client, private_key, index):
-    # declare sender
-    sender = account.address_from_private_key(private_key)
-    print("OptIn from account: ", sender)
-
-    # get node suggested parameters
-    params = client.suggested_params()
-    # comment out the next two (2) lines to use suggested fees
-    params.flat_fee = True
-    params.fee = 1000
-
-    # create unsigned transaction
-    txn = transaction.ApplicationOptInTxn(sender, params, index)
-
-    # sign transaction
-    signed_txn = txn.sign(private_key)
-    tx_id = signed_txn.transaction.get_txid()
-
-    # send transaction
-    client.send_transactions([signed_txn])
-
-    # await confirmation
-    wait_for_confirmation(client, tx_id)
-
-    # display results
-    transaction_response = client.pending_transaction_info(tx_id)
-    print("OptIn to app-id: ", transaction_response["txn"]["txn"]["apid"])
-
-
-# # call application
-# def call_app(client, private_key, index, app_args):
-#     # declare sender
-#     sender = account.address_from_private_key(private_key)
-#     print("Call from account: ", sender)
-
-#     # get node suggested parameters
-#     params = client.suggested_params()
-#     # comment out the next two (2) lines to use suggested fees
-#     params.flat_fee = True
-#     params.fee = 1000
-
-#     # create unsigned transaction
-#     txn = transaction.ApplicationNoOpTxn(sender, params, index, app_args)
-
-#     # sign transaction
-#     signed_txn = txn.sign(private_key)
-#     tx_id = signed_txn.transaction.get_txid()
-
-#     # send transaction
-#     client.send_transactions([signed_txn])
-
-#     # await confirmation
-#     wait_for_confirmation(client, tx_id)
-
-#     # display results
-#     transaction_response = client.pending_transaction_info(tx_id)
-#     print("Called app-id: ", transaction_response["txn"]["txn"]["apid"])
-#     if "global-state-delta" in transaction_response:
-#         print("Global State updated :\n", transaction_response["global-state-delta"])
-#     if "local-state-delta" in transaction_response:
-#         print("Local State updated :\n", transaction_response["local-state-delta"])
-
-
-# # read user local state
-# def read_local_state(client, addr, app_id):
-#     results = client.account_info(addr)
-#     local_state = results["apps-local-state"][0]
-#     for index in local_state:
-#         if local_state[index] == app_id:
-#             print(
-#                 f"local_state of account {addr} for app_id {app_id}: ",
-#                 local_state["key-value"],
-#             )
-
-
-# # read app global state
-# def read_global_state(client, addr, app_id):
-#     results = client.account_info(addr)
-#     apps_created = results["created-apps"]
-#     for app in apps_created:
-#         if app["id"] == app_id:
-#             print(f"global_state for app_id {app_id}: ", app["params"]["global-state"])
-
-
-# # update existing application
-# def update_app(client, private_key, app_id, approval_program, clear_program) :
-#     # declare sender
-#     sender = account.address_from_private_key(private_key)
-
-# #    # define initial value for key "timestamp"
-# #    app_args = [b'initial value']
-
-# 	# get node suggested parameters
-#     params = client.suggested_params()
-#     # comment out the next two (2) lines to use suggested fees
-#     params.flat_fee = True
-#     params.fee = 1000
-
-#     # create unsigned transaction
-#     txn = transaction.ApplicationUpdateTxn(sender, params, app_id, \
-#                                             approval_program, clear_program) #, app_args)
-
-#     # sign transaction
-#     signed_txn = txn.sign(private_key)
-#     tx_id = signed_txn.transaction.get_txid()
-
-#     # send transaction
-#     client.send_transactions([signed_txn])
-
-#     # await confirmation
-#     wait_for_confirmation(client, tx_id)
-
-#     # display results
-#     transaction_response = client.pending_transaction_info(tx_id)
-#     app_id = transaction_response['txn']['txn']['apid']
-#     print("Updated existing app-id: ",app_id)
-
-
 # delete application
 def delete_app(client, private_key, index):
     # declare sender
@@ -265,72 +146,6 @@ def delete_app(client, private_key, index):
     print("Deleted app-id: ", transaction_response["txn"]["txn"]["apid"])
 
 
-# close out from application
-def close_out_app(client, private_key, index):
-    # declare sender
-    sender = account.address_from_private_key(private_key)
-
-    # get node suggested parameters
-    params = client.suggested_params()
-    # comment out the next two (2) lines to use suggested fees
-    params.flat_fee = True
-    params.fee = 1000
-
-    # create unsigned transaction
-    txn = transaction.ApplicationCloseOutTxn(sender, params, index)
-
-    # sign transaction
-    signed_txn = txn.sign(private_key)
-    tx_id = signed_txn.transaction.get_txid()
-
-    # send transaction
-    client.send_transactions([signed_txn])
-
-    # await confirmation
-    wait_for_confirmation(client, tx_id)
-
-    # display results
-    transaction_response = client.pending_transaction_info(tx_id)
-    print("Closed out from app-id: ", transaction_response["txn"]["txn"]["apid"])
-
-
-# clear application
-def clear_app(client, private_key, index):
-    # declare sender
-    sender = account.address_from_private_key(private_key)
-
-    # get node suggested parameters
-    params = client.suggested_params()
-    # comment out the next two (2) lines to use suggested fees
-    params.flat_fee = True
-    params.fee = 1000
-
-    # create unsigned transaction
-    txn = transaction.ApplicationClearStateTxn(sender, params, index)
-
-    # sign transaction
-    signed_txn = txn.sign(private_key)
-    tx_id = signed_txn.transaction.get_txid()
-
-    # send transaction
-    client.send_transactions([signed_txn])
-
-    # await confirmation
-    wait_for_confirmation(client, tx_id)
-
-    # display results
-    transaction_response = client.pending_transaction_info(tx_id)
-    print("Cleared app-id: ", transaction_response["txn"]["txn"]["apid"])
-
-
-# example: APP_ROUTER_CALLER
-# call application
-# convert 64 bit integer i to byte string
-def intToBytes(i):
-    return i.to_bytes(8, "big")
-
-
-# Not used but may be handy for e.g. users of the lib when writing unit tests.
 def serialize_uint64(values):
     _bytes = bytes(
         x
@@ -338,16 +153,6 @@ def serialize_uint64(values):
         for x in int.to_bytes(i, length=8, byteorder="big", signed=False)
     )
     return base64.b64encode(_bytes).decode("ascii")
-
-
-def deserialize_uint64(data: str) -> list[int]:
-    decoded = base64.b64decode(data)
-    return [extract_uint64(decoded, offset) for offset in range(0, len(decoded), 8)]
-
-
-def extract_uint64(byte_str: bytes, index: int) -> int:
-    """Extract a uint64 from a byte string"""
-    return int.from_bytes(byte_str[index : index + 8], byteorder="big")
 
 
 def call_app(client, private_key, app_id, contract, box_name):
@@ -359,8 +164,7 @@ def call_app(client, private_key, app_id, contract, box_name):
     # get node suggested parameters
     sp = client.suggested_params()
 
-    # values = intToBytes(2000) + intToBytes(100) + intToBytes(10) + intToBytes(1)
-    values = serialize_uint64([2000, 100, 10])
+    values = serialize_uint64([2000, 100, 10, 1])
 
     # Create an instance of AtomicTransactionComposer
     atc = AtomicTransactionComposer()
@@ -441,12 +245,18 @@ def main():
 
     # define private keys
     creator_private_key = get_private_key_from_mnemonic(creator_mnemonic)
-    user_private_key = get_private_key_from_mnemonic(user_mnemonic)
 
     # app_id = _create(algod_client, creator_private_key)
 
-    app_id = 730129052
-    _call(algod_client, creator_private_key, app_id, box_name="box_name3")
+    app_id = 730132583
+    try:
+        user_private_key = get_private_key_from_mnemonic(user_mnemonic)
+        _call(algod_client, user_private_key, app_id, box_name="box_name_user")
+
+    except AlgodHTTPError as exception:
+        assert "logic eval error" in exception.args[0]
+
+    _call(algod_client, creator_private_key, app_id, box_name="box_name1")
 
     # # delete application
     # delete_app(algod_client, creator_private_key, app_id)
