@@ -164,7 +164,7 @@ def call_app(client, private_key, app_id, contract, box_name):
     # get node suggested parameters
     sp = client.suggested_params()
 
-    values = serialize_uint64([2000, 100, 10, 1])
+    values = serialize_uint64([2000, 10084793375367, 10, 1])
 
     # Create an instance of AtomicTransactionComposer
     atc = AtomicTransactionComposer()
@@ -256,7 +256,7 @@ def main():
     except AlgodHTTPError as exception:
         assert "logic eval error" in exception.args[0]
 
-    _call(algod_client, creator_private_key, app_id, box_name="box_name1")
+    _call(algod_client, creator_private_key, app_id, box_name="box_name2")
 
     # # delete application
     # delete_app(algod_client, creator_private_key, app_id)
