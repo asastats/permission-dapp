@@ -130,6 +130,29 @@ def delete_app(client, private_key, index):
     print("Deleted app-id: ", transaction_response["txn"]["txn"]["apid"])
 
 
+def delete_box(client, sender, signer, app_id, contract, address):
+    sp = client.suggested_params()
+    atc = AtomicTransactionComposer()
+
+    atc.add_method_call(
+        app_id=app_id,
+        # method=contract.get_method_by_name("createBoxWithPut"),
+        method=contract.get_method_by_name("deleteBox"),
+        sender=sender,
+        sp=sp,
+        signer=signer,
+        method_args=[address],
+        boxes=[(app_id, address.encode())],
+    )
+
+    # send transaction
+    results = atc.execute(client, 2)
+
+    # wait for confirmation
+    print("TXID: ", results.tx_ids[0])
+    print("Result confirmed in round: {}".format(results.confirmed_round))
+
+
 def read_box(client, app_id, box_name):
     try:
         response = client.application_box_by_name(app_id, box_name)
@@ -156,8 +179,13 @@ def write_box(client, sender, signer, app_id, contract, address, value):
         # method_args=[int.from_bytes(box_name, byteorder="big"), value],
         # method_args=[int.from_bytes(box_name, byteorder="big"), value],+
         method_args=[address, value],
-        boxes=[(app_id, decode_address(address))],
+        boxes=[(app_id, address.encode())],
     )
+
+    # decode_address(address)
+
+    # method_args=[box_name, values],
+    # boxes=[(app_id, box_name.encode())],
 
     # send transaction
     results = atc.execute(client, 2)
