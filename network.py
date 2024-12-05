@@ -5,7 +5,7 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     AccountTransactionSigner,
 )
-from algosdk.encoding import decode_address, encode_address
+from algosdk.encoding import decode_address
 from algosdk.error import AlgodHTTPError
 
 
@@ -134,6 +134,8 @@ def delete_box(client, sender, signer, app_id, contract, address):
     sp = client.suggested_params()
     atc = AtomicTransactionComposer()
 
+    box_name = base64.b64encode(decode_address(address)).decode("utf-8")
+
     atc.add_method_call(
         app_id=app_id,
         # method=contract.get_method_by_name("createBoxWithPut"),
@@ -141,8 +143,8 @@ def delete_box(client, sender, signer, app_id, contract, address):
         sender=sender,
         sp=sp,
         signer=signer,
-        method_args=[address],
-        boxes=[(app_id, address.encode())],
+        method_args=[box_name],
+        boxes=[(app_id, box_name.encode())],
     )
 
     # send transaction
@@ -168,26 +170,18 @@ def write_box(client, sender, signer, app_id, contract, address, value):
     sp = client.suggested_params()
     atc = AtomicTransactionComposer()
 
+    box_name = base64.b64encode(decode_address(address)).decode("utf-8")
+
     atc.add_method_call(
         app_id=app_id,
-        # method=contract.get_method_by_name("createBoxWithPut"),
         method=contract.get_method_by_name("writeBox"),
         sender=sender,
         sp=sp,
         signer=signer,
-        # method_args=[base64.b64encode(box_name).decode(), value],
-        # method_args=[int.from_bytes(box_name, byteorder="big"), value],
-        # method_args=[int.from_bytes(box_name, byteorder="big"), value],+
-        method_args=[address, value],
-        boxes=[(app_id, address.encode())],
+        method_args=[box_name, value],
+        boxes=[(app_id, box_name.encode())],
     )
 
-    # decode_address(address)
-
-    # method_args=[box_name, values],
-    # boxes=[(app_id, box_name.encode())],
-
-    # send transaction
     results = atc.execute(client, 2)
 
     # wait for confirmation
@@ -196,9 +190,7 @@ def write_box(client, sender, signer, app_id, contract, address, value):
 
 
 def write_foundation_boxes(client, creator_private_key, app_id, contract, data):
-    # get sender address
     sender = account.address_from_private_key(creator_private_key)
-    # create a Signer object
     signer = AccountTransactionSigner(creator_private_key)
 
     for address, values in data.items():

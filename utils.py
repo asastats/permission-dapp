@@ -2,6 +2,7 @@ import base64
 import sys
 
 from algosdk import account
+from algosdk.encoding import decode_address, encode_address
 from algosdk.v2client.algod import AlgodClient
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 
@@ -25,9 +26,10 @@ def print_box_values():
     boxes = client.application_boxes(app_id)
     for box in boxes.get("boxes", []):
         box_name = base64.b64decode(box.get("name"))
+        address = encode_address(base64.b64decode(box_name))
         response = client.application_box_by_name(app_id, box_name)
         value = base64.b64decode(response.get("value")).decode("utf8")
-        print(box_name, deserialize_uint64(value))
+        print(address, deserialize_uint64(value))
 
     else:
         if len(boxes.get("boxes", [])) == 0:
@@ -56,16 +58,24 @@ def delete_boxes():
     boxes = client.application_boxes(app_id)
     for box in boxes.get("boxes", []):
         box_name = base64.b64decode(box.get("name"))
-        address = box_name.decode()
+        address = encode_address(base64.b64decode(box_name))
         print(f"Deleting box for {address[:5]}..{address[-5:]}")
         delete_box(client, sender, signer, app_id, contract, address)
 
 
+def to_bytes(address):
+    print(base64.b64encode(decode_address(address)).decode("utf-8"))
+
+
 if __name__ == "__main__":
-    arg = sys.argv[1] if len(sys.argv) > 1 else None
-    if arg is None:
+    args = sys.argv
+    if len(args) == 1:
         print_box_values()
+
+    elif len(args) == 2:
+        this_module = sys.modules[__name__]
+        getattr(this_module, args[1])()
 
     else:
         this_module = sys.modules[__name__]
-        getattr(this_module, arg)()
+        getattr(this_module, args[1])(*args[2:])
