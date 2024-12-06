@@ -10,7 +10,7 @@ from algosdk.abi.contract import Contract
 from algosdk.encoding import decode_address
 from dotenv import load_dotenv
 
-from permissiondapp.config import DAO_VOTES_PER_STAKING_AMOUNT
+from permissiondapp.config import DAO_VOTES_PER_STAKING_AMOUNT, MANDATORY_VALUES_SIZE
 
 
 # # DEPRECATED
@@ -34,12 +34,15 @@ def serialize_uint64(values):
 
 
 # # VALUES
-def _docs_positions_offset_and_length_pairs(start=48):
+def _docs_positions_offset_and_length_pairs(
+    docs_data_size, start=MANDATORY_VALUES_SIZE
+):
     return [
-        (start + (index // 2) * 10, 8)
+        (start + (index // 2) * 9, 8)
         if divmod(index, 2)[1] == 0
-        else (start + (index // 2) * 10 + 8, 1)
-        for index in range(20)
+        else (start + (index // 2) * 9 + 8, 1)
+        for counter, index in enumerate(range(30))
+        if counter // 2 < docs_data_size // 9
     ]
 
 
@@ -48,12 +51,12 @@ def _extract_uint(byte_str, index, length):
     return int.from_bytes(byte_str[index : index + length], byteorder="big")
 
 
-def _starting_positions_offset_and_length_pairs(end=48):
+def _starting_positions_offset_and_length_pairs(end=MANDATORY_VALUES_SIZE):
     return [(offset, 8) for offset in range(0, end, 8)]
 
 
 def _value_length_from_values_position(position):
-    """
+    """Return bytes length of the value defined by providced `position`
 
     First three pairs are:
     CALCULATED_DATA = ["votes", "permission"]
@@ -62,14 +65,17 @@ def _value_length_from_values_position(position):
 
     After those 6, pairs are (permission, doc_index).
 
+    :param position: value index/position in values collection
+    :type position: int
+    :return: int
     """
-    return 8 if position < 7 or divmod(position, 2)[1] else 1
+    return 8 if position < 6 or divmod(position, 2)[1] == 0 else 1
 
 
-def _values_offset_and_length_pairs():
+def _values_offset_and_length_pairs(docs_data_size):
     return (
         _starting_positions_offset_and_length_pairs()
-        + _docs_positions_offset_and_length_pairs()
+        + _docs_positions_offset_and_length_pairs(docs_data_size)
     )
 
 
@@ -77,7 +83,9 @@ def deserialize_values_data(data):
     decoded = base64.b64decode(data)
     return [
         _extract_uint(decoded, offset, length)
-        for offset, length in _values_offset_and_length_pairs()
+        for offset, length in _values_offset_and_length_pairs(
+            len(decoded) - MANDATORY_VALUES_SIZE
+        )
     ]
 
 

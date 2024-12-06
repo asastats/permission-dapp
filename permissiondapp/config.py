@@ -25,6 +25,9 @@ STAKING_POSITIONS = ("staking-first-year-1128",)
 CALCULATED_DATA = ["votes", "permission"]
 SUBSCRIPTION_DATA = ["amount", "permission"]
 CURRENT_STAKING_DATA = ["amount", "permission"]
+
+MANDATORY_VALUES_SIZE = 48
+
 BOX_VALUE_SIZE = (
     len(CALCULATED_DATA)
     + len(SUBSCRIPTION_DATA)
