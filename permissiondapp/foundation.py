@@ -1,3 +1,5 @@
+"""Module with functions for importing DAO docs and staking data."""
+
 from collections import defaultdict
 from pathlib import Path
 
@@ -83,6 +85,14 @@ def _load_and_parse_staking_data(data, items):
 
 
 def _prepare_data(client):
+    """Collect and return collection of addresses and related values.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var data: collection of addresses and related permission and votes values
+    :type data: dict
+    :return: dict
+    """
     data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
     _load_and_parse_foundation_data(data, items=DAO_DISCUSSIONS_DOCS)
     _load_and_parse_staking_data(data, items=STAKING_DOCS)
@@ -93,16 +103,20 @@ def _prepare_data(client):
     return data
 
 
-def prepare_and_write_data():
-    env, client = _initial_check()
-    data = _prepare_data(client)
-    creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
-    app_id = int(env.get("permission_app_id"))
-    contract = load_contract()
-    write_foundation_boxes(client, creator_private_key, app_id, contract, data)
-
-
 def _update_current_staking(client, data, starting_position):
+    """Check and update cutrent staking values for all data` addresses.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var data: collection of addresses and related permission and votes values
+    :type data: dict
+    :var starting_position: staking permission's index in values collection
+    :type starting_position: int
+    :var address: currentrly processed public Algorand address
+    :type address: str
+    :var current_staking_amount: current address' staking amount
+    :type current_staking_amount: int
+    """
     for address in data:
         print(f"Checking current staking for {address[:5]}..{address[-5:]}")
         current_staking_amount = current_staking(client, address)
@@ -111,6 +125,30 @@ def _update_current_staking(client, data, starting_position):
             data[address][starting_position + 1] = permission_for_amount(
                 current_staking_amount
             )
+
+
+def prepare_and_write_data():
+    """Collect and write collection of DAO addresses and related values.
+
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var data: collection of addresses and related permission and votes values
+    :type data: dict
+    :var creator_private_key: application creator's base64 encoded private key
+    :type creator_private_key: str
+    :var app_id: Permission dApp identifier
+    :type app_id: int
+    :var contract: application caller's address
+    :type contract: :class:`Contract`
+    """
+    env, client = _initial_check()
+    data = _prepare_data(client)
+    creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
+    app_id = int(env.get("permission_app_id"))
+    contract = load_contract()
+    write_foundation_boxes(client, creator_private_key, app_id, contract, data)
 
 
 if __name__ == "__main__":
