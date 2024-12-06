@@ -56,18 +56,18 @@ router = Router(
 
 ## WRITE
 # @router.method
-# def replaceBox(box_name: abi.String, new_name: abi.String):
+# def replaceBox(box_name: abi.String, value: abi.String):
 #     return Seq(
 #         assert_sender_is_creator(),
-#         App.box_replace(box_name.get(), Int(0), new_name.get()),
+#         App.box_replace(box_name.get(), Int(0), value.get()),
 #     )
 
 
 @router.method
-def writeBox(box_name: abi.String, new_name: abi.String):
+def writeBox(box_name: abi.String, value: abi.String):
     return Seq(
         assert_sender_is_creator(),
-        App.box_put(box_name.get(), new_name.get()),
+        App.box_put(box_name.get(), value.get()),
     )
 
 
