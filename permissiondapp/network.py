@@ -7,8 +7,8 @@ from algosdk.atomic_transaction_composer import (
 )
 from algosdk.error import AlgodHTTPError
 
-from permissiondapp.config import STAKING_APP_ID, STAKING_KEY
-from permissiondapp.helpers import (
+from config import STAKING_APP_ID, STAKING_KEY
+from helpers import (
     app_schemas,
     box_name_from_address,
     deserialize_uint64,

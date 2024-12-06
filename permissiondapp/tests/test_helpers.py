@@ -1,10 +1,24 @@
 """Testing module for :py:mod:`helpers` module."""
 
+import base64
+import json
+from unittest import mock
+
 import pytest
 
-from permissiondapp.helpers import (
+from helpers import (
+    _docs_positions_offset_and_length_pairs,
+    _extract_uint,
+    _starting_positions_offset_and_length_pairs,
     _value_length_from_values_position,
+    _values_offset_and_length_pairs,
+    app_schemas,
+    box_name_from_address,
     deserialize_values_data,
+    environment_variables,
+    permission_for_amount,
+    private_key_from_mnemonic,
+    read_json,
     serialize_values,
 )
 
@@ -54,28 +68,28 @@ def _valid_boxes_values_and_data():
                 2,
                 1200,
                 3,
-                1400,
+                1300,
                 4,
-                1500,
+                1400,
                 5,
-                1600,
+                1500,
                 6,
-                1700,
+                1600,
                 7,
-                1800,
+                1700,
                 8,
-                1900,
+                1800,
                 9,
-                2000,
+                1900,
                 10,
-                2010,
+                2000,
                 11,
-                2020,
+                2010,
                 12,
             ],
             "AAAAAACYloAAAAAAC+vCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB6GdAAAAAAAH1wgAAAAAAA"
-            "AA+gBAAAAAAAABEwCAAAAAAAABLADAAAAAAAABXgEAAAAAAAABdwFAAAAAAAABkAGAAAAAA"
-            "AABqQHAAAAAAAABwgIAAAAAAAAB2wJAAAAAAAAB9AKAAAAAAAAB9oLAAAAAAAAB+QM",
+            "AA+gBAAAAAAAABEwCAAAAAAAABLADAAAAAAAABRQEAAAAAAAABXgFAAAAAAAABdwGAAAAAA"
+            "AABkAHAAAAAAAABqQIAAAAAAAABwgJAAAAAAAAB2wKAAAAAAAAB9ALAAAAAAAAB9oM",
         ),
     ]
 
@@ -83,6 +97,121 @@ def _valid_boxes_values_and_data():
 # # VALUES
 class TestHelpersValuesFunctions:
     """Testing class for :py:mod:`helpers` values functions."""
+
+    # # _docs_positions_offset_and_length_pairs
+    @pytest.mark.parametrize(
+        "size,result",
+        [
+            (0, []),
+            (9, [(48, 8), (56, 1)]),
+            (18, [(48, 8), (56, 1), (57, 8), (65, 1)]),
+            (27, [(48, 8), (56, 1), (57, 8), (65, 1), (66, 8), (74, 1)]),
+            (
+                36,
+                [
+                    (48, 8),
+                    (56, 1),
+                    (57, 8),
+                    (65, 1),
+                    (66, 8),
+                    (74, 1),
+                    (75, 8),
+                    (83, 1),
+                ],
+            ),
+            (
+                108,
+                [
+                    (48, 8),
+                    (56, 1),
+                    (57, 8),
+                    (65, 1),
+                    (66, 8),
+                    (74, 1),
+                    (75, 8),
+                    (83, 1),
+                    (84, 8),
+                    (92, 1),
+                    (93, 8),
+                    (101, 1),
+                    (102, 8),
+                    (110, 1),
+                    (111, 8),
+                    (119, 1),
+                    (120, 8),
+                    (128, 1),
+                    (129, 8),
+                    (137, 1),
+                    (138, 8),
+                    (146, 1),
+                    (147, 8),
+                    (155, 1),
+                ],
+            ),
+        ],
+    )
+    def test_helpers_docs_positions_offset_and_length_pairs_functionality(
+        self, size, result
+    ):
+        returned = _docs_positions_offset_and_length_pairs(size)
+        assert returned == result
+
+    # # _extract_uint
+    @pytest.mark.parametrize(
+        "index,length,result",
+        [
+            (0, 8, 10000000),
+            (8, 8, 200000000),
+            (16, 8, 0),
+            (24, 8, 0),
+            (32, 8, 2000500),
+            (40, 8, 2055200),
+            (48, 8, 1000),
+            (56, 1, 1),
+            (57, 8, 1100),
+            (65, 1, 2),
+            (66, 8, 1200),
+            (74, 1, 3),
+            (75, 8, 1300),
+            (83, 1, 4),
+            (84, 8, 1400),
+            (92, 1, 5),
+            (93, 8, 1500),
+            (101, 1, 6),
+            (102, 8, 1600),
+            (110, 1, 7),
+            (111, 8, 1700),
+            (119, 1, 8),
+            (120, 8, 1800),
+            (128, 1, 9),
+            (129, 8, 1900),
+            (137, 1, 10),
+            (138, 8, 2000),
+            (146, 1, 11),
+            (147, 8, 2010),
+            (155, 1, 12),
+        ],
+    )
+    def test_helpers_extract_uint_functionality(self, index, length, result):
+        data = (
+            "AAAAAACYloAAAAAAC+vCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB6GdAAAAAAAH1wgAAAAAAA"
+            "AA+gBAAAAAAAABEwCAAAAAAAABLADAAAAAAAABRQEAAAAAAAABXgFAAAAAAAABdwGAAAAAA"
+            "AABkAHAAAAAAAABqQIAAAAAAAABwgJAAAAAAAAB2wKAAAAAAAAB9ALAAAAAAAAB9oM"
+        )
+        returned = _extract_uint(base64.b64decode(data), index, length)
+        assert returned == result
+
+    # # _starting_positions_offset_and_length_pairs
+    def test_helpers_starting_positions_offset_and_length_pairs_functionality(self):
+        returned = _starting_positions_offset_and_length_pairs()
+        assert returned == [
+            (0, 8),
+            (8, 8),
+            (16, 8),
+            (24, 8),
+            (32, 8),
+            (40, 8),
+        ]
 
     # # _value_length_from_values_position
     @pytest.mark.parametrize(
@@ -108,6 +237,26 @@ class TestHelpersValuesFunctions:
         returned = _value_length_from_values_position(position)
         assert returned == length
 
+    # # _values_offset_and_length_pairs
+    def test_helpers_values_offset_and_length_pairs_functionality(self, mocker):
+        docs_data_size = mocker.MagicMock()
+        starting = [(0, 8), (8, 1)]
+        docs = [(48, 8), (56, 1)]
+        mocked_starting = mocker.patch(
+            "helpers._starting_positions_offset_and_length_pairs",
+            return_value=starting,
+        )
+        mocked_docs = mocker.patch(
+            "helpers._docs_positions_offset_and_length_pairs",
+            return_value=docs,
+        )
+        returned = _values_offset_and_length_pairs(docs_data_size)
+        assert returned == starting + docs
+        mocked_starting.assert_called_once()
+        mocked_starting.assert_called_with()
+        mocked_docs.assert_called_once()
+        mocked_docs.assert_called_with(docs_data_size)
+
     # # serialize_values
     @pytest.mark.parametrize("values,data", _valid_boxes_values_and_data())
     def test_helpers_serialize_values_functionality(self, values, data):
@@ -119,3 +268,205 @@ class TestHelpersValuesFunctions:
     def test_helpers_deserialize_values_data_functionality(self, values, data):
         returned = deserialize_values_data(data)
         assert returned == values
+
+
+# # CONTRACT
+class TestHelpersContractFunctions:
+    """Testing class for :py:mod:`helpers` smart contract functions."""
+
+    # # app_schemas
+    def test_helpers_app_schemas_functionality(self, mocker):
+        schema1, schema2 = mocker.MagicMock(), mocker.MagicMock()
+        mocked_schema = mocker.patch(
+            "helpers.StateSchema", side_effect=[schema1, schema2]
+        )
+        returned = app_schemas()
+        assert returned == (schema1, schema2)
+        calls = [mocker.call(0, 0), mocker.call(0, 0)]
+        mocked_schema.assert_has_calls(calls, any_order=True)
+        assert mocked_schema.call_count == 2
+
+
+# # CONTRACT
+class TestHelpersHelpersFunctions:
+    """Testing class for :py:mod:`helpers` helpers functions."""
+
+    # # box_name_from_address
+    @pytest.mark.parametrize(
+        "address,box_name",
+        [
+            (
+                "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU",
+                "0Sps8CZ0l7T7lMDJoNDTbMOc5WjvK0hBucrwIbhrxvc=",
+            ),
+            (
+                "VW55KZ3NF4GDOWI7IPWLGZDFWNXWKSRD5PETRLDABZVU5XPKRJJRK3CBSU",
+                "rbvVZ20vDDdZH0Pss2Rls29lSiPryTisYA5rTt3qilM=",
+            ),
+            (
+                "LXJ3Q6RZ2TJ6VCJDFMSM4ZVNYYYE4KVSL3N2TYR23PLNCJCIXBM3NYTBYE",
+                "XdO4ejnU0+qJIyskzmatxjBOKrJe26niOtvW0SRIuFk=",
+            ),
+            (
+                "VKENBO5W2DZAZFQR45SOQO6IMWS5UMVZCHLPEACNOII7BDJTGBZKSEL4Y4",
+                "qojQu7bQ8gyWEedk6DvIZaXaMrkR1vIATXIR8I0zMHI=",
+            ),
+        ],
+    )
+    def test_helpers_box_name_from_address_functionality(self, address, box_name):
+        returned = box_name_from_address(address)
+        assert returned == box_name
+
+    # # environment_variables
+    def test_helpers_environment_variables_functionality(self, mocker):
+        (
+            creator_mnemonic,
+            user_mnemonic,
+            algod_token,
+            algod_address,
+            permission_app_id,
+        ) = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        mocked_load_dotenv = mocker.patch("helpers.load_dotenv")
+        with mock.patch(
+            "helpers.os.getenv",
+            side_effect=[
+                creator_mnemonic,
+                user_mnemonic,
+                algod_token,
+                algod_address,
+                permission_app_id,
+            ],
+        ) as mocked_getenv:
+            returned = environment_variables()
+            assert returned == {
+                "creator_mnemonic": creator_mnemonic,
+                "user_mnemonic": user_mnemonic,
+                "algod_token": algod_token,
+                "algod_address": algod_address,
+                "permission_app_id": permission_app_id,
+            }
+            calls = [
+                mocker.call("CREATOR_MNEMONIC"),
+                mocker.call("USER_MNEMONIC"),
+                mocker.call("ALGOD_TOKEN"),
+                mocker.call("ALGOD_ADDRESS"),
+                mocker.call("PERMISSION_APP_ID"),
+            ]
+            mocked_getenv.assert_has_calls(calls, any_order=True)
+            assert mocked_getenv.call_count == 5
+        mocked_load_dotenv.assert_called_once()
+        mocked_load_dotenv.assert_called_with()
+
+    ((5_000_000_000_000, 258885.438200),)
+    ((500_000_000_000, 23299.689438),)
+
+    # # box_name_from_address
+    @pytest.mark.parametrize(
+        "amount,permission",
+        [
+            (
+                50_000_000_000_001,
+                3236067977500,
+            ),
+            (
+                49_999_999_999_999,
+                2588854381999,
+            ),
+            (
+                5_000_000_000_001,
+                258885438200,
+            ),
+            (
+                4_999_999_999_999,
+                232996894379,
+            ),
+            (
+                500_000_000_001,
+                23299689438,
+            ),
+            (
+                1_500_000_000_001,
+                69899068314,
+            ),
+            (
+                25_000_000_000_001,
+                1294427191000,
+            ),
+            (
+                90_000_000_000_001,
+                5824922359500,
+            ),
+        ],
+    )
+    def test_helpers_permission_for_amount_functionality(self, amount, permission):
+        returned = permission_for_amount(amount)
+        assert returned == permission
+
+    @pytest.mark.parametrize(
+        "amount",
+        [
+            0,
+            1,
+            10000000,
+            1000000000,
+            999999999,
+            450252515252,
+            499999999999,
+            500000000000,
+        ],
+    )
+    def test_helpers_permission_for_amount_returns_0_for_to_small_amount(self, amount):
+        returned = permission_for_amount(amount)
+        assert returned == 0
+
+    # # private_key_from_mnemonic
+    def test_helpers_private_key_from_mnemonic_functionality(self, mocker):
+        passphrase = mocker.MagicMock()
+        mocked_key = mocker.patch("helpers.to_private_key")
+        returned = private_key_from_mnemonic(passphrase)
+        assert returned == mocked_key.return_value
+        mocked_key.assert_called_once()
+        mocked_key.assert_called_with(passphrase)
+
+    # # read_json
+    def test_helpers_read_json_returns_empty_dict_for_no_file(self, mocker):
+        path = mocker.MagicMock()
+        with (
+            mock.patch("helpers.os.path.exists", return_value=False) as mocked_exist,
+            mock.patch("helpers.open") as mocked_open,
+        ):
+            assert read_json(path) == {}
+            mocked_exist.assert_called_once()
+            mocked_exist.assert_called_with(path)
+            mocked_open.assert_not_called()
+
+    def test_helpers_read_json_returns_empty_dict_for_exception(self, mocker):
+        with (
+            mock.patch("helpers.os.path.exists", return_value=True),
+            mock.patch("helpers.open"),
+            mock.patch(
+                "helpers.json.load", side_effect=json.JSONDecodeError("", "", 0)
+            ),
+        ):
+            assert read_json(mocker.MagicMock()) == {}
+
+    def test_helpers_read_json_returns_json_file_content(self, mocker):
+        path = mocker.MagicMock()
+        with (
+            mock.patch("helpers.os.path.exists", return_value=True),
+            mock.patch("helpers.open") as mocked_open,
+            mock.patch("helpers.json.load") as mocked_load,
+        ):
+            assert read_json(path) == mocked_load.return_value
+            mocked_open.assert_called_once()
+            mocked_open.assert_called_with(path, "r")
+            mocked_load.assert_called_once()
+            mocked_load.assert_called_with(
+                mocked_open.return_value.__enter__.return_value
+            )

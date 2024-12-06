@@ -2,4 +2,5 @@ pyteal>=0.26.1
 python-dotenv>=1.0.1
 # development
 pytest>=8.3.4
+pytest-mock>=3.14.0
 black>=24.10.0

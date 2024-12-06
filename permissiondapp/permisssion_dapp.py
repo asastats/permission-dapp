@@ -1,3 +1,5 @@
+"""Permisssion dApp smart contract module."""
+
 from pyteal import (
     App,
     Approve,
@@ -6,7 +8,6 @@ from pyteal import (
     CallConfig,
     Expr,
     Global,
-    # Int,
     OnCompleteAction,
     Router,
     Seq,
@@ -15,8 +16,6 @@ from pyteal import (
     abi,
 )
 from pyteal.types import TealType
-
-# ACCOUNT_STATE_SIZE = 32
 
 
 @Subroutine(TealType.none)
