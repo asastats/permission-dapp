@@ -4,13 +4,12 @@ from pathlib import Path
 from algosdk.v2client.algod import AlgodClient
 
 from config import (
-    BOX_VALUE_SIZE,
     CURRENT_STAKING_STARTING_POSITION,
-    DAO_DISCUSSIONS_POSITIONS,
-    DAO_DISCUSSIONS_STARTING_POSITION,
+    DAO_DISCUSSIONS_DOCS,
+    DOCS_STARTING_POSITION,
     MERGED_ACCOUNTS,
-    STAKING_POSITIONS,
-    STAKING_STARTING_POSITION,
+    STAKING_DOCS,
+    STAKING_DOCS_STARTING_INDEX,
     SUBSCRIPTION_POSITION,
 )
 from helpers import (
@@ -25,19 +24,7 @@ from network import current_staking, write_foundation_boxes
 
 def _calculate_and_update_votes_and_permissions(data):
     for address, value in list(data.items()):
-        docs_permission = sum(
-            amount
-            for amount in value[
-                DAO_DISCUSSIONS_STARTING_POSITION : DAO_DISCUSSIONS_STARTING_POSITION
-                + len(DAO_DISCUSSIONS_POSITIONS)
-            ]
-        ) + sum(
-            amount
-            for amount in value[
-                STAKING_STARTING_POSITION : STAKING_STARTING_POSITION
-                + len(STAKING_POSITIONS)
-            ]
-        )
+        docs_permission = sum(amount for amount in value[DOCS_STARTING_POSITION:][::2])
         votes = int(docs_permission / 1_000_000)
 
         subscription_permission = value[SUBSCRIPTION_POSITION + 1]  # initally 0
@@ -72,43 +59,34 @@ def _load_and_merge_accounts(doc_id, stem="allocations"):
     }
 
 
-def _load_and_parse_foundation_data(data, items, starting_position):
+def _load_and_parse_foundation_data(data, items):
     for index, doc_id in enumerate(items):
-        if not doc_id:
-            break
-
         doc_data = _load_and_merge_accounts(doc_id)
         for address, value in doc_data.items():
-            data[address][starting_position + index] = value * 1_000_000
+            data[address].append(value * 1_000_000)
+            data[address].append(index)
 
 
-def _load_and_parse_staking_data(data, items, starting_position):
+def _load_and_parse_staking_data(data, items):
     for index, doc_id in enumerate(items):
-        if not doc_id:
-            break
-
         governors_data = _load_and_merge_accounts(doc_id, stem="dao_governors")
         for address, value in governors_data.items():
-            data[address][starting_position + index] = int(value[0] * 1_000_000)
+            data[address].append(int(value[0] * 1_000_000))
+            data[address].append(STAKING_DOCS_STARTING_INDEX + index)
 
         ongoing_governors_data = _load_and_merge_accounts(
             doc_id, stem="dao_ongoing_governors"
         )
         for address, value in ongoing_governors_data.items():
-            data[address][starting_position + index] = int(value[0] * 1_000_000)
+            data[address].append(int(value[0] * 1_000_000))
+            data[address].append(STAKING_DOCS_STARTING_INDEX + index)
 
 
 def _prepare_data(client):
-    data = defaultdict(lambda: [0] * BOX_VALUE_SIZE)
+    data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
 
-    _load_and_parse_foundation_data(
-        data,
-        items=DAO_DISCUSSIONS_POSITIONS,
-        starting_position=DAO_DISCUSSIONS_STARTING_POSITION,
-    )
-    _load_and_parse_staking_data(
-        data, items=STAKING_POSITIONS, starting_position=STAKING_STARTING_POSITION
-    )
+    _load_and_parse_foundation_data(data, items=DAO_DISCUSSIONS_DOCS)
+    _load_and_parse_staking_data(data, items=STAKING_DOCS)
     _update_current_staking(
         client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
     )

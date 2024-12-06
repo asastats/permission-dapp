@@ -11,8 +11,8 @@ from config import STAKING_APP_ID, STAKING_KEY
 from helpers import (
     app_schemas,
     box_name_from_address,
-    deserialize_uint64,
-    serialize_uint64,
+    deserialize_values_data,
+    serialize_values,
     wait_for_confirmation,
 )
 
@@ -162,7 +162,9 @@ def read_box(client, app_id, box_name):
             return None
         raise exception
 
-    return deserialize_uint64(base64.b64decode(response.get("value")).decode("utf8"))
+    return deserialize_values_data(
+        base64.b64decode(response.get("value")).decode("utf8")
+    )
 
 
 def write_box(client, sender, signer, app_id, contract, address, value):
@@ -193,6 +195,6 @@ def write_foundation_boxes(client, creator_private_key, app_id, contract, data):
     signer = AccountTransactionSigner(creator_private_key)
 
     for address, values in data.items():
-        value = serialize_uint64(values)
+        value = serialize_values(values)
         print(f"Writting box for {address[:5]}..{address[-5:]}")
         write_box(client, sender, signer, app_id, contract, address, value)
