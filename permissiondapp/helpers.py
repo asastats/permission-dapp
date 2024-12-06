@@ -14,26 +14,6 @@ from dotenv import load_dotenv
 from config import STAKING_AMOUNT_VOTES_BOUNDARIES, MANDATORY_VALUES_SIZE
 
 
-# # DEPRECATED
-def extract_uint64(byte_str, index):
-    """Extract a uint64 from a byte string"""
-    return int.from_bytes(byte_str[index : index + 8], byteorder="big")
-
-
-def deserialize_uint64(data):
-    decoded = base64.b64decode(data)
-    return [extract_uint64(decoded, offset) for offset in range(0, len(decoded), 8)]
-
-
-def serialize_uint64(values):
-    _bytes = bytes(
-        x
-        for i in values
-        for x in int.to_bytes(i, length=8, byteorder="big", signed=False)
-    )
-    return base64.b64encode(_bytes).decode("ascii")
-
-
 # # VALUES
 def _docs_positions_offset_and_length_pairs(
     docs_data_size, start=MANDATORY_VALUES_SIZE
@@ -46,7 +26,6 @@ def _docs_positions_offset_and_length_pairs(
     :type start: int
     :return: list
     """
-
     return [
         (start + (index // 2) * 9, 8)
         if divmod(index, 2)[1] == 0

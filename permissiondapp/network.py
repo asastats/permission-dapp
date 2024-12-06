@@ -64,6 +64,7 @@ def _cometa_app_local_state_for_address(client, address):
 
 
 def create_app(client, private_key, approval_program, clear_program):
+    """TODO: docstring and tests"""
     # define sender as creator
     sender = address_from_private_key(private_key)
 
@@ -108,11 +109,22 @@ def create_app(client, private_key, approval_program, clear_program):
 
 
 def current_staking(client, address):
+    """Return staking amount for `address` from Cometa's staking program.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param address: public Algorand address associated with the box
+    :type address: str
+    :var state: staking application's local state object
+    :type state: dict
+    :return: int
+    """
     state = _cometa_app_local_state_for_address(client, address)
     return _cometa_app_amount(STAKING_KEY, state) if state else 0
 
 
 def delete_app(client, private_key, index):
+    """TODO: docstring and tests"""
     # declare sender
     sender = address_from_private_key(private_key)
 
@@ -185,6 +197,7 @@ def delete_box(client, sender, signer, app_id, contract, address):
 
 
 def read_box(client, app_id, box_name):
+    """TODO: docstring and tests"""
     try:
         response = client.application_box_by_name(app_id, box_name)
     except AlgodHTTPError as exception:

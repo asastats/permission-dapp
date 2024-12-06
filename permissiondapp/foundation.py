@@ -25,6 +25,7 @@ from network import current_staking, write_foundation_boxes
 
 
 def _calculate_and_update_votes_and_permissions(data):
+    """TODO: docstring and tests"""
     for address, value in list(data.items()):
         docs_permission = sum(amount for amount in value[DOCS_STARTING_POSITION:][::2])
         votes = int(docs_permission / 1_000_000)
@@ -39,6 +40,7 @@ def _calculate_and_update_votes_and_permissions(data):
 
 
 def _initial_check():
+    """TODO: docstring and tests"""
     env = environment_variables()
     if env.get("permission_app_id") is None:
         raise ValueError("Permission dApp ID isn't set!")
@@ -52,6 +54,7 @@ def _initial_check():
 
 
 def _load_and_merge_accounts(doc_id, stem="allocations"):
+    """TODO: docstring and tests"""
     doc_data = read_json(
         Path(__file__).resolve().parent / "DAO" / doc_id / f"{stem}.json"
     )
@@ -62,6 +65,7 @@ def _load_and_merge_accounts(doc_id, stem="allocations"):
 
 
 def _load_and_parse_foundation_data(data, items):
+    """TODO: docstring and tests"""
     for index, doc_id in enumerate(items):
         doc_data = _load_and_merge_accounts(doc_id)
         for address, value in doc_data.items():
@@ -70,6 +74,7 @@ def _load_and_parse_foundation_data(data, items):
 
 
 def _load_and_parse_staking_data(data, items):
+    """TODO: docstring and tests"""
     for index, doc_id in enumerate(items):
         governors_data = _load_and_merge_accounts(doc_id, stem="dao_governors")
         for address, value in governors_data.items():

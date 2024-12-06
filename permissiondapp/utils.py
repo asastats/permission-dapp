@@ -7,7 +7,7 @@ from algosdk.v2client.algod import AlgodClient
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 
 from helpers import (
-    deserialize_uint64,
+    deserialize_values_data,
     environment_variables,
     load_contract,
     private_key_from_mnemonic,
@@ -29,7 +29,7 @@ def print_box_values():
         address = encode_address(base64.b64decode(box_name))
         response = client.application_box_by_name(app_id, box_name)
         value = base64.b64decode(response.get("value")).decode("utf8")
-        print(address, deserialize_uint64(value))
+        print(address, deserialize_values_data(value))
 
     else:
         if len(boxes.get("boxes", [])) == 0:

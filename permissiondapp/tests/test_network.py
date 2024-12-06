@@ -6,6 +6,7 @@ from config import STAKING_KEY
 from network import (
     _cometa_app_amount,
     _cometa_app_local_state_for_address,
+    current_staking,
     delete_box,
     write_box,
     write_foundation_boxes,
@@ -14,7 +15,7 @@ from network import (
 
 # # VALUES
 class TestNetworkFunctions:
-    """Testing class for :py:mod:`helpers` values functions."""
+    """Testing class for :py:mod:`network` functions."""
 
     # # _cometa_app_amount
     def test_network_cometa_app_amount_returns_amount_for_staking_app(self):
@@ -128,6 +129,33 @@ class TestNetworkFunctions:
         assert returned == state2
         client.account_info.assert_called_once()
         client.account_info.assert_called_with(address)
+
+    # # current_staking
+    def test_network_current_staking_for_no_state(self, mocker):
+        client, address = mocker.MagicMock(), mocker.MagicMock()
+        mocked_state = mocker.patch(
+            "network._cometa_app_local_state_for_address", return_value=None
+        )
+        mocked_amount = mocker.patch("network._cometa_app_amount")
+        returned = current_staking(client, address)
+        assert returned == 0
+        mocked_state.assert_called_once()
+        mocked_state.assert_called_with(client, address)
+        mocked_amount.assert_not_called()
+
+    def test_network_current_staking_functionality(self, mocker):
+        client, address = mocker.MagicMock(), mocker.MagicMock()
+        state = mocker.MagicMock()
+        mocked_state = mocker.patch(
+            "network._cometa_app_local_state_for_address", return_value=state
+        )
+        mocked_amount = mocker.patch("network._cometa_app_amount")
+        returned = current_staking(client, address)
+        assert returned == mocked_amount.return_value
+        mocked_state.assert_called_once()
+        mocked_state.assert_called_with(client, address)
+        mocked_amount.assert_called_once()
+        mocked_amount.assert_called_with(STAKING_KEY, state)
 
     # # delete_box
     def test_network_delete_box_functionality(self, mocker):

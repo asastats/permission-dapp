@@ -13,7 +13,7 @@ from foundation import _prepare_data, _update_current_staking, prepare_and_write
 
 # # VALUES
 class TestFoundationFunctions:
-    """Testing class for :py:mod:`helpers` values functions."""
+    """Testing class for :py:mod:`foundation` functions."""
 
     # # _prepare_data
     def test_foundation_prepare_data_functionality(self, mocker):
