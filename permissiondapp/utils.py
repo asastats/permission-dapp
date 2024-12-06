@@ -6,13 +6,13 @@ from algosdk.encoding import decode_address, encode_address
 from algosdk.v2client.algod import AlgodClient
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 
-from helpers import (
+from permissiondapp.helpers import (
     deserialize_uint64,
     environment_variables,
     load_contract,
     private_key_from_mnemonic,
 )
-from network import delete_box
+from permissiondapp.network import delete_box
 
 
 def print_box_values():

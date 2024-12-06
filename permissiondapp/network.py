@@ -5,13 +5,12 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     AccountTransactionSigner,
 )
-from algosdk.encoding import decode_address
 from algosdk.error import AlgodHTTPError
 
-
-from config import STAKING_APP_ID, STAKING_KEY
-from helpers import (
+from permissiondapp.config import STAKING_APP_ID, STAKING_KEY
+from permissiondapp.helpers import (
     app_schemas,
+    box_name_from_address,
     deserialize_uint64,
     serialize_uint64,
     wait_for_confirmation,
@@ -134,7 +133,7 @@ def delete_box(client, sender, signer, app_id, contract, address):
     sp = client.suggested_params()
     atc = AtomicTransactionComposer()
 
-    box_name = base64.b64encode(decode_address(address)).decode("utf-8")
+    box_name = box_name_from_address(address)
 
     atc.add_method_call(
         app_id=app_id,
@@ -170,7 +169,7 @@ def write_box(client, sender, signer, app_id, contract, address, value):
     sp = client.suggested_params()
     atc = AtomicTransactionComposer()
 
-    box_name = base64.b64encode(decode_address(address)).decode("utf-8")
+    box_name = box_name_from_address(address)
 
     atc.add_method_call(
         app_id=app_id,

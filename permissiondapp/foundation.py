@@ -3,7 +3,7 @@ from pathlib import Path
 
 from algosdk.v2client.algod import AlgodClient
 
-from config import (
+from permissiondapp.config import (
     BOX_VALUE_SIZE,
     CURRENT_STAKING_STARTING_POSITION,
     DAO_DISCUSSIONS_POSITIONS,
@@ -13,14 +13,14 @@ from config import (
     STAKING_STARTING_POSITION,
     SUBSCRIPTION_POSITION,
 )
-from helpers import (
+from permissiondapp.helpers import (
     environment_variables,
     load_contract,
     permission_for_amount,
     private_key_from_mnemonic,
     read_json,
 )
-from network import current_staking, write_foundation_boxes
+from permissiondapp.network import current_staking, write_foundation_boxes
 
 
 def _calculate_and_update_votes_and_permissions(data):

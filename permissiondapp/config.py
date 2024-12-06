@@ -18,13 +18,9 @@ DAO_DISCUSSIONS_POSITIONS = (
     "update-16",
     "update-17",
     "update-18",
-    "",
-    "",
-    "",
-    "",
 )
 
-STAKING_POSITIONS = ("staking-first-year-1128", "")
+STAKING_POSITIONS = ("staking-first-year-1128",)
 
 CALCULATED_DATA = ["votes", "permission"]
 SUBSCRIPTION_DATA = ["amount", "permission"]
