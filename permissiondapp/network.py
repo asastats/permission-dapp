@@ -1,6 +1,7 @@
 import base64
 
-from algosdk import account, transaction
+from algosdk import transaction
+from algosdk.account import address_from_private_key
 from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     AccountTransactionSigner,
@@ -37,6 +38,16 @@ def _cometa_app_amount(key, state):
 
 
 def _cometa_app_local_state_for_address(client, address):
+    """Return Cometa's ASASTATS staking dApp's local state instance from account info.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param address: public Algorand address
+    :type address: str
+    :var account_info: account's information object
+    :type account_info: dict
+    :return: dict
+    """
     try:
         account_info = client.account_info(address)
     except AlgodHTTPError:
@@ -54,7 +65,7 @@ def _cometa_app_local_state_for_address(client, address):
 
 def create_app(client, private_key, approval_program, clear_program):
     # define sender as creator
-    sender = account.address_from_private_key(private_key)
+    sender = address_from_private_key(private_key)
 
     # declare on_complete as NoOp
     on_complete = transaction.OnComplete.NoOpOC.real
@@ -103,7 +114,7 @@ def current_staking(client, address):
 
 def delete_app(client, private_key, index):
     # declare sender
-    sender = account.address_from_private_key(private_key)
+    sender = address_from_private_key(private_key)
 
     # get node suggested parameters
     params = client.suggested_params()
@@ -130,28 +141,47 @@ def delete_app(client, private_key, index):
 
 
 def delete_box(client, sender, signer, app_id, contract, address):
-    sp = client.suggested_params()
+    """Delete  box owned by `app_id` defined by provided `address`.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param sender: application caller's address
+    :type sender: str
+    :param signer: application caller's address
+    :type signer: :class:`AccountTransactionSigner`
+    :param app_id: Permission dApp identifier
+    :type app_id: int
+    :param contract: application caller's address
+    :type contract: :class:`Contract`
+    :param address: public Algorand address associated with the box
+    :type address: str
+    :var atc: transaction composer instance
+    :type atc: :class:`AtomicTransactionComposer`
+    :var box_name: base64 encoded box name
+    :type box_name: str
+    :var response: application call's response
+    :type response: :class:`AtomicTransactionResponse`
+    """
     atc = AtomicTransactionComposer()
 
     box_name = box_name_from_address(address)
 
     atc.add_method_call(
         app_id=app_id,
-        # method=contract.get_method_by_name("createBoxWithPut"),
         method=contract.get_method_by_name("deleteBox"),
         sender=sender,
-        sp=sp,
+        sp=client.suggested_params(),
         signer=signer,
         method_args=[box_name],
         boxes=[(app_id, box_name.encode())],
     )
 
     # send transaction
-    results = atc.execute(client, 2)
+    response = atc.execute(client, 2)
 
     # wait for confirmation
-    print("TXID: ", results.tx_ids[0])
-    print("Result confirmed in round: {}".format(results.confirmed_round))
+    print("TXID: ", response.tx_ids[0])
+    print("Result confirmed in round: {}".format(response.confirmed_round))
 
 
 def read_box(client, app_id, box_name):
@@ -168,7 +198,29 @@ def read_box(client, app_id, box_name):
 
 
 def write_box(client, sender, signer, app_id, contract, address, value):
-    sp = client.suggested_params()
+    """Write `value` to the box owned by `app_id` defined by provided `address`.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param sender: application caller's address
+    :type sender: str
+    :param signer: application caller's signer instance
+    :type signer: :class:`AccountTransactionSigner`
+    :param app_id: Permission dApp identifier
+    :type app_id: int
+    :param contract: application caller's address
+    :type contract: :class:`Contract`
+    :param address: public Algorand address associated with the box
+    :type address: str
+    :param value: serialized base64 encoded values collection
+    :type value: str
+    :var atc: transaction composer instance
+    :type atc: :class:`AtomicTransactionComposer`
+    :var box_name: base64 encoded box name
+    :type box_name: str
+    :var response: application call's response
+    :type response: :class:`AtomicTransactionResponse`
+    """
     atc = AtomicTransactionComposer()
 
     box_name = box_name_from_address(address)
@@ -177,21 +229,44 @@ def write_box(client, sender, signer, app_id, contract, address, value):
         app_id=app_id,
         method=contract.get_method_by_name("writeBox"),
         sender=sender,
-        sp=sp,
+        sp=client.suggested_params(),
         signer=signer,
         method_args=[box_name, value],
         boxes=[(app_id, box_name.encode())],
     )
 
-    results = atc.execute(client, 2)
+    response = atc.execute(client, 2)
 
     # wait for confirmation
-    print("TXID: ", results.tx_ids[0])
-    print("Result confirmed in round: {}".format(results.confirmed_round))
+    print("TXID: ", response.tx_ids[0])
+    print("Result confirmed in round: {}".format(response.confirmed_round))
 
 
 def write_foundation_boxes(client, creator_private_key, app_id, contract, data):
-    sender = account.address_from_private_key(creator_private_key)
+    """Write to the boxes owned by `app_id` values extracted from provided `data`.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param creator_private_key: application creator's base64 encoded private key
+    :type creator_private_key: str
+    :param app_id: Permission dApp identifier
+    :type app_id: int
+    :param contract: application caller's address
+    :type contract: :class:`Contract`
+    :var data: collection of addresses and associated integer values
+    :type data: dict
+    :var sender: application caller's address
+    :type sender: str
+    :var signer: application caller's signer instance
+    :type signer: :class:`AccountTransactionSigner`
+    :var address: currently processed public Algorand address
+    :type address: str
+    :var values: currently processed integer values collection
+    :type values: list
+    :var value: currently processed serialized base64 encoded values collection
+    :type value: str
+    """
+    sender = address_from_private_key(creator_private_key)
     signer = AccountTransactionSigner(creator_private_key)
 
     for address, values in data.items():
