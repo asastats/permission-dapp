@@ -84,26 +84,21 @@ def _load_and_parse_staking_data(data, items):
 
 def _prepare_data(client):
     data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
-
     _load_and_parse_foundation_data(data, items=DAO_DISCUSSIONS_DOCS)
     _load_and_parse_staking_data(data, items=STAKING_DOCS)
     _update_current_staking(
         client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
     )
     _calculate_and_update_votes_and_permissions(data)
-
     return data
 
 
 def prepare_and_write_data():
     env, client = _initial_check()
-
     data = _prepare_data(client)
-
     creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
     app_id = int(env.get("permission_app_id"))
     contract = load_contract()
-
     write_foundation_boxes(client, creator_private_key, app_id, contract, data)
 
 
