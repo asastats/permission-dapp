@@ -2,10 +2,12 @@
 
 import base64
 import json
+from pathlib import Path
 from unittest import mock
 
 import pytest
 
+import helpers
 from helpers import (
     _docs_positions_offset_and_length_pairs,
     _extract_uint,
@@ -14,8 +16,10 @@ from helpers import (
     _values_offset_and_length_pairs,
     app_schemas,
     box_name_from_address,
+    compile_program,
     deserialize_values_data,
     environment_variables,
+    load_contract,
     permission_for_amount,
     private_key_from_mnemonic,
     read_json,
@@ -286,8 +290,32 @@ class TestHelpersContractFunctions:
         mocked_schema.assert_has_calls(calls, any_order=True)
         assert mocked_schema.call_count == 2
 
+    # # compile_program
+    def test_helpers_compile_program_functionality(self, mocker):
+        client = mocker.MagicMock()
+        source_code = b"source_code"
+        result = base64.b64encode(b"result")
+        compile_response = {"result": result}
+        client.compile.return_value = compile_response
+        returned = compile_program(client, source_code)
+        assert returned == b"result"
 
-# # CONTRACT
+    # # load_contract
+    def test_helpers_load_contract_functionality(self, mocker):
+        contract_json = mocker.MagicMock()
+        mocked_read = mocker.patch("helpers.read_json", return_value=contract_json)
+        mocked_undictify = mocker.patch("helpers.Contract.undictify")
+        returned = load_contract()
+        assert returned == mocked_undictify.return_value
+        mocked_read.assert_called_once()
+        mocked_read.assert_called_with(
+            Path(helpers.__file__).resolve().parent / "artifacts" / "contract.json"
+        )
+        mocked_undictify.assert_called_once()
+        mocked_undictify.assert_called_with(contract_json)
+
+
+# # HELPERS
 class TestHelpersHelpersFunctions:
     """Testing class for :py:mod:`helpers` helpers functions."""
 

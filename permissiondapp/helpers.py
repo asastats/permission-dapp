@@ -166,13 +166,27 @@ def app_schemas():
 
 
 def compile_program(client, source_code):
-    """TODO: docstring and tests"""
+    """Collect and return collection of addresses and related values.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var source_code: approval/clear program code
+    :type source_code: bytes
+    :var compile_response: compilation response from Node instance
+    :type compile_response: dict
+    :return: str
+    """
     compile_response = client.compile(source_code.decode("utf-8"))
     return base64.b64decode(compile_response["result"])
 
 
 def load_contract():
-    """TODO: docstring and tests"""
+    """Load from disk, instantiate and return Permission dApp smart contract object.
+
+    :var contract_json: full path to Permission dApp smart contract file
+    :type contract_json: dict
+    :return: :class:`Contract`
+    """
     contract_json = read_json(
         Path(__file__).resolve().parent / "artifacts" / "contract.json"
     )
@@ -183,7 +197,7 @@ def load_contract():
 def box_name_from_address(address):
     """Return string representation of base64 encoded public Algorand `address`.
 
-    :param address: public Algorand address
+    :param address: governance seat address
     :type address: str
     :return: str
     """

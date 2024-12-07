@@ -1,6 +1,9 @@
 """Testing module for :py:mod:`foundation` module."""
 
 from collections import defaultdict
+from pathlib import Path
+
+import pytest
 
 from config import (
     CURRENT_STAKING_STARTING_POSITION,
@@ -8,12 +11,359 @@ from config import (
     DOCS_STARTING_POSITION,
     STAKING_DOCS,
 )
-from foundation import _prepare_data, _update_current_staking, prepare_and_write_data
+import foundation
+from foundation import (
+    _calculate_and_update_votes_and_permissions,
+    _initial_check,
+    _load_and_merge_accounts,
+    _load_and_parse_foundation_data,
+    _load_and_parse_staking_data,
+    _prepare_data,
+    _update_current_staking,
+    prepare_and_write_data,
+)
 
 
 # # VALUES
 class TestFoundationFunctions:
     """Testing class for :py:mod:`foundation` functions."""
+
+    # # _calculate_and_update_votes_and_permissions
+    def test_calculate_and_update_votes_and_permissions_functionality(self, mocker):
+        address1, address2, address3, address4, address5 = (
+            "address1",
+            "address2",
+            "address3",
+            "address4",
+            "address5",
+        )
+        values1 = [0, 0, 100000, 200000, 300000, 400000, 5000000, 1, 10000000, 2]
+        values2 = [
+            0,
+            0,
+            500000,
+            600000,
+            700000,
+            800000,
+            15000000,
+            3,
+            20000000,
+            4,
+            30000000,
+            201,
+        ]
+        values3 = [0, 0, 900000, 1000000, 1100000, 1200000, 25000000, 5]
+        values4 = [0, 0, 1300000, 1400000, 1500000, 1600000, 35000000, 6, 40000000, 202]
+        values5 = [0, 0, 1700000, 1800000, 1900000, 200000]
+        data = {
+            address1: values1,
+            address2: values2,
+            address3: values3,
+            address4: values4,
+            address5: values5,
+        }
+        _calculate_and_update_votes_and_permissions(data)
+        assert data == {
+            address1: [
+                15,
+                15600000,
+                100000,
+                200000,
+                300000,
+                400000,
+                5000000,
+                1,
+                10000000,
+                2,
+            ],
+            address2: [
+                65,
+                66400000,
+                500000,
+                600000,
+                700000,
+                800000,
+                15000000,
+                3,
+                20000000,
+                4,
+                30000000,
+                201,
+            ],
+            address3: [25, 27200000, 900000, 1000000, 1100000, 1200000, 25000000, 5],
+            address4: [
+                75,
+                78000000,
+                1300000,
+                1400000,
+                1500000,
+                1600000,
+                35000000,
+                6,
+                40000000,
+                202,
+            ],
+            address5: [0, 2000000, 1700000, 1800000, 1900000, 200000],
+        }
+
+    # # _initial_check
+    def test_foundation_initial_check_raises_for_no_permission_app_id(self, mocker):
+        mocked_client = mocker.patch("foundation.AlgodClient")
+        env = {"foo": "bar"}
+        mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
+        with pytest.raises(ValueError) as exception:
+            _initial_check()
+            assert str(exception.value) == "Permission dApp ID isn't set!"
+        mocked_env.assert_called_once()
+        mocked_env.assert_called_with()
+        mocked_client.assert_not_called()
+
+    def test_foundation_initial_check_raises_for_exiszing_boxes(self, mocker):
+        client = mocker.MagicMock()
+        mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
+        boxes = {"boxes": [1, 2, 3, 4]}
+        client.application_boxes.return_value = boxes
+        permission_app_id = 5050
+        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
+        env = {
+            "permission_app_id": str(permission_app_id),
+            "algod_token": algod_token,
+            "algod_address": algod_address,
+        }
+        mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
+        with pytest.raises(ValueError) as exception:
+            _initial_check()
+            assert str(exception.value) == "Some boxes are already populated!"
+        mocked_env.assert_called_once()
+        mocked_env.assert_called_with()
+        mocked_client.assert_called_once()
+        mocked_client.assert_called_with(algod_token, algod_address)
+        client.application_boxes.assert_called_once()
+        client.application_boxes.assert_called_with(permission_app_id)
+
+    def test_foundation_initial_check_raises_functionality(self, mocker):
+        client = mocker.MagicMock()
+        mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
+        boxes = {"boxes": []}
+        client.application_boxes.return_value = boxes
+        permission_app_id = 5050
+        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
+        env = {
+            "permission_app_id": str(permission_app_id),
+            "algod_token": algod_token,
+            "algod_address": algod_address,
+        }
+        mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
+        returned = _initial_check()
+        assert returned == (env, client)
+        mocked_env.assert_called_once()
+        mocked_env.assert_called_with()
+        mocked_client.assert_called_once()
+        mocked_client.assert_called_with(algod_token, algod_address)
+        client.application_boxes.assert_called_once()
+        client.application_boxes.assert_called_with(permission_app_id)
+
+    # # _load_and_merge_accounts
+    def test_foundation_load_and_merge_accounts_functionality(self, mocker):
+        address1, address2, address3, address4, address5 = (
+            "address1",
+            "address2",
+            "I3LE7Y6XHOXLBTOO26XVCOLQEUUPO4CN5ATOK3BOBVM3PZ52R7I66SACAM",
+            "address4",
+            "NKWAXEKZCDMBPYLRU3PKVHBAW7AO774HWIXSOCZCCMPAATLYPIK2DL6UHA",
+        )
+        value1, value2, value3, value4, value5 = 100, 200, 300, 400, 500
+        doc_data = {
+            address1: value1,
+            address2: value2,
+            address3: value3,
+            address4: value4,
+            address5: value5,
+        }
+        mocked_read = mocker.patch("foundation.read_json", return_value=doc_data)
+        doc_id = "doc1"
+        returned = _load_and_merge_accounts(doc_id)
+        assert returned == {
+            address1: value1,
+            address2: value2,
+            "5L2CUFOR7LYVIV7KOGU6L3TXM3CZVF3P2PRDLPTAGBC2AHDSNMRZX6GKOI": value3,
+            address4: value4,
+            "ZJEPH66G4C2YLVAOL6NH6ZP3GPCRG3BDZQJ4KCHDN3BD6GZ3YWCHTGOTMA": value5,
+        }
+        mocked_read.assert_called_once()
+        mocked_read.assert_called_with(
+            Path(foundation.__file__).resolve().parent
+            / "DAO"
+            / doc_id
+            / "allocations.json"
+        )
+
+    def test_foundation_load_and_merge_accounts_for_provided_stem(self, mocker):
+        address1, address2, address3 = "address1", "address2", "address3"
+        value1, value2, value3 = 100, 200, 300
+        doc_data = {address1: value1, address2: value2, address3: value3}
+        mocked_read = mocker.patch("foundation.read_json", return_value=doc_data)
+        doc_id = "doc1"
+        stem = "some_stem"
+        returned = _load_and_merge_accounts(doc_id, stem=stem)
+        assert returned == {address1: value1, address2: value2, address3: value3}
+        mocked_read.assert_called_once()
+        mocked_read.assert_called_with(
+            Path(foundation.__file__).resolve().parent / "DAO" / doc_id / f"{stem}.json"
+        )
+
+    # # _load_and_parse_foundation_data
+    def test_foundation_load_and_parse_foundation_data_functionality(self, mocker):
+        address1, address2, address3, address4, address5, address6 = (
+            "address1",
+            "address2",
+            "address3",
+            "address4",
+            "address5",
+            "address6",
+        )
+        data = {
+            address1: [0, 1, 2, 3, 0, 0],
+            address2: [0, 1, 2, 3, 0, 0],
+            address3: [0, 1, 2, 3, 0, 0],
+            address4: [0, 1, 2, 3, 0, 0],
+            address5: [0, 1, 2, 3, 0, 0],
+            address6: [0, 1, 2, 3, 0, 0],
+        }
+        value1, value2, value3, value4, value5, value6, value7, value8, value9 = (
+            100,
+            200,
+            300,
+            400,
+            500,
+            600,
+            700,
+            800,
+            900,
+        )
+        doc_data1 = {address1: value1, address3: value2}
+        doc_data2 = {address1: value3, address5: value4}
+        doc_data3 = {address2: value5}
+        doc_data4 = {address4: value6, address5: value6}
+        doc_data5 = {address1: value7, address2: value8, address5: value9}
+        mocked_load = mocker.patch(
+            "foundation._load_and_merge_accounts",
+            side_effect=[doc_data1, doc_data2, doc_data3, doc_data4, doc_data5],
+        )
+        items = ("doc1", "doc2", "doc3", "doc4", "doc5")
+        _load_and_parse_foundation_data(data, items)
+        assert data == {
+            address1: [
+                0,
+                1,
+                2,
+                3,
+                0,
+                0,
+                100_000_000,
+                1,
+                300_000_000,
+                2,
+                700_000_000,
+                5,
+            ],
+            address2: [0, 1, 2, 3, 0, 0, 500_000_000, 3, 800_000_000, 5],
+            address3: [0, 1, 2, 3, 0, 0, 200_000_000, 1],
+            address4: [0, 1, 2, 3, 0, 0, 600_000_000, 4],
+            address5: [
+                0,
+                1,
+                2,
+                3,
+                0,
+                0,
+                400_000_000,
+                2,
+                600_000_000,
+                4,
+                900_000_000,
+                5,
+            ],
+            address6: [0, 1, 2, 3, 0, 0],
+        }
+        calls = [mocker.call(doc_id) for doc_id in items]
+        mocked_load.assert_has_calls(calls, any_order=True)
+        assert mocked_load.call_count == len(items)
+
+    # # _load_and_parse_staking_data
+    def test_foundation_load_and_parse_staking_data_functionality(self, mocker):
+        address1, address2, address3, address4, address5, address6 = (
+            "address1",
+            "address2",
+            "address3",
+            "address4",
+            "address5",
+            "address6",
+        )
+        data = {
+            address1: [0, 1, 2, 3, 0, 0],
+            address2: [0, 1, 2, 3, 0, 0],
+            address3: [0, 1, 2, 3, 0, 0],
+            address4: [0, 1, 2, 3, 0, 0],
+            address5: [0, 1, 2, 3, 0, 0],
+            address6: [0, 1, 2, 3, 0, 0],
+        }
+        value1, value2, value3, value4, value5, value6 = (
+            100.0,
+            200,
+            300,
+            400,
+            500,
+            600.0,
+        )
+        doc_data1 = {address1: [value1], address3: [value2]}
+        doc_data2 = {address1: [value3], address5: [value4]}
+        doc_data3 = {address2: [value5]}
+        doc_data4 = {address4: [value6], address5: [value6]}
+        mocked_load = mocker.patch(
+            "foundation._load_and_merge_accounts",
+            side_effect=[doc_data1, doc_data2, doc_data3, doc_data4],
+        )
+        items = ("doc1", "doc2")
+        _load_and_parse_staking_data(data, items)
+        assert data == {
+            address1: [
+                0,
+                1,
+                2,
+                3,
+                0,
+                0,
+                100_000_000,
+                201,
+                300_000_000,
+                201,
+            ],
+            address2: [0, 1, 2, 3, 0, 0, 500_000_000, 202],
+            address3: [0, 1, 2, 3, 0, 0, 200_000_000, 201],
+            address4: [0, 1, 2, 3, 0, 0, 600_000_000, 202],
+            address5: [
+                0,
+                1,
+                2,
+                3,
+                0,
+                0,
+                400_000_000,
+                201,
+                600_000_000,
+                202,
+            ],
+            address6: [0, 1, 2, 3, 0, 0],
+        }
+        calls = [
+            mocker.call("doc1", stem="dao_governors"),
+            mocker.call("doc1", stem="dao_ongoing_governors"),
+            mocker.call("doc2", stem="dao_governors"),
+            mocker.call("doc2", stem="dao_ongoing_governors"),
+        ]
+        mocked_load.assert_has_calls(calls, any_order=True)
+        assert mocked_load.call_count == len(items) * 2
 
     # # _prepare_data
     def test_foundation_prepare_data_functionality(self, mocker):

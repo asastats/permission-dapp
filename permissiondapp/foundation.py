@@ -26,13 +26,29 @@ from network import current_staking, write_foundation_boxes
 
 
 def _calculate_and_update_votes_and_permissions(data):
-    """TODO: docstring and tests"""
-    for address, value in list(data.items()):
-        docs_permission = sum(amount for amount in value[DOCS_STARTING_POSITION:][::2])
+    """Calculkate and update votes and permission values for all addresses in `data`.
+
+    :param data: collection of addresses and related permission and votes values
+    :type data: dict
+    :var address: currently processed governance seat address
+    :type address: str
+    :var values: collection of integer values
+    :type values: list
+    :var docs_permission: total permission from foundation and staking documents
+    :type docs_permission: tuple
+    :var votes: total votes from foundation and staking documents
+    :type votes: int
+    :var subscription_permission: permission value from address' subcription tier
+    :type subscription_permission: int
+    :var staking_permission: permission value from address' current governance staking
+    :type staking_permission: int
+    """
+    for address, values in list(data.items()):
+        docs_permission = sum(amount for amount in values[DOCS_STARTING_POSITION:][::2])
         votes = int(docs_permission / 1_000_000)
 
-        subscription_permission = value[SUBSCRIPTION_POSITION + 1]  # initally 0
-        staking_permission = value[CURRENT_STAKING_STARTING_POSITION + 1]
+        subscription_permission = values[SUBSCRIPTION_POSITION + 1]  # initally 0
+        staking_permission = values[CURRENT_STAKING_STARTING_POSITION + 1]
 
         data[address][0] = votes
         data[address][1] = (
@@ -41,7 +57,18 @@ def _calculate_and_update_votes_and_permissions(data):
 
 
 def _initial_check():
-    """TODO: docstring and tests"""
+    """Return environment variables and client instances.
+
+    Raise ValueError if Permission dApp ID isn't set.
+    Raise ValueError if there are existing dApp boxes.
+
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var boxes: collection of app's boxes fetched from Node
+    :type boxes: dict
+    """
     env = environment_variables()
     if env.get("permission_app_id") is None:
         raise ValueError("Permission dApp ID isn't set!")
@@ -55,7 +82,15 @@ def _initial_check():
 
 
 def _load_and_merge_accounts(doc_id, stem="allocations"):
-    """TODO: docstring and tests"""
+    """Update `data` with the values collected from foundation docs found in `items`.
+
+    :param doc_id: document identifier
+    :type doc_id: str
+    :param stem: JSON file name to read data from
+    :type stem: str
+    :var doc_data: curently processed document's addresses and values collections
+    :type doc_data: dict
+    """
     doc_data = read_json(
         Path(__file__).resolve().parent / "DAO" / doc_id / f"{stem}.json"
     )
@@ -66,7 +101,19 @@ def _load_and_merge_accounts(doc_id, stem="allocations"):
 
 
 def _load_and_parse_foundation_data(data, items):
-    """TODO: docstring and tests"""
+    """Update `data` with the values collected from foundation docs found in `items`.
+
+    :param data: collection of addresses and related permission and votes values
+    :type data: dict
+    :param items: collection of document identifiers
+    :type items: tuple
+    :var index: curently processed document index
+    :type index: int
+    :var doc_id: curently processed document identifier
+    :type doc_id: str
+    :var doc_data: curently processed document's addresses and values collections
+    :type doc_data: dict
+    """
     for index, doc_id in enumerate(items):
         doc_data = _load_and_merge_accounts(doc_id)
         for address, value in doc_data.items():
@@ -75,7 +122,21 @@ def _load_and_parse_foundation_data(data, items):
 
 
 def _load_and_parse_staking_data(data, items):
-    """TODO: docstring and tests"""
+    """Update `data` with the values collected from staking documents found in `items`.
+
+    :param data: collection of addresses and related permission and votes values
+    :type data: dict
+    :param items: collection of document identifiers
+    :type items: tuple
+    :var index: curently processed document index
+    :type index: int
+    :var doc_id: curently processed document identifier
+    :type doc_id: str
+    :var governors_data: curently processed document's governors data
+    :type governors_data: dict
+    :var ongoing_governors_data: curently processed document's eligible governors data
+    :type ongoing_governors_data: dict
+    """
     for index, doc_id in enumerate(items):
         governors_data = _load_and_merge_accounts(doc_id, stem="dao_governors")
         for address, value in governors_data.items():
@@ -118,7 +179,7 @@ def _update_current_staking(client, data, starting_position):
     :type data: dict
     :var starting_position: staking permission's index in values collection
     :type starting_position: int
-    :var address: currentrly processed public Algorand address
+    :var address: currentrly processed governance seat address
     :type address: str
     :var current_staking_amount: current address' staking amount
     :type current_staking_amount: int

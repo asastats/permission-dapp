@@ -42,7 +42,7 @@ def _cometa_app_local_state_for_address(client, address):
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :param address: public Algorand address
+    :param address: governance seat address
     :type address: str
     :var account_info: account's information object
     :type account_info: dict
@@ -113,7 +113,7 @@ def current_staking(client, address):
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :param address: public Algorand address associated with the box
+    :param address: governance seat address associated with the box
     :type address: str
     :var state: staking application's local state object
     :type state: dict
@@ -165,7 +165,7 @@ def delete_box(client, sender, signer, app_id, contract, address):
     :type app_id: int
     :param contract: application caller's address
     :type contract: :class:`Contract`
-    :param address: public Algorand address associated with the box
+    :param address: governance seat address associated with the box
     :type address: str
     :var atc: transaction composer instance
     :type atc: :class:`AtomicTransactionComposer`
@@ -223,7 +223,7 @@ def write_box(client, sender, signer, app_id, contract, address, value):
     :type app_id: int
     :param contract: application caller's address
     :type contract: :class:`Contract`
-    :param address: public Algorand address associated with the box
+    :param address: governance seat address associated with the box
     :type address: str
     :param value: serialized base64 encoded values collection
     :type value: str
@@ -272,7 +272,7 @@ def write_foundation_boxes(client, creator_private_key, app_id, contract, data):
     :type sender: str
     :var signer: application caller's signer instance
     :type signer: :class:`AccountTransactionSigner`
-    :var address: currently processed public Algorand address
+    :var address: currently processed governance seat address
     :type address: str
     :var values: currently processed integer values collection
     :type values: list
