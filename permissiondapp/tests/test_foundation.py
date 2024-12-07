@@ -119,7 +119,7 @@ class TestFoundationHelpersFunctions:
         mocked_env.assert_called_with()
         mocked_client.assert_not_called()
 
-    def test_foundation_initial_check_raises_for_exiszing_boxes(self, mocker):
+    def test_foundation_initial_check_raises_for_existing_boxes(self, mocker):
         client = mocker.MagicMock()
         mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
         boxes = {"boxes": [1, 2, 3, 4]}
@@ -142,7 +142,7 @@ class TestFoundationHelpersFunctions:
         client.application_boxes.assert_called_once()
         client.application_boxes.assert_called_with(permission_app_id)
 
-    def test_foundation_initial_check_raises_functionality(self, mocker):
+    def test_foundation_initial_check_functionality(self, mocker):
         client = mocker.MagicMock()
         mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
         boxes = {"boxes": []}
@@ -376,6 +376,7 @@ class TestFoundationFoundationFunctions:
         client = mocker.MagicMock()
         mocked_foundation = mocker.patch("foundation._load_and_parse_foundation_data")
         mocked_staking = mocker.patch("foundation._load_and_parse_staking_data")
+        mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
         mocked_staking_foundation = mocker.patch(
             "foundation._update_current_staking_for_foundation"
         )
@@ -386,12 +387,22 @@ class TestFoundationFoundationFunctions:
             "foundation._calculate_and_update_votes_and_permissions"
         )
         data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
-        returned = _prepare_data(client)
+        mainnet_algod_token, mainnet_algod_address = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        env = {
+            "mainnet_algod_token": mainnet_algod_token,
+            "mainnet_algod_address": mainnet_algod_address,
+        }
+        returned = _prepare_data(env)
         assert returned == data
         mocked_foundation.assert_called_once()
         mocked_foundation.assert_called_with(data, items=DAO_DISCUSSIONS_DOCS)
         mocked_staking.assert_called_once()
         mocked_staking.assert_called_with(data, items=STAKING_DOCS)
+        mocked_client.assert_called_once()
+        mocked_client.assert_called_with(mainnet_algod_token, mainnet_algod_address)
         mocked_staking_foundation.assert_called_once()
         mocked_staking_foundation.assert_called_with(
             client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
@@ -423,7 +434,7 @@ class TestFoundationFoundationFunctions:
         mocked_initial.assert_called_once()
         mocked_initial.assert_called_with()
         mocked_data.assert_called_once()
-        mocked_data.assert_called_with(client)
+        mocked_data.assert_called_with(env)
         mocked_private_key.assert_called_once()
         mocked_private_key.assert_called_with(creator_mnemonic)
         mocked_contract.assert_called_once()

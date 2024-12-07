@@ -411,8 +411,12 @@ class TestHelpersHelpersFunctions:
             user_mnemonic,
             algod_token,
             algod_address,
+            mainnet_algod_address,
+            mainnet_algod_token,
             permission_app_id,
         ) = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -427,6 +431,8 @@ class TestHelpersHelpersFunctions:
                 user_mnemonic,
                 algod_token,
                 algod_address,
+                mainnet_algod_token,
+                mainnet_algod_address,
                 permission_app_id,
             ],
         ) as mocked_getenv:
@@ -436,6 +442,8 @@ class TestHelpersHelpersFunctions:
                 "user_mnemonic": user_mnemonic,
                 "algod_token": algod_token,
                 "algod_address": algod_address,
+                "mainnet_algod_token": mainnet_algod_token,
+                "mainnet_algod_address": mainnet_algod_address,
                 "permission_app_id": permission_app_id,
             }
             calls = [
@@ -443,15 +451,14 @@ class TestHelpersHelpersFunctions:
                 mocker.call("USER_MNEMONIC"),
                 mocker.call("ALGOD_TOKEN"),
                 mocker.call("ALGOD_ADDRESS"),
+                mocker.call("MAINNET_ALGOD_TOKEN"),
+                mocker.call("MAINNET_ALGOD_ADDRESS"),
                 mocker.call("PERMISSION_APP_ID"),
             ]
             mocked_getenv.assert_has_calls(calls, any_order=True)
-            assert mocked_getenv.call_count == 5
+            assert mocked_getenv.call_count == 7
         mocked_load_dotenv.assert_called_once()
         mocked_load_dotenv.assert_called_with()
-
-    ((5_000_000_000_000, 258885.438200),)
-    ((500_000_000_000, 23299.689438),)
 
     # # box_name_from_address
     @pytest.mark.parametrize(

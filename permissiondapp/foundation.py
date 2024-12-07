@@ -70,6 +70,7 @@ def _initial_check():
     :type client: :class:`AlgodClient`
     :var boxes: collection of app's boxes fetched from Node
     :type boxes: dict
+    :return: two-tuple
     """
     env = environment_variables()
     if env.get("permission_app_id") is None:
@@ -154,24 +155,31 @@ def _load_and_parse_staking_data(data, items):
             data[address].append(STAKING_DOCS_STARTING_INDEX + index)
 
 
-def _prepare_data(client):
+def _prepare_data(env):
     """Collect and return collection of addresses and related values.
 
-    :param client: Algorand Node client instance
-    :type client: :class:`AlgodClient`
+    :param env: environment variables collection
+    :type env: dict
     :var data: collection of addresses and related permission and votes values
     :type data: dict
+    :var client: Algorand Node Mainnet client instance
+    :type client: :class:`AlgodClient`
     :return: dict
     """
     data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
     _load_and_parse_foundation_data(data, items=DAO_DISCUSSIONS_DOCS)
     _load_and_parse_staking_data(data, items=STAKING_DOCS)
+
+    client = AlgodClient(
+        env.get("mainnet_algod_token"), env.get("mainnet_algod_address")
+    )
     _update_current_staking_for_foundation(
         client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
     )
     _update_current_staking_for_non_foundation(
         client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
     )
+
     _calculate_and_update_votes_and_permissions(data)
     return data
 
@@ -193,7 +201,7 @@ def prepare_and_write_data():
     :type contract: :class:`Contract`
     """
     env, client = _initial_check()
-    data = _prepare_data(client)
+    data = _prepare_data(env)
     creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
     app_id = int(env.get("permission_app_id"))
     contract = load_contract()

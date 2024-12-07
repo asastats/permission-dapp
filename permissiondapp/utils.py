@@ -20,20 +20,25 @@ def print_box_values():
     if env.get("permission_app_id") is None:
         raise ValueError("Permission dApp ID isn't set!")
 
+    permissions = {}
     app_id = int(env.get("permission_app_id"))
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-
     boxes = client.application_boxes(app_id)
+    counter = 1
     for box in boxes.get("boxes", []):
         box_name = base64.b64decode(box.get("name"))
         address = encode_address(base64.b64decode(box_name))
         response = client.application_box_by_name(app_id, box_name)
         value = base64.b64decode(response.get("value")).decode("utf8")
-        print(address, deserialize_values_data(value))
+        permissions[address] = deserialize_values_data(value)
+        print(f"{counter}.", f"{address[:5]}..{address[-5:]}")
+        counter += 1
 
     else:
         if len(boxes.get("boxes", [])) == 0:
             print(f"There are no boxes for dApp ID: {app_id}")
+
+    print(sorted(permissions.items(), key=lambda e: e[1][1], reverse=True))
 
 
 def delete_boxes():

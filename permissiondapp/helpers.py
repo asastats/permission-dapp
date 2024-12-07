@@ -310,6 +310,8 @@ def environment_variables():
         "user_mnemonic": os.getenv("USER_MNEMONIC"),
         "algod_token": os.getenv("ALGOD_TOKEN"),
         "algod_address": os.getenv("ALGOD_ADDRESS"),
+        "mainnet_algod_token": os.getenv("MAINNET_ALGOD_TOKEN"),
+        "mainnet_algod_address": os.getenv("MAINNET_ALGOD_ADDRESS"),
         "permission_app_id": os.getenv("PERMISSION_APP_ID"),
     }
 
