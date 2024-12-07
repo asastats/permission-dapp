@@ -8,6 +8,7 @@ from algosdk.v2client.algod import AlgodClient
 from config import (
     CURRENT_STAKING_STARTING_POSITION,
     DAO_DISCUSSIONS_DOCS,
+    DAO_DISCUSSIONS_DOCS_STARTING_INDEX,
     DOCS_STARTING_POSITION,
     MERGED_ACCOUNTS,
     STAKING_DOCS,
@@ -70,7 +71,7 @@ def _load_and_parse_foundation_data(data, items):
         doc_data = _load_and_merge_accounts(doc_id)
         for address, value in doc_data.items():
             data[address].append(value * 1_000_000)
-            data[address].append(index)
+            data[address].append(DAO_DISCUSSIONS_DOCS_STARTING_INDEX + index)
 
 
 def _load_and_parse_staking_data(data, items):
