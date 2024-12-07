@@ -19,14 +19,15 @@ from foundation import (
     _load_and_parse_foundation_data,
     _load_and_parse_staking_data,
     _prepare_data,
-    _update_current_staking,
+    _update_current_staking_for_foundation,
+    _update_current_staking_for_non_foundation,
     prepare_and_write_data,
 )
 
 
-# # VALUES
-class TestFoundationFunctions:
-    """Testing class for :py:mod:`foundation` functions."""
+# # HELPERS
+class TestFoundationHelpersFunctions:
+    """Testing class for :py:mod:`foundation` helpers functions."""
 
     # # _calculate_and_update_votes_and_permissions
     def test_calculate_and_update_votes_and_permissions_functionality(self, mocker):
@@ -162,6 +163,11 @@ class TestFoundationFunctions:
         mocked_client.assert_called_with(algod_token, algod_address)
         client.application_boxes.assert_called_once()
         client.application_boxes.assert_called_with(permission_app_id)
+
+
+# # FOUNDATION
+class TestFoundationFoundationFunctions:
+    """Testing class for :py:mod:`foundation` foundation functions."""
 
     # # _load_and_merge_accounts
     def test_foundation_load_and_merge_accounts_functionality(self, mocker):
@@ -370,7 +376,12 @@ class TestFoundationFunctions:
         client = mocker.MagicMock()
         mocked_foundation = mocker.patch("foundation._load_and_parse_foundation_data")
         mocked_staking = mocker.patch("foundation._load_and_parse_staking_data")
-        mocked_update = mocker.patch("foundation._update_current_staking")
+        mocked_staking_foundation = mocker.patch(
+            "foundation._update_current_staking_for_foundation"
+        )
+        mocked_staking_non_foundation = mocker.patch(
+            "foundation._update_current_staking_for_non_foundation"
+        )
         mocked_calculate = mocker.patch(
             "foundation._calculate_and_update_votes_and_permissions"
         )
@@ -381,45 +392,16 @@ class TestFoundationFunctions:
         mocked_foundation.assert_called_with(data, items=DAO_DISCUSSIONS_DOCS)
         mocked_staking.assert_called_once()
         mocked_staking.assert_called_with(data, items=STAKING_DOCS)
-        mocked_update.assert_called_once()
-        mocked_update.assert_called_with(
+        mocked_staking_foundation.assert_called_once()
+        mocked_staking_foundation.assert_called_with(
+            client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
+        )
+        mocked_staking_non_foundation.assert_called_once()
+        mocked_staking_non_foundation.assert_called_with(
             client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
         )
         mocked_calculate.assert_called_once()
         mocked_calculate.assert_called_with(data)
-
-    # # _update_current_staking
-    def test_foundation_update_current_staking_functionality(self, mocker):
-        client = mocker.MagicMock()
-        starting_position = 4
-        mocked_staking = mocker.patch(
-            "foundation.current_staking", side_effect=[50000, 0, 100000]
-        )
-        mocked_permission = mocker.patch(
-            "foundation.permission_for_amount", side_effect=[2000, 3000]
-        )
-        address1, address2, address3 = "address1", "address2", "address3"
-        data = {
-            address1: [0, 1, 2, 3, 0, 0],
-            address2: [0, 1, 2, 3, 0, 0],
-            address3: [0, 1, 2, 3, 0, 0],
-        }
-        _update_current_staking(client, data, starting_position)
-        assert data == {
-            address1: [0, 1, 2, 3, 50000, 2000],
-            address2: [0, 1, 2, 3, 0, 0],
-            address3: [0, 1, 2, 3, 100000, 3000],
-        }
-        calls = [
-            mocker.call(client, address1),
-            mocker.call(client, address2),
-            mocker.call(client, address3),
-        ]
-        mocked_staking.assert_has_calls(calls, any_order=True)
-        assert mocked_staking.call_count == 3
-        calls = [mocker.call(50000), mocker.call(100000)]
-        mocked_permission.assert_has_calls(calls, any_order=True)
-        assert mocked_permission.call_count == 2
 
     # # prepare_and_write_data
     def test_foundation_prepare_and_write_data_functionality(self, mocker):
@@ -454,3 +436,93 @@ class TestFoundationFunctions:
             mocked_contract.return_value,
             mocked_data.return_value,
         )
+
+
+# # STAKING
+class TestFoundationStakingFunctions:
+    """Testing class for :py:mod:`foundation` staking functions."""
+
+    # # _update_current_staking_for_foundation
+    def test_foundation_update_current_staking_for_foundation_functionality(
+        self, mocker
+    ):
+        client = mocker.MagicMock()
+        starting_position = 4
+        mocked_staking = mocker.patch(
+            "foundation.current_staking", side_effect=[50000, 0, 100000]
+        )
+        mocked_permission = mocker.patch(
+            "foundation.permission_for_amount", side_effect=[2000, 3000]
+        )
+        address1, address2, address3 = "address1", "address2", "address3"
+        data = {
+            address1: [0, 1, 2, 3, 0, 0],
+            address2: [0, 1, 2, 3, 1, 1],
+            address3: [0, 1, 2, 3, 0, 0],
+        }
+        _update_current_staking_for_foundation(client, data, starting_position)
+        assert data == {
+            address1: [0, 1, 2, 3, 50000, 2000],
+            address2: [0, 1, 2, 3, 0, 0],
+            address3: [0, 1, 2, 3, 100000, 3000],
+        }
+        calls = [
+            mocker.call(client, address1),
+            mocker.call(client, address2),
+            mocker.call(client, address3),
+        ]
+        mocked_staking.assert_has_calls(calls, any_order=True)
+        assert mocked_staking.call_count == 3
+        calls = [mocker.call(50000), mocker.call(100000)]
+        mocked_permission.assert_has_calls(calls, any_order=True)
+        assert mocked_permission.call_count == 2
+
+    # # _update_current_staking_for_non_foundation
+    def test_foundation_update_current_staking_for_non_foundation_functionality(
+        self, mocker
+    ):
+        client = mocker.MagicMock()
+        starting_position = 4
+        address1, address2, address3, address4, address5, address6, address7 = (
+            "address1",
+            "address2",
+            "address3",
+            "address4",
+            "address5",
+            "address6",
+            "address7",
+        )
+        mocked_addresses = mocker.patch(
+            "foundation.governance_staking_addresses",
+            return_value=[address1, address3, address4, address5, address6, address7],
+        )
+        mocked_staking = mocker.patch(
+            "foundation.current_staking", side_effect=[100000, 0, 20000, 0]
+        )
+        mocked_permission = mocker.patch(
+            "foundation.permission_for_amount", side_effect=[5000, 0]
+        )
+        data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
+        data[address1] = [0, 1, 2, 3, 0, 0]
+        data[address2] = [0, 1, 2, 3, 0, 0]
+        data[address3] = [0, 1, 2, 3, 0, 0]
+        _update_current_staking_for_non_foundation(client, data, starting_position)
+        mocked_addresses.assert_called_once()
+        mocked_addresses.assert_called_with()
+        assert data == {
+            address1: [0, 1, 2, 3, 0, 0],
+            address2: [0, 1, 2, 3, 0, 0],
+            address3: [0, 1, 2, 3, 0, 0],
+            address4: [0, 0, 0, 0, 100000, 5000],
+        }
+        calls = [
+            mocker.call(client, address4),
+            mocker.call(client, address5),
+            mocker.call(client, address6),
+            mocker.call(client, address7),
+        ]
+        mocked_staking.assert_has_calls(calls, any_order=True)
+        assert mocked_staking.call_count == 4
+        calls = [mocker.call(100000), mocker.call(20000)]
+        mocked_permission.assert_has_calls(calls, any_order=True)
+        assert mocked_permission.call_count == 2

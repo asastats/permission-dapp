@@ -3,15 +3,25 @@
 import base64
 import json
 import os
+import time
+from copy import deepcopy
 from pathlib import Path
 
 from algosdk.abi.contract import Contract
 from algosdk.encoding import decode_address
 from algosdk.mnemonic import to_private_key
 from algosdk.transaction import StateSchema
+from algosdk.v2client.indexer import IndexerClient
 from dotenv import load_dotenv
 
-from config import STAKING_AMOUNT_VOTES_BOUNDARIES, MANDATORY_VALUES_SIZE
+from config import (
+    INDEXER_ADDRESS,
+    INDEXER_TOKEN,
+    STAKING_AMOUNT_VOTES_BOUNDARIES,
+    STAKING_APP_ID,
+    STAKING_APP_MIN_ROUND,
+    MANDATORY_VALUES_SIZE,
+)
 
 
 # # VALUES
@@ -191,6 +201,91 @@ def load_contract():
         Path(__file__).resolve().parent / "artifacts" / "contract.json"
     )
     return Contract.undictify(contract_json)
+
+
+# # STAKING
+def _application_transaction(params, indexer_client):
+    """TODO: docstring and tests"""
+    results = _application_transactions(params, indexer_client, delay=1)
+    while results.get("transactions"):
+        for transaction in results.get("transactions"):
+            yield transaction
+
+        time.sleep(1)
+        results = _application_transactions(
+            params,
+            indexer_client,
+            next_page=results.get("next-token"),
+            delay=1,
+        )
+
+
+def _indexer_instance():
+    """Return Algorand Indexer instance.
+
+    :return: :class:`IndexerClient`
+    """
+    return IndexerClient(
+        INDEXER_TOKEN, INDEXER_ADDRESS, headers={"User-Agent": "algosdk"}
+    )
+
+
+def _application_transactions(
+    params, indexer_client, next_page=None, delay=1, error_delay=5, retries=20
+):
+    """TODO: docstring and tests"""
+    _params = deepcopy(params)
+    if next_page:
+        _params.update({"next_page": next_page})
+    counter = 0
+    while True:
+        try:
+            time.sleep(delay)
+            return indexer_client.search_transactions(**_params)
+        except Exception as e:
+            if counter >= retries:
+                print("Maximum number of retries reached. Exiting...")
+                return {}
+            print(
+                "Exception %s raised searching transactions: %s; Paused..."
+                % (
+                    e,
+                    _params,
+                )
+            )
+            time.sleep(error_delay)
+            counter += 1
+
+
+def governance_staking_addresses():
+    """Return all addresses involved in the last governance staking iteration.
+
+    :var addresses: collection of public Algorand adresses
+    :type addresses: set
+    :var indexer_client: Algorand Indexer client instance
+    :type indexer_client: :class:`IndexerClient`
+    :var params: collection of arguments provided to Indexer method
+    :type params: dict
+    :var transaction: currently processed application transaction instance
+    :type transaction: dict
+    :return: set
+    """
+    addresses = set()
+    indexer_client = _indexer_instance()
+    params = {
+        "application_id": STAKING_APP_ID,
+        "limit": 1000,
+        "min_round": STAKING_APP_MIN_ROUND,
+    }
+    for counter, transaction in enumerate(
+        _application_transaction(params, indexer_client)
+    ):
+        addresses.add(transaction.get("sender"))
+        if divmod(counter, 1000)[1] == 0:
+            print(counter)
+
+    # print(addresses)
+    return addresses
 
 
 # # HELPERS

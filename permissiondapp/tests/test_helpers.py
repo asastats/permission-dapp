@@ -8,9 +8,11 @@ from unittest import mock
 import pytest
 
 import helpers
+from config import INDEXER_ADDRESS, INDEXER_TOKEN, STAKING_APP_ID, STAKING_APP_MIN_ROUND
 from helpers import (
     _docs_positions_offset_and_length_pairs,
     _extract_uint,
+    _indexer_instance,
     _starting_positions_offset_and_length_pairs,
     _value_length_from_values_position,
     _values_offset_and_length_pairs,
@@ -19,6 +21,7 @@ from helpers import (
     compile_program,
     deserialize_values_data,
     environment_variables,
+    governance_staking_addresses,
     load_contract,
     permission_for_amount,
     private_key_from_mnemonic,
@@ -313,6 +316,62 @@ class TestHelpersContractFunctions:
         )
         mocked_undictify.assert_called_once()
         mocked_undictify.assert_called_with(contract_json)
+
+
+# # STAKING
+class TestHelpersStakingFunctions:
+    """Testing class for :py:mod:`helpers` staking functions."""
+
+    # # _indexer_instance
+    def test_helpers_indexer_instance_functionality(self, mocker):
+        mocked_indexer = mocker.patch("helpers.IndexerClient")
+        returned = _indexer_instance()
+        assert returned == mocked_indexer.return_value
+        mocked_indexer.assert_called_once()
+        mocked_indexer.assert_called_with(
+            INDEXER_TOKEN, INDEXER_ADDRESS, headers={"User-Agent": "algosdk"}
+        )
+
+    # # governance_staking_addresses
+    def test_helpers_governance_staking_addresses_functionality(self, mocker):
+        mocked_indexer = mocker.patch("helpers._indexer_instance")
+        address1, address2, address3, address4, address5 = (
+            "address1",
+            "address2",
+            "address3",
+            "address4",
+            "address5",
+        )
+        txns = [
+            {"sender": address4},
+            {"sender": address2},
+            {"sender": address3},
+            {"sender": address4},
+            {"sender": address1},
+            {"sender": address2},
+            {"sender": address5},
+        ]
+        mocked_transaction = mocker.patch(
+            "helpers._application_transaction", return_value=txns
+        )
+        params = {
+            "application_id": STAKING_APP_ID,
+            "limit": 1000,
+            "min_round": STAKING_APP_MIN_ROUND,
+        }
+        returned = governance_staking_addresses()
+        assert isinstance(returned, set)
+        assert sorted(list(returned)) == [
+            address1,
+            address2,
+            address3,
+            address4,
+            address5,
+        ]
+        mocked_indexer.assert_called_once()
+        mocked_indexer.assert_called_with()
+        mocked_transaction.assert_called_once()
+        mocked_transaction.assert_called_with(params, mocked_indexer.return_value)
 
 
 # # HELPERS

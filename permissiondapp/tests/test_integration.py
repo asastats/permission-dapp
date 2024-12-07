@@ -94,3 +94,4 @@ class TestIntegrationForNonCreator:
         write_box(client, sender, signer, app_id, contract, address, value)
         returned = read_box(client, app_id, box_name)
         assert returned == values
+        delete_box(client, sender, signer, app_id, contract, address)        

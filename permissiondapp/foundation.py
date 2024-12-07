@@ -17,6 +17,7 @@ from config import (
 )
 from helpers import (
     environment_variables,
+    governance_staking_addresses,
     load_contract,
     permission_for_amount,
     private_key_from_mnemonic,
@@ -25,6 +26,7 @@ from helpers import (
 from network import current_staking, write_foundation_boxes
 
 
+# # HELPERS
 def _calculate_and_update_votes_and_permissions(data):
     """Calculkate and update votes and permission values for all addresses in `data`.
 
@@ -81,6 +83,7 @@ def _initial_check():
     return env, client
 
 
+# # FOUNDATION
 def _load_and_merge_accounts(doc_id, stem="allocations"):
     """Update `data` with the values collected from foundation docs found in `items`.
 
@@ -163,35 +166,14 @@ def _prepare_data(client):
     data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
     _load_and_parse_foundation_data(data, items=DAO_DISCUSSIONS_DOCS)
     _load_and_parse_staking_data(data, items=STAKING_DOCS)
-    _update_current_staking(
+    _update_current_staking_for_foundation(
+        client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
+    )
+    _update_current_staking_for_non_foundation(
         client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
     )
     _calculate_and_update_votes_and_permissions(data)
     return data
-
-
-def _update_current_staking(client, data, starting_position):
-    """Check and update cutrent staking values for all data` addresses.
-
-    :param client: Algorand Node client instance
-    :type client: :class:`AlgodClient`
-    :var data: collection of addresses and related permission and votes values
-    :type data: dict
-    :var starting_position: staking permission's index in values collection
-    :type starting_position: int
-    :var address: currentrly processed governance seat address
-    :type address: str
-    :var current_staking_amount: current address' staking amount
-    :type current_staking_amount: int
-    """
-    for address in data:
-        print(f"Checking current staking for {address[:5]}..{address[-5:]}")
-        current_staking_amount = current_staking(client, address)
-        if current_staking_amount:
-            data[address][starting_position] = current_staking_amount
-            data[address][starting_position + 1] = permission_for_amount(
-                current_staking_amount
-            )
 
 
 def prepare_and_write_data():
@@ -216,6 +198,62 @@ def prepare_and_write_data():
     app_id = int(env.get("permission_app_id"))
     contract = load_contract()
     write_foundation_boxes(client, creator_private_key, app_id, contract, data)
+
+
+# # STAKING
+def _update_current_staking_for_foundation(client, data, starting_position):
+    """Check and update cutrent staking values for all data` addresses.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param data: collection of addresses and related permission and votes values
+    :type data: dict
+    :param starting_position: staking permission's index in values collection
+    :type starting_position: int
+    :var address: currentrly processed governance seat address
+    :type address: str
+    :var current_staking_amount: current address' staking amount
+    :type current_staking_amount: int
+    """
+    for address in data:
+        current_staking_amount = current_staking(client, address)
+        data[address][starting_position] = current_staking_amount
+        data[address][starting_position + 1] = (
+            permission_for_amount(current_staking_amount)
+            if current_staking_amount
+            else 0
+        )
+
+
+def _update_current_staking_for_non_foundation(client, data, starting_position):
+    """Check and update cutrent staking values for addresses not found in `data`.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param data: collection of addresses and related permission and votes values
+    :type data: dict
+    :param starting_position: staking permission's index in values collection
+    :type starting_position: int
+    :var non_foundation: collection of adresses and staking amounts for non-foundation
+    :type non_foundation: dict
+    :var address: currentrly processed governance seat address
+    :type address: str
+    :var amount: current address' staking amount
+    :type amount: int
+    :var permission: current address' permission value
+    :type permission: int
+    """
+    non_foundation = {
+        address: current_staking(client, address)
+        for address in governance_staking_addresses()
+        if address not in data
+    }
+    for address, amount in non_foundation.items():
+        if amount:
+            permission = permission_for_amount(amount)
+            if permission:
+                data[address][starting_position] = amount
+                data[address][starting_position + 1] = permission
 
 
 if __name__ == "__main__":
