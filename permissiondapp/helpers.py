@@ -8,16 +8,17 @@ from copy import deepcopy
 from pathlib import Path
 
 from algosdk.abi.contract import Contract
-from algosdk.encoding import decode_address
+from algosdk.encoding import decode_address, encode_address
 from algosdk.mnemonic import to_private_key
 from algosdk.transaction import StateSchema
+from algosdk.v2client.algod import AlgodClient
 from algosdk.v2client.indexer import IndexerClient
 from dotenv import load_dotenv
 
 from config import (
     INDEXER_ADDRESS,
     INDEXER_TOKEN,
-    STAKING_AMOUNT_VOTES_BOUNDARIES,
+    STAKING_AMOUNT_VOTES,
     STAKING_APP_ID,
     STAKING_APP_MIN_ROUND,
     MANDATORY_VALUES_SIZE,
@@ -152,6 +153,31 @@ def serialize_values(values):
         )
     )
     return base64.b64encode(_bytes).decode("ascii")
+
+
+# # BOXES
+def permission_dapp_values_from_boxes(verbose=True):
+    """TODO: docstring and tests"""
+    env = environment_variables()
+    if env.get("permission_app_id") is None:
+        raise ValueError("Permission dApp ID isn't set!")
+
+    permissions = {}
+    app_id = int(env.get("permission_app_id"))
+    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    boxes = client.application_boxes(app_id)
+    counter = 1
+    for box in boxes.get("boxes", []):
+        box_name = base64.b64decode(box.get("name"))
+        address = encode_address(base64.b64decode(box_name))
+        response = client.application_box_by_name(app_id, box_name)
+        value = base64.b64decode(response.get("value")).decode("utf8")
+        permissions[address] = deserialize_values_data(value)
+        if verbose:
+            print(f"{counter}.", f"{address[:5]}..{address[-5:]}")
+        counter += 1
+
+    return permissions
 
 
 # # CONTRACT
@@ -327,7 +353,7 @@ def permission_for_amount(amount):
     :type votes: float
     :return: int
     """
-    for boundary, votes in STAKING_AMOUNT_VOTES_BOUNDARIES[::-1]:
+    for boundary, votes in STAKING_AMOUNT_VOTES[::-1]:
         if amount > boundary:
             return int((votes + ((amount - boundary) / boundary) * votes) * 1_000_000)
 
