@@ -16,14 +16,21 @@ from config import (
     SUBSCRIPTION_POSITION,
 )
 from helpers import (
+    box_writing_parameters,
     environment_variables,
     governance_staking_addresses,
-    load_contract,
     permission_for_amount,
-    private_key_from_mnemonic,
     read_json,
 )
-from network import current_governance_staking_for_address, write_foundation_boxes
+from network import (
+    check_and_update_changed_subscriptions_and_staking,
+    check_and_update_new_stakers,
+    check_and_update_new_subscribers,
+    current_governance_staking_for_address,
+    fetch_subscriptions_from_boxes,
+    permission_dapp_values_from_boxes,
+    write_foundation_boxes,
+)
 
 
 # # HELPERS
@@ -193,19 +200,16 @@ def prepare_and_write_data():
     :type client: :class:`AlgodClient`
     :var data: collection of addresses and related permission and votes values
     :type data: dict
-    :var creator_private_key: application creator's base64 encoded private key
-    :type creator_private_key: str
     :var app_id: Permission dApp identifier
     :type app_id: int
-    :var contract: application caller's address
-    :type contract: :class:`Contract`
+    :var writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
     """
     env, client = _initial_check()
     data = _prepare_data(env)
-    creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
     app_id = int(env.get("permission_app_id"))
-    contract = load_contract()
-    write_foundation_boxes(client, creator_private_key, app_id, contract, data)
+    writing_parameters = box_writing_parameters(env)
+    write_foundation_boxes(client, app_id, writing_parameters, data)
 
 
 # # STAKING
@@ -262,6 +266,48 @@ def _update_current_staking_for_non_foundation(client, data, starting_position):
             if permission:
                 data[address][starting_position] = amount
                 data[address][starting_position + 1] = permission
+
+
+# # UPDATE
+def check_and_update_permission_dapp_boxes():
+    """Check and update boxes if staking and/or subscription values have changed.
+
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var app_id: currently processed subscription tier app
+    :type app_id: int
+    :var writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
+    :var subscriptions: Subtopia subscribers addresses and related tiers' values
+    :type subscriptions: dict
+    :var stakings: collection  of all governance staking addresses and related amounts
+    :type stakings: dict
+    :var permissions: collection of addresses and related votes and permission values
+    :type permissions: dict
+    """
+    env = environment_variables()
+    app_id = int(env.get("permission_app_id"))
+    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    writing_parameters = box_writing_parameters(env)
+
+    subscriptions = fetch_subscriptions_from_boxes(client)
+    stakings = {
+        address: current_governance_staking_for_address(client, address)
+        for address in governance_staking_addresses()
+    }
+    permissions = permission_dapp_values_from_boxes(client, app_id)
+
+    check_and_update_new_subscribers(
+        client, app_id, writing_parameters, permissions, subscriptions
+    )
+    check_and_update_new_stakers(
+        client, app_id, writing_parameters, permissions, stakings
+    )
+    check_and_update_changed_subscriptions_and_staking(
+        client, app_id, writing_parameters, permissions, subscriptions, stakings
+    )
 
 
 if __name__ == "__main__":

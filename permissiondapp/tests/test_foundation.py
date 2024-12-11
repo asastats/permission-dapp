@@ -21,6 +21,7 @@ from foundation import (
     _prepare_data,
     _update_current_staking_for_foundation,
     _update_current_staking_for_non_foundation,
+    check_and_update_permission_dapp_boxes,
     prepare_and_write_data,
 )
 
@@ -419,34 +420,26 @@ class TestFoundationFoundationFunctions:
     # # prepare_and_write_data
     def test_foundation_prepare_and_write_data_functionality(self, mocker):
         client = mocker.MagicMock()
-        creator_mnemonic = mocker.MagicMock()
         permission_app_id = 5050
-        env = {
-            "creator_mnemonic": creator_mnemonic,
-            "permission_app_id": permission_app_id,
-        }
+        env = {"permission_app_id": permission_app_id}
         mocked_initial = mocker.patch(
             "foundation._initial_check", return_value=[env, client]
         )
         mocked_data = mocker.patch("foundation._prepare_data")
-        mocked_private_key = mocker.patch("foundation.private_key_from_mnemonic")
-        mocked_contract = mocker.patch("foundation.load_contract")
+        mocked_parameters = mocker.patch("foundation.box_writing_parameters")
         mocked_write = mocker.patch("foundation.write_foundation_boxes")
         prepare_and_write_data()
         mocked_initial.assert_called_once()
         mocked_initial.assert_called_with()
         mocked_data.assert_called_once()
         mocked_data.assert_called_with(env)
-        mocked_private_key.assert_called_once()
-        mocked_private_key.assert_called_with(creator_mnemonic)
-        mocked_contract.assert_called_once()
-        mocked_contract.assert_called_with()
+        mocked_parameters.assert_called_once()
+        mocked_parameters.assert_called_with(env)
         mocked_write.assert_called_once()
         mocked_write.assert_called_with(
             client,
-            mocked_private_key.return_value,
             permission_app_id,
-            mocked_contract.return_value,
+            mocked_parameters.return_value,
             mocked_data.return_value,
         )
 
@@ -541,3 +534,97 @@ class TestFoundationStakingFunctions:
         calls = [mocker.call(100000), mocker.call(20000)]
         mocked_permission.assert_has_calls(calls, any_order=True)
         assert mocked_permission.call_count == 2
+
+
+# # UPDATE
+class TestFoundationUpdateFunctions:
+    """Testing class for :py:mod:`foundation` update functions."""
+
+    # # check_and_update_permission_dapp_boxes
+    def test_foundation_check_and_update_permission_dapp_boxes_functionality(
+        self, mocker
+    ):
+        permission_app_id = 5050
+        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
+        env = {
+            "permission_app_id": str(permission_app_id),
+            "algod_token": algod_token,
+            "algod_address": algod_address,
+        }
+        mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
+        client = mocker.MagicMock()
+        mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
+        writing_parameters = mocker.MagicMock()
+        mocked_parameters = mocker.patch(
+            "foundation.box_writing_parameters", return_value=writing_parameters
+        )
+        mocked_subscriptions = mocker.patch("foundation.fetch_subscriptions_from_boxes")
+        address1, address2, address3 = "address1", "address2", "address3"
+        mocked_governance = mocker.patch(
+            "foundation.governance_staking_addresses",
+            return_value=[address1, address2, address3],
+        )
+        staking1, staking2, staking3 = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        mocked_staking = mocker.patch(
+            "foundation.current_governance_staking_for_address",
+            side_effect=[staking1, staking2, staking3],
+        )
+        mocked_permissions = mocker.patch(
+            "foundation.permission_dapp_values_from_boxes"
+        )
+        mocked_check_subscribers = mocker.patch(
+            "foundation.check_and_update_new_subscribers"
+        )
+        mocked_check_stakers = mocker.patch("foundation.check_and_update_new_stakers")
+        mocked_check_changed = mocker.patch(
+            "foundation.check_and_update_changed_subscriptions_and_staking"
+        )
+        check_and_update_permission_dapp_boxes()
+        mocked_env.assert_called_once()
+        mocked_env.assert_called_with()
+        mocked_client.assert_called_once()
+        mocked_client.assert_called_with(algod_token, algod_address)
+        mocked_parameters.assert_called_once()
+        mocked_parameters.assert_called_with(env)
+        mocked_subscriptions.assert_called_once()
+        mocked_subscriptions.assert_called_with(client)
+        mocked_governance.assert_called_once()
+        mocked_governance.assert_called_with()
+        calls = [
+            mocker.call(client, address1),
+            mocker.call(client, address2),
+            mocker.call(client, address3),
+        ]
+        mocked_staking.assert_has_calls(calls, any_order=True)
+        assert mocked_staking.call_count == 3
+        mocked_permissions.assert_called_once()
+        mocked_permissions.assert_called_with(client, permission_app_id)
+        mocked_check_subscribers.assert_called_once()
+        mocked_check_subscribers.assert_called_with(
+            client,
+            permission_app_id,
+            writing_parameters,
+            mocked_permissions.return_value,
+            mocked_subscriptions.return_value,
+        )
+        mocked_check_stakers.assert_called_once()
+        mocked_check_stakers.assert_called_with(
+            client,
+            permission_app_id,
+            writing_parameters,
+            mocked_permissions.return_value,
+            {address1: staking1, address2: staking2, address3: staking3},
+        )
+        mocked_check_changed.assert_called_once()
+        mocked_check_changed.assert_called_with(
+            client,
+            permission_app_id,
+            writing_parameters,
+            mocked_permissions.return_value,
+            mocked_subscriptions.return_value,
+            {address1: staking1, address2: staking2, address3: staking3},
+        )

@@ -34,11 +34,7 @@ class TestNetworkSubscriptionsFunctions:
 
     # # fetch_subscriptions_from_boxes
     def test_network_fetch_subscriptions_from_boxes_functionality(self, mocker):
-        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        env = {"algod_token": algod_token, "algod_address": algod_address}
-        mocked_env = mocker.patch("network.environment_variables", return_value=env)
         client = mocker.MagicMock()
-        mocked_client = mocker.patch("network.AlgodClient", return_value=client)
         boxes1 = {
             "boxes": [
                 {"name": "cQWUzn1mozSwFjfbuIUJlTjN/dz4zHUs60ey06uw/kY="},
@@ -123,7 +119,7 @@ class TestNetworkSubscriptionsFunctions:
         )
         with mock.patch("network.datetime") as mocked_datetime:
             mocked_datetime.now.return_value.timestamp.return_value = 1736000000
-            returned = fetch_subscriptions_from_boxes()
+            returned = fetch_subscriptions_from_boxes(client)
         assert returned == {
             address1: [(500000000000, 3236067977500), (0, 0)],
             address2: [(2500000000, 2329968943), (18000000000, 23299689438)],
@@ -132,10 +128,6 @@ class TestNetworkSubscriptionsFunctions:
             address5: [(38000000000, 258885438200)],
             address6: [(500000000000, 3236067977500), (0, 0)],
         }
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
-        mocked_client.assert_called_once()
-        mocked_client.assert_called_with(algod_token, algod_address)
         calls = [mocker.call(app_id) for app_id in SUBSCRIPTION_PERMISSIONS]
         client.application_boxes.assert_has_calls(calls, any_order=True)
         assert client.application_boxes.call_count == len(SUBSCRIPTION_PERMISSIONS)
@@ -329,22 +321,22 @@ class TestNetworkPermissionDappFunctions:
 
     # # delete_box
     def test_network_delete_box_functionality(self, mocker):
-        client, sender, signer, app_id, contract = (
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-        )
+        client, app_id = mocker.MagicMock(), mocker.MagicMock()
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         box_name = "0Sps8CZ0l7T7lMDJoNDTbMOc5WjvK0hBucrwIbhrxvc="
         atc = mocker.MagicMock()
         mocked_composer = mocker.patch(
             "network.AtomicTransactionComposer", return_value=atc
         )
+        sender, signer, contract = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
         method = mocker.MagicMock()
+        writing_parameters = {"sender": sender, "signer": signer, "contract": contract}
         contract.get_method_by_name.return_value = method
-        delete_box(client, sender, signer, app_id, contract, address)
+        delete_box(client, app_id, writing_parameters, address)
         mocked_composer.assert_called_once()
         mocked_composer.assert_called_with()
         client.suggested_params.assert_called_once()
@@ -414,35 +406,30 @@ class TestNetworkPermissionDappFunctions:
     def test_network_permission_dapp_values_from_boxes_raises_for_no_app_id(
         self, mocker
     ):
-        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        env = {"algod_token": algod_token, "algod_address": algod_address}
-        mocked_env = mocker.patch("network.environment_variables", return_value=env)
-        mocked_client = mocker.patch("network.AlgodClient")
         with pytest.raises(ValueError) as exception:
-            permission_dapp_values_from_boxes()
+            permission_dapp_values_from_boxes(mocker.MagicMock(), None)
             assert str(exception.value) == "Permission dApp ID isn't set!"
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
-        mocked_client.assert_not_called()
 
     def test_network_permission_dapp_values_from_boxes_functionality(self, mocker):
-        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        app_id = 5050
-        env = {
-            "permission_app_id": app_id,
-            "algod_token": algod_token,
-            "algod_address": algod_address,
-        }
-        mocked_env = mocker.patch("network.environment_variables", return_value=env)
         client = mocker.MagicMock()
-        mocked_client = mocker.patch("network.AlgodClient", return_value=client)
+        app_id = 5050
         boxes = {
             "boxes": [
-                {"name": "0Sps8CZ0l7T7lMDJoNDTbMOc5WjvK0hBucrwIbhrxvc="},
-                {"name": "8hpyzix6cqySfm/qF8VT/NZSNB2RRkQ8x3BhJggvgXY="},
-                {"name": "PS0rYN5N7NcjOcyG2JAZtk2TdZSCylU93lnpdxrWCxU="},
-                {"name": "kI7lz3JceNCB4gOOi/HM4PM+V3G5wHLi3LoX5IMf3SM="},
-                {"name": "sApIj6tyyM7p4UNQ6Le9FvLDUrWkUnb0aCq262s0JcE="},
+                {
+                    "name": "SGkvcklnR0VhT1RWM1JJNEpzMzZjQmxIekliNkUwOEUrbWtadUhMMVAyST0="
+                },
+                {
+                    "name": "NnZRcUZkSDY4VlJYNm5HcDVlNTNac1dhbDIvVDRqVytZREJGb0J4eWF5TT0="
+                },
+                {
+                    "name": "bjdWdWpYNEhjNWs4QTAvSXk1MjQxNS90M0ZYY0Z3ODJDcElQdWw1bWpYQT0="
+                },
+                {
+                    "name": "eGpIelhFUWVNL3ZlTzF0bnN5ZndrMTV5aDhzUExXT0tFbVh5YmxrNWJ1Yz0="
+                },
+                {
+                    "name": "bnpnem5WRkllT01lVFhrRTM3aEw1eUNsdHFlQ0tVRE1yVjl4SW50VUxQMD0="
+                },
             ]
         }
         client.application_boxes.return_value = boxes
@@ -457,22 +444,18 @@ class TestNetworkPermissionDappFunctions:
             side_effect=[values1, values2, None, values3, values4],
         )
         address1, address2, address3, address4 = (
-            "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU",
-            "6INHFTRMPJZKZET6N7VBPRKT7TLFENA5SFDEIPGHOBQSMCBPQF3BBH4RAY",
-            "SCHOLT3SLR4NBAPCAOHIX4OM4DZT4V3RXHAHFYW4XIL6JAY73URXR5PONE",
-            "WAFERD5LOLEM52PBINIORN55C3ZMGUVVURJHN5DIFK3OW2ZUEXAYBDEWCA",
+            "DYX6WIQBQRUOJVO5CI4CNTP2OAMUPTEG7IJU6BH2NEM3Q4XVH5RPVE3KDU",
+            "5L2CUFOR7LYVIV7KOGU6L3TXM3CZVF3P2PRDLPTAGBC2AHDSNMRZX6GKOI",
+            "YYY7GXCEDYZ7XXR3LNT3GJ7QSNPHFB6LB4WWHCQSMXZG4WJZN3T6RC7SUU",
+            "T44DHHKRJB4OGHSNPECN7OCL44QKLNVHQIUUBTFNL5YSE62UFT6RMR5GGU",
         )
-        returned = permission_dapp_values_from_boxes()
+        returned = permission_dapp_values_from_boxes(client, app_id)
         assert returned == {
             address1: values1,
             address2: values2,
             address3: values3,
             address4: values4,
         }
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
-        mocked_client.assert_called_once()
-        mocked_client.assert_called_with(algod_token, algod_address)
         client.application_boxes.assert_called_once()
         client.application_boxes.assert_called_with(app_id)
         calls = [
@@ -484,9 +467,7 @@ class TestNetworkPermissionDappFunctions:
 
     # # write_box
     def test_network_write_box_functionality(self, mocker):
-        client, sender, signer, app_id, contract, value = (
-            mocker.MagicMock(),
-            mocker.MagicMock(),
+        client, app_id, writing_parameters, value = (
             mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -498,9 +479,16 @@ class TestNetworkPermissionDappFunctions:
         mocked_composer = mocker.patch(
             "network.AtomicTransactionComposer", return_value=atc
         )
+        sender, signer, contract = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        method = mocker.MagicMock()
+        writing_parameters = {"sender": sender, "signer": signer, "contract": contract}
         method = mocker.MagicMock()
         contract.get_method_by_name.return_value = method
-        write_box(client, sender, signer, app_id, contract, address, value)
+        write_box(client, app_id, writing_parameters, address, value)
         mocked_composer.assert_called_once()
         mocked_composer.assert_called_with()
         client.suggested_params.assert_called_once()
@@ -522,18 +510,10 @@ class TestNetworkPermissionDappFunctions:
 
     # # write_foundation_boxes
     def test_network_write_foundation_boxes_functionality(self, mocker):
-        client, creator_private_key, app_id, contract = (
+        client, app_id, writing_parameters = (
             mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
-            mocker.MagicMock(),
-        )
-        sender, signer = mocker.MagicMock(), mocker.MagicMock()
-        mocked_sender = mocker.patch(
-            "network.address_from_private_key", return_value=sender
-        )
-        mocked_signer = mocker.patch(
-            "network.AccountTransactionSigner", return_value=signer
         )
         value1, value2, value3 = (
             mocker.MagicMock(),
@@ -551,18 +531,14 @@ class TestNetworkPermissionDappFunctions:
             mocker.MagicMock(),
         )
         data = {address1: values1, address2: values2, address3: values3}
-        write_foundation_boxes(client, creator_private_key, app_id, contract, data)
-        mocked_sender.assert_called_once()
-        mocked_sender.assert_called_with(creator_private_key)
-        mocked_signer.assert_called_once()
-        mocked_signer.assert_called_with(creator_private_key)
+        write_foundation_boxes(client, app_id, writing_parameters, data)
         calls = [mocker.call(values1), mocker.call(values2), mocker.call(values3)]
         mocked_serialize.assert_has_calls(calls, any_order=True)
         assert mocked_serialize.call_count == 3
         calls = [
-            mocker.call(client, sender, signer, app_id, contract, address1, value1),
-            mocker.call(client, sender, signer, app_id, contract, address2, value2),
-            mocker.call(client, sender, signer, app_id, contract, address3, value3),
+            mocker.call(client, app_id, writing_parameters, address1, value1),
+            mocker.call(client, app_id, writing_parameters, address2, value2),
+            mocker.call(client, app_id, writing_parameters, address3, value3),
         ]
         mocked_write.assert_has_calls(calls, any_order=True)
         assert mocked_write.call_count == 3

@@ -6,35 +6,28 @@ from datetime import datetime, UTC
 
 from algosdk import transaction
 from algosdk.account import address_from_private_key
-from algosdk.atomic_transaction_composer import (
-    AtomicTransactionComposer,
-    AccountTransactionSigner,
-)
+from algosdk.atomic_transaction_composer import AtomicTransactionComposer
 from algosdk.encoding import encode_address
 from algosdk.error import AlgodHTTPError
-from algosdk.v2client.algod import AlgodClient
 
 from config import STAKING_APP_ID, STAKING_KEY, SUBSCRIPTION_PERMISSIONS
 from helpers import (
     app_schemas,
     box_name_from_address,
     deserialize_values_data,
-    environment_variables,
     serialize_values,
     wait_for_confirmation,
 )
 
 
 # # SUBCRIPTIONS
-def fetch_subscriptions_from_boxes():
+def fetch_subscriptions_from_boxes(client):
     """Return collection of all subscribed addresses with related subscription values.
 
     Box value contains the following uints:
     (tier_asset_id, 2, subscription_start, subscription_end, subscription_duration)
 
-    :var env: environment variables collection
-    :type env: dict
-    :var client: Algorand Node client instance
+    :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
     :var subscriptions: Subtopia subscribers addresses and related tiers' values
     :type subscriptions: dict
@@ -58,10 +51,7 @@ def fetch_subscriptions_from_boxes():
     :type start: int
     :return: dict
     """
-    env = environment_variables()
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
     subscriptions = defaultdict(list)
-
     for app_id, (amount, permission) in SUBSCRIPTION_PERMISSIONS.items():
         boxes = client.application_boxes(app_id)
         for box in boxes.get("boxes", []):
@@ -143,6 +133,83 @@ def current_governance_staking_for_address(client, address):
     return _cometa_app_amount(STAKING_KEY, state) if state else 0
 
 
+# # UPDATE
+def check_and_update_new_stakers(
+    client, app_id, writing_parameters, permissions, stakings
+):
+    """Check and update boxes for completely new staking addresses.
+
+    TODO: implement and tests
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param app_id: currently processed subscription tier app
+    :type app_id: int
+    :param writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
+    :param permissions: collection of addresses and related votes and permission values
+    :type permissions: dict
+    :param stakings: collection  of all governance staking addresses and related amounts
+    :type stakings: dict
+    """
+    new_stakers = {
+        address: amount
+        for address, amount in stakings.items()
+        if address not in permissions
+    }
+    if new_stakers:
+        pass
+
+
+def check_and_update_new_subscribers(
+    client, app_id, writing_parameters, permissions, subscriptions
+):
+    """Check and update boxes for completely new staking addresses.
+
+    TODO: implement and tests
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param app_id: currently processed subscription tier app
+    :type app_id: int
+    :param writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
+    :param permissions: collection of addresses and related votes and permission values
+    :type permissions: dict
+    :param subscriptions: Subtopia subscribers addresses and related tiers' values
+    :type subscriptions: dict
+    """
+    new_subscribers = {
+        address: (amount, permission)
+        for address, (amount, permission) in subscriptions.items()
+        if address not in permissions
+    }
+    if new_subscribers:
+        pass
+
+
+def check_and_update_changed_subscriptions_and_staking(
+    client, app_id, writing_parameters, permissions, subscriptions, stakings
+):
+    """Check and update boxes for completely new staking addresses.
+
+    TODO: implement and tests
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param app_id: currently processed subscription tier app
+    :type app_id: int
+    :param writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
+    :param permissions: collection of addresses and related votes and permission values
+    :type permissions: dict
+    :param subscriptions: Subtopia subscribers addresses and related tiers' values
+    :type subscriptions: dict
+    :param stakings: collection  of all governance staking addresses and related amounts
+    :type stakings: dict
+    """
+
+
 # # PERMISSION DAPP
 def create_app(client, private_key, approval_program, clear_program):
     """TODO: docstring and tests"""
@@ -218,19 +285,15 @@ def delete_app(client, private_key, index):
     print("Deleted app-id: ", transaction_response["txn"]["txn"]["apid"])
 
 
-def delete_box(client, sender, signer, app_id, contract, address):
+def delete_box(client, app_id, writing_parameters, address):
     """Delete  box owned by `app_id` defined by provided `address`.
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :param sender: application caller's address
-    :type sender: str
-    :param signer: application caller's address
-    :type signer: :class:`AccountTransactionSigner`
     :param app_id: Permission dApp identifier
     :type app_id: int
-    :param contract: application caller's address
-    :type contract: :class:`Contract`
+    :param writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
     :param address: governance seat address associated with the box
     :type address: str
     :var atc: transaction composer instance
@@ -246,10 +309,10 @@ def delete_box(client, sender, signer, app_id, contract, address):
 
     atc.add_method_call(
         app_id=app_id,
-        method=contract.get_method_by_name("deleteBox"),
-        sender=sender,
+        method=writing_parameters.get("contract").get_method_by_name("deleteBox"),
+        sender=writing_parameters.get("sender"),
         sp=client.suggested_params(),
-        signer=signer,
+        signer=writing_parameters.get("signer"),
         method_args=[box_name],
         boxes=[(app_id, box_name.encode())],
     )
@@ -287,17 +350,15 @@ def deserialized_permission_dapp_box_value(client, app_id, box_name):
     )
 
 
-def permission_dapp_values_from_boxes():
+def permission_dapp_values_from_boxes(client, app_id):
     """Return collection of all addresses with related votes and permission values.
 
-    :var env: environment variables collection
-    :type env: dict
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param app_id: Permisssion dApp identifier
+    :type app_id: int
     :var permissions: collection of addresses and related votes and permission values
     :type permissions: dict
-    :var app_id: currently processed subscription tier app
-    :type app_id: int
-    :var client: Algorand Node client instance
-    :type client: :class:`AlgodClient`
     :var boxes: collection of Pewrmission dApp's boxes fetched from Node
     :type boxes: dict
     :var box_name: currently processed box's name
@@ -308,17 +369,14 @@ def permission_dapp_values_from_boxes():
     :type values: int
     :return: dict
     """
-    env = environment_variables()
-    if env.get("permission_app_id") is None:
+    if app_id is None:
         raise ValueError("Permission dApp ID isn't set!")
 
     permissions = {}
-    app_id = int(env.get("permission_app_id"))
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
     boxes = client.application_boxes(app_id)
     for box in boxes.get("boxes", []):
         box_name = base64.b64decode(box.get("name"))
-        address = encode_address(box_name)
+        address = encode_address(base64.b64decode(box_name))
         values = deserialized_permission_dapp_box_value(client, app_id, box_name)
         if not values:
             continue
@@ -327,19 +385,15 @@ def permission_dapp_values_from_boxes():
     return permissions
 
 
-def write_box(client, sender, signer, app_id, contract, address, value):
+def write_box(client, app_id, writing_parameters, address, value):
     """Write `value` to the box owned by `app_id` defined by provided `address`.
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :param sender: application caller's address
-    :type sender: str
-    :param signer: application caller's signer instance
-    :type signer: :class:`AccountTransactionSigner`
     :param app_id: Permission dApp identifier
     :type app_id: int
-    :param contract: application caller's address
-    :type contract: :class:`Contract`
+    :param writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
     :param address: governance seat address associated with the box
     :type address: str
     :param value: serialized base64 encoded values collection
@@ -357,10 +411,10 @@ def write_box(client, sender, signer, app_id, contract, address, value):
 
     atc.add_method_call(
         app_id=app_id,
-        method=contract.get_method_by_name("writeBox"),
-        sender=sender,
+        method=writing_parameters.get("contract").get_method_by_name("writeBox"),
+        sender=writing_parameters.get("sender"),
         sp=client.suggested_params(),
-        signer=signer,
+        signer=writing_parameters.get("signer"),
         method_args=[box_name, value],
         boxes=[(app_id, box_name.encode())],
     )
@@ -372,23 +426,17 @@ def write_box(client, sender, signer, app_id, contract, address, value):
     print("Result confirmed in round: {}".format(response.confirmed_round))
 
 
-def write_foundation_boxes(client, creator_private_key, app_id, contract, data):
+def write_foundation_boxes(client, app_id, writing_parameters, data):
     """Write to the boxes owned by `app_id` values extracted from provided `data`.
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
-    :param creator_private_key: application creator's base64 encoded private key
-    :type creator_private_key: str
     :param app_id: Permission dApp identifier
     :type app_id: int
-    :param contract: application caller's address
-    :type contract: :class:`Contract`
-    :var data: collection of addresses and associated integer values
+    :param writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
+    :param data: collection of addresses and associated integer values
     :type data: dict
-    :var sender: application caller's address
-    :type sender: str
-    :var signer: application caller's signer instance
-    :type signer: :class:`AccountTransactionSigner`
     :var address: currently processed governance seat address
     :type address: str
     :var values: currently processed integer values collection
@@ -396,10 +444,7 @@ def write_foundation_boxes(client, creator_private_key, app_id, contract, data):
     :var value: currently processed serialized base64 encoded values collection
     :type value: str
     """
-    sender = address_from_private_key(creator_private_key)
-    signer = AccountTransactionSigner(creator_private_key)
-
     for address, values in data.items():
         value = serialize_values(values)
         print(f"Writting box for {address[:5]}..{address[-5:]}")
-        write_box(client, sender, signer, app_id, contract, address, value)
+        write_box(client, app_id, writing_parameters, address, value)

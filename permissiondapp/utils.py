@@ -6,11 +6,7 @@ from algosdk.encoding import decode_address, encode_address
 from algosdk.v2client.algod import AlgodClient
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 
-from helpers import (
-    environment_variables,
-    load_contract,
-    private_key_from_mnemonic,
-)
+from helpers import environment_variables, load_contract, private_key_from_mnemonic
 from network import delete_box, permission_dapp_values_from_boxes
 
 
@@ -41,7 +37,10 @@ def delete_boxes():
 
 
 def print_box_values():
-    permissions = permission_dapp_values_from_boxes()
+    env = environment_variables()
+    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    app_id = int(env.get("permission_app_id"))
+    permissions = permission_dapp_values_from_boxes(client, app_id)
     if not permissions:
         print("There are no boxes!")
 
