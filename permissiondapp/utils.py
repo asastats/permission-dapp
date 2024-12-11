@@ -9,10 +9,9 @@ from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from helpers import (
     environment_variables,
     load_contract,
-    permission_dapp_values_from_boxes,
     private_key_from_mnemonic,
 )
-from network import delete_box
+from network import delete_box, permission_dapp_values_from_boxes
 
 
 def delete_boxes():

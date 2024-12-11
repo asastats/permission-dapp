@@ -30,7 +30,9 @@ class TestFoundationHelpersFunctions:
     """Testing class for :py:mod:`foundation` helpers functions."""
 
     # # _calculate_and_update_votes_and_permissions
-    def test_foundation_calculate_and_update_votes_and_permissions_functionality(self, mocker):
+    def test_foundation_calculate_and_update_votes_and_permissions_functionality(
+        self, mocker
+    ):
         address1, address2, address3, address4, address5 = (
             "address1",
             "address2",
@@ -460,7 +462,8 @@ class TestFoundationStakingFunctions:
         client = mocker.MagicMock()
         starting_position = 4
         mocked_staking = mocker.patch(
-            "foundation.current_staking", side_effect=[50000, 0, 100000]
+            "foundation.current_governance_staking_for_address",
+            side_effect=[50000, 0, 100000],
         )
         mocked_permission = mocker.patch(
             "foundation.permission_for_amount", side_effect=[2000, 3000]
@@ -508,7 +511,8 @@ class TestFoundationStakingFunctions:
             return_value=[address1, address3, address4, address5, address6, address7],
         )
         mocked_staking = mocker.patch(
-            "foundation.current_staking", side_effect=[100000, 0, 20000, 0]
+            "foundation.current_governance_staking_for_address",
+            side_effect=[100000, 0, 20000, 0],
         )
         mocked_permission = mocker.patch(
             "foundation.permission_for_amount", side_effect=[5000, 0]

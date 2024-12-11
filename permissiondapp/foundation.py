@@ -23,7 +23,7 @@ from helpers import (
     private_key_from_mnemonic,
     read_json,
 )
-from network import current_staking, write_foundation_boxes
+from network import current_governance_staking_for_address, write_foundation_boxes
 
 
 # # HELPERS
@@ -224,7 +224,7 @@ def _update_current_staking_for_foundation(client, data, starting_position):
     :type current_staking_amount: int
     """
     for address in data:
-        current_staking_amount = current_staking(client, address)
+        current_staking_amount = current_governance_staking_for_address(client, address)
         data[address][starting_position] = current_staking_amount
         data[address][starting_position + 1] = (
             permission_for_amount(current_staking_amount)
@@ -252,7 +252,7 @@ def _update_current_staking_for_non_foundation(client, data, starting_position):
     :type permission: int
     """
     non_foundation = {
-        address: current_staking(client, address)
+        address: current_governance_staking_for_address(client, address)
         for address in governance_staking_addresses()
         if address not in data
     }

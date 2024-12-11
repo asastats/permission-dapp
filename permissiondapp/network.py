@@ -1,4 +1,8 @@
+"""Module with functions for retrieving and saving blockchain data."""
+
 import base64
+from collections import defaultdict
+from datetime import datetime, UTC
 
 from algosdk import transaction
 from algosdk.account import address_from_private_key
@@ -6,18 +10,78 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     AccountTransactionSigner,
 )
+from algosdk.encoding import encode_address
 from algosdk.error import AlgodHTTPError
+from algosdk.v2client.algod import AlgodClient
 
-from config import STAKING_APP_ID, STAKING_KEY
+from config import STAKING_APP_ID, STAKING_KEY, SUBSCRIPTION_PERMISSIONS
 from helpers import (
     app_schemas,
     box_name_from_address,
     deserialize_values_data,
+    environment_variables,
     serialize_values,
     wait_for_confirmation,
 )
 
 
+# # SUBCRIPTIONS
+def fetch_subscriptions_from_boxes():
+    """Return collection of all subscribed addresses with related subscription values.
+
+    Box value contains the following uints:
+    (tier_asset_id, 2, subscription_start, subscription_end, subscription_duration)
+
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var subscriptions: Subtopia subscribers addresses and related tiers' values
+    :type subscriptions: dict
+    :var app_id: currently processed subscription tier app
+    :type app_id: int
+    :var amount: currently processed app's subscription amount
+    :type amount: int
+    :var permission: currently processed subscription app's permission
+    :type permission: int
+    :var boxes: collection of currently processed app's boxes fetched from Node
+    :type boxes: dict
+    :var box_name: currently processed box's name
+    :type box_name: bytes
+    :var address: currently processed box's user address
+    :type address: str
+    :var response: user's box response instance
+    :type response: dict
+    :var hexed: user box value's hexadecimal string representation
+    :type hexed: str
+    :var start: starting position of subscription's end value
+    :type start: int
+    :return: dict
+    """
+    env = environment_variables()
+    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    subscriptions = defaultdict(list)
+
+    for app_id, (amount, permission) in SUBSCRIPTION_PERMISSIONS.items():
+        boxes = client.application_boxes(app_id)
+        for box in boxes.get("boxes", []):
+            box_name = base64.b64decode(box.get("name"))
+            address = encode_address(box_name)
+            response = client.application_box_by_name(app_id, box_name)
+            hexed = base64.b64decode(response.get("value")).hex()
+            assert len(hexed) == 80, hexed
+            start = 48
+            subscription_end = int(hexed[start : start + 16], 16)
+            if (
+                subscription_end > datetime.now(UTC).timestamp()
+                or subscription_end == 0
+            ):
+                subscriptions[address].append((amount, permission))
+
+    return subscriptions
+
+
+# #  STAKING
 def _cometa_app_amount(key, state):
     """Return amount behind provided key for provided Cometa app.
 
@@ -63,6 +127,23 @@ def _cometa_app_local_state_for_address(client, address):
     )
 
 
+def current_governance_staking_for_address(client, address):
+    """Return staking amount for `address` from Cometa's staking program.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param address: governance seat address associated with the box
+    :type address: str
+    :var state: staking application's local state object
+    :type state: dict
+    :return: int
+    """
+    print(f"Checking current staking for {address[:5]}..{address[-5:]}")
+    state = _cometa_app_local_state_for_address(client, address)
+    return _cometa_app_amount(STAKING_KEY, state) if state else 0
+
+
+# # PERMISSION DAPP
 def create_app(client, private_key, approval_program, clear_program):
     """TODO: docstring and tests"""
     # define sender as creator
@@ -106,22 +187,6 @@ def create_app(client, private_key, approval_program, clear_program):
     print("Created new app-id: ", app_id)
 
     return app_id
-
-
-def current_staking(client, address):
-    """Return staking amount for `address` from Cometa's staking program.
-
-    :param client: Algorand Node client instance
-    :type client: :class:`AlgodClient`
-    :param address: governance seat address associated with the box
-    :type address: str
-    :var state: staking application's local state object
-    :type state: dict
-    :return: int
-    """
-    print(f"Checking current staking for {address[:5]}..{address[-5:]}")
-    state = _cometa_app_local_state_for_address(client, address)
-    return _cometa_app_amount(STAKING_KEY, state) if state else 0
 
 
 def delete_app(client, private_key, index):
@@ -197,8 +262,19 @@ def delete_box(client, sender, signer, app_id, contract, address):
     print("Result confirmed in round: {}".format(response.confirmed_round))
 
 
-def read_box(client, app_id, box_name):
-    """TODO: docstring and tests"""
+def deserialized_permission_dapp_box_value(client, app_id, box_name):
+    """Fetch `box_name`  value and return deserialized values from it.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param app_id: Permission dApp identifier
+    :type app_id: int
+    :param box_name: base64 encoded box name
+    :type box_name: str
+    :var response: fetch application box call's response
+    :type response: :class:`AtomicTransactionResponse`
+    :return: list
+    """
     try:
         response = client.application_box_by_name(app_id, box_name)
     except AlgodHTTPError as exception:
@@ -209,6 +285,46 @@ def read_box(client, app_id, box_name):
     return deserialize_values_data(
         base64.b64decode(response.get("value")).decode("utf8")
     )
+
+
+def permission_dapp_values_from_boxes():
+    """Return collection of all addresses with related votes and permission values.
+
+    :var env: environment variables collection
+    :type env: dict
+    :var permissions: collection of addresses and related votes and permission values
+    :type permissions: dict
+    :var app_id: currently processed subscription tier app
+    :type app_id: int
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var boxes: collection of Pewrmission dApp's boxes fetched from Node
+    :type boxes: dict
+    :var box_name: currently processed box's name
+    :type box_name: bytes
+    :var address: currently processed box's user address
+    :type address: str
+    :var values: collection of deserialized values for currently processed address
+    :type values: int
+    :return: dict
+    """
+    env = environment_variables()
+    if env.get("permission_app_id") is None:
+        raise ValueError("Permission dApp ID isn't set!")
+
+    permissions = {}
+    app_id = int(env.get("permission_app_id"))
+    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    boxes = client.application_boxes(app_id)
+    for box in boxes.get("boxes", []):
+        box_name = base64.b64decode(box.get("name"))
+        address = encode_address(box_name)
+        values = deserialized_permission_dapp_box_value(client, app_id, box_name)
+        if not values:
+            continue
+
+        permissions[address] = values
+    return permissions
 
 
 def write_box(client, sender, signer, app_id, contract, address, value):

@@ -13,7 +13,7 @@ from helpers import (
     private_key_from_mnemonic,
     serialize_values,
 )
-from network import delete_box, read_box, write_box
+from network import delete_box, deserialized_permission_dapp_box_value, write_box
 
 
 # # VALUES
@@ -50,10 +50,10 @@ class TestIntegrationForNonCreator:
         value = serialize_values(values)
         write_box(client, sender, signer, app_id, contract, address, value)
         box_name = box_name_from_address(address).encode()
-        returned = read_box(client, app_id, box_name)
+        returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned == values
         delete_box(client, sender, signer, app_id, contract, address)
-        returned = read_box(client, app_id, box_name)
+        returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned is None
 
     # # write_box
@@ -84,14 +84,14 @@ class TestIntegrationForNonCreator:
         contract = load_contract()
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         box_name = box_name_from_address(address).encode()
-        returned = read_box(client, app_id, box_name)
+        returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         if returned:
             delete_box(client, sender, signer, app_id, contract, address)
-        returned = read_box(client, app_id, box_name)
+        returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned is None
         values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         value = serialize_values(values)
         write_box(client, sender, signer, app_id, contract, address, value)
-        returned = read_box(client, app_id, box_name)
+        returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned == values
         delete_box(client, sender, signer, app_id, contract, address)        
