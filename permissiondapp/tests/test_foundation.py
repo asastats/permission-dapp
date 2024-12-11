@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from config import (
-    CURRENT_STAKING_STARTING_POSITION,
+    CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DOCS_STARTING_POSITION,
     STAKING_DOCS,
@@ -408,11 +408,11 @@ class TestFoundationFoundationFunctions:
         mocked_client.assert_called_with(mainnet_algod_token, mainnet_algod_address)
         mocked_staking_foundation.assert_called_once()
         mocked_staking_foundation.assert_called_with(
-            client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
+            client, data, starting_position=CURRENT_STAKING_POSITION
         )
         mocked_staking_non_foundation.assert_called_once()
         mocked_staking_non_foundation.assert_called_with(
-            client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
+            client, data, starting_position=CURRENT_STAKING_POSITION
         )
         mocked_calculate.assert_called_once()
         mocked_calculate.assert_called_with(data)
@@ -546,14 +546,22 @@ class TestFoundationUpdateFunctions:
     ):
         permission_app_id = 5050
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
+        mainnet_algod_token, mainnet_algod_address = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
         env = {
             "permission_app_id": str(permission_app_id),
             "algod_token": algod_token,
             "algod_address": algod_address,
+            "mainnet_algod_token": mainnet_algod_token,
+            "mainnet_algod_address": mainnet_algod_address,
         }
         mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
-        client = mocker.MagicMock()
-        mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
+        client, mainnet_client = mocker.MagicMock(), mocker.MagicMock()
+        mocked_client = mocker.patch(
+            "foundation.AlgodClient", side_effect=[client, mainnet_client]
+        )
         writing_parameters = mocker.MagicMock()
         mocked_parameters = mocker.patch(
             "foundation.box_writing_parameters", return_value=writing_parameters
@@ -586,8 +594,12 @@ class TestFoundationUpdateFunctions:
         check_and_update_permission_dapp_boxes()
         mocked_env.assert_called_once()
         mocked_env.assert_called_with()
-        mocked_client.assert_called_once()
-        mocked_client.assert_called_with(algod_token, algod_address)
+        calls = [
+            mocker.call(algod_token, algod_address),
+            mocker.call(mainnet_algod_token, mainnet_algod_address),
+        ]
+        mocked_client.assert_has_calls(calls, any_order=True)
+        assert mocked_client.call_count == 2
         mocked_parameters.assert_called_once()
         mocked_parameters.assert_called_with(env)
         mocked_subscriptions.assert_called_once()
@@ -595,9 +607,9 @@ class TestFoundationUpdateFunctions:
         mocked_governance.assert_called_once()
         mocked_governance.assert_called_with()
         calls = [
-            mocker.call(client, address1),
-            mocker.call(client, address2),
-            mocker.call(client, address3),
+            mocker.call(mainnet_client, address1),
+            mocker.call(mainnet_client, address2),
+            mocker.call(mainnet_client, address3),
         ]
         mocked_staking.assert_has_calls(calls, any_order=True)
         assert mocked_staking.call_count == 3

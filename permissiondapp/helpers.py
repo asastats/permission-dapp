@@ -17,12 +17,15 @@ from algosdk.v2client.indexer import IndexerClient
 from dotenv import load_dotenv
 
 from config import (
+    CURRENT_STAKING_POSITION,
+    DOCS_STARTING_POSITION,
     INDEXER_ADDRESS,
     INDEXER_TOKEN,
+    MANDATORY_VALUES_SIZE,
     STAKING_AMOUNT_VOTES,
     STAKING_APP_ID,
     STAKING_APP_MIN_ROUND,
-    MANDATORY_VALUES_SIZE,
+    SUBSCRIPTION_POSITION,
 )
 
 
@@ -279,14 +282,9 @@ def governance_staking_addresses():
         "limit": 1000,
         "min_round": STAKING_APP_MIN_ROUND,
     }
-    for counter, transaction in enumerate(
-        _application_transaction(params, indexer_client)
-    ):
+    for transaction in _application_transaction(params, indexer_client):
         addresses.add(transaction.get("sender"))
-        if divmod(counter, 1000)[1] == 0:
-            print(counter)
 
-    # print(addresses)
     return addresses
 
 
@@ -322,6 +320,33 @@ def box_writing_parameters(env):
     contract = load_contract()
 
     return {"sender": sender, "signer": signer, "contract": contract}
+
+
+def calculate_votes_and_permission(values):
+    """Calculate and update votes and permission values for all addresses in `data`.
+
+    :param data: collection of addresses and related permission and votes values
+    :type data: dict
+    :var address: currently processed governance seat address
+    :type address: str
+    :var values: collection of integer values
+    :type values: list
+    :var docs_permission: total permission from foundation and staking documents
+    :type docs_permission: tuple
+    :var votes: total votes from foundation and staking documents
+    :type votes: int
+    :var subscription_permission: permission value from address' subcription tier
+    :type subscription_permission: int
+    :var staking_permission: permission value from address' current governance staking
+    :type staking_permission: int
+    :return: two-tuple
+    """
+    docs_permission = sum(amount for amount in values[DOCS_STARTING_POSITION:][::2])
+    votes = int(docs_permission / 1_000_000)
+    subscription_permission = values[SUBSCRIPTION_POSITION + 1]
+    staking_permission = values[CURRENT_STAKING_POSITION + 1]
+
+    return votes, subscription_permission + staking_permission + docs_permission
 
 
 def environment_variables():

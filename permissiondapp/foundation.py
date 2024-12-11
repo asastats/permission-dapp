@@ -6,16 +6,16 @@ from pathlib import Path
 from algosdk.v2client.algod import AlgodClient
 
 from config import (
-    CURRENT_STAKING_STARTING_POSITION,
+    CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DAO_DISCUSSIONS_DOCS_STARTING_INDEX,
     DOCS_STARTING_POSITION,
     MERGED_ACCOUNTS,
     STAKING_DOCS,
     STAKING_DOCS_STARTING_INDEX,
-    SUBSCRIPTION_POSITION,
 )
 from helpers import (
+    calculate_votes_and_permission,
     box_writing_parameters,
     environment_variables,
     governance_staking_addresses,
@@ -35,7 +35,7 @@ from network import (
 
 # # HELPERS
 def _calculate_and_update_votes_and_permissions(data):
-    """Calculkate and update votes and permission values for all addresses in `data`.
+    """Calculate and update votes and permission values for all addresses in `data`.
 
     :param data: collection of addresses and related permission and votes values
     :type data: dict
@@ -43,26 +43,15 @@ def _calculate_and_update_votes_and_permissions(data):
     :type address: str
     :var values: collection of integer values
     :type values: list
-    :var docs_permission: total permission from foundation and staking documents
-    :type docs_permission: tuple
-    :var votes: total votes from foundation and staking documents
+    :var votes: total address' votes from foundation and staking documents
     :type votes: int
-    :var subscription_permission: permission value from address' subcription tier
-    :type subscription_permission: int
-    :var staking_permission: permission value from address' current governance staking
-    :type staking_permission: int
+    :var permission: total address' permission value
+    :type permission: int
     """
     for address, values in list(data.items()):
-        docs_permission = sum(amount for amount in values[DOCS_STARTING_POSITION:][::2])
-        votes = int(docs_permission / 1_000_000)
-
-        subscription_permission = values[SUBSCRIPTION_POSITION + 1]  # initally 0
-        staking_permission = values[CURRENT_STAKING_STARTING_POSITION + 1]
-
+        votes, permission = calculate_votes_and_permission(values)
         data[address][0] = votes
-        data[address][1] = (
-            subscription_permission + staking_permission + docs_permission
-        )
+        data[address][1] = permission
 
 
 def _initial_check():
@@ -181,10 +170,10 @@ def _prepare_data(env):
         env.get("mainnet_algod_token"), env.get("mainnet_algod_address")
     )
     _update_current_staking_for_foundation(
-        client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
+        client, data, starting_position=CURRENT_STAKING_POSITION
     )
     _update_current_staking_for_non_foundation(
-        client, data, starting_position=CURRENT_STAKING_STARTING_POSITION
+        client, data, starting_position=CURRENT_STAKING_POSITION
     )
 
     _calculate_and_update_votes_and_permissions(data)
@@ -276,6 +265,8 @@ def check_and_update_permission_dapp_boxes():
     :type env: dict
     :var client: Algorand Node client instance
     :type client: :class:`AlgodClient`
+    :var mainnet_client: Algorand Mainnet Node client instance
+    :type mainnet_client: :class:`AlgodClient`
     :var app_id: currently processed subscription tier app
     :type app_id: int
     :var writing_parameters: instances sneeded for writing boxes to blockchain
@@ -290,11 +281,14 @@ def check_and_update_permission_dapp_boxes():
     env = environment_variables()
     app_id = int(env.get("permission_app_id"))
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    mainnet_client = AlgodClient(
+        env.get("mainnet_algod_token"), env.get("mainnet_algod_address")
+    )
     writing_parameters = box_writing_parameters(env)
 
     subscriptions = fetch_subscriptions_from_boxes(client)
     stakings = {
-        address: current_governance_staking_for_address(client, address)
+        address: current_governance_staking_for_address(mainnet_client, address)
         for address in governance_staking_addresses()
     }
     permissions = permission_dapp_values_from_boxes(client, app_id)
@@ -312,3 +306,4 @@ def check_and_update_permission_dapp_boxes():
 
 if __name__ == "__main__":
     prepare_and_write_data()
+    # check_and_update_permission_dapp_boxes()

@@ -18,6 +18,7 @@ from helpers import (
     _values_offset_and_length_pairs,
     app_schemas,
     box_name_from_address,
+    calculate_votes_and_permission,
     compile_program,
     deserialize_values_data,
     environment_variables,
@@ -403,6 +404,12 @@ class TestHelpersHelpersFunctions:
     def test_helpers_box_name_from_address_functionality(self, address, box_name):
         returned = box_name_from_address(address)
         assert returned == box_name
+
+    # # calculate_votes_and_permission
+    def test_helpers_calculate_votes_and_permission_functionality(self):
+        values = [0, 0, 1300000, 1400000, 1500000, 1600000, 35000000, 6, 40000000, 202]
+        returned = calculate_votes_and_permission(values)
+        assert returned == (75, 78000000)
 
     # # environment_variables
     def test_helpers_environment_variables_functionality(self, mocker):

@@ -18,6 +18,9 @@ from config import (
 from network import (
     _cometa_app_amount,
     _cometa_app_local_state_for_address,
+    check_and_update_changed_subscriptions_and_staking,
+    check_and_update_new_stakers,
+    check_and_update_new_subscribers,
     current_governance_staking_for_address,
     fetch_subscriptions_from_boxes,
     delete_box,
@@ -314,6 +317,222 @@ class TestNetworkStakingFunctions:
         mocked_state.assert_called_with(client, address)
         mocked_amount.assert_called_once()
         mocked_amount.assert_called_with(STAKING_KEY, state)
+
+
+class TestNetworkUpdateFunctions:
+    """Testing class for :py:mod:`network` update functions."""
+
+    # # check_and_update_changed_subscriptions_and_staking
+    def test_network_check_and_update_changed_subscriptions_and_staking_for_no_changes(
+        self, mocker
+    ):
+        permissions = {
+            "address1": [1000, 500, 1000, 100, 5000, 200, 2000, 2],
+            "address2": [5000, 800, 2000, 200, 8000, 400, 3000, 2],
+        }
+        subscriptions = {"address1": [(1000, 100)], "address2": [(2000, 200)]}
+        stakings = {"address1": 5000, "address2": 8000}
+        mocked_write = mocker.patch("network.write_box")
+        check_and_update_changed_subscriptions_and_staking(
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            permissions,
+            subscriptions,
+            stakings,
+        )
+        mocked_write.assert_not_called()
+
+    def test_network_check_and_update_changed_subscriptions_and_staking_functionality(
+        self, mocker
+    ):
+        client, app_id, writing_parameters = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        address1, address2, address3, address4 = (
+            "address1",
+            "address2",
+            "address3",
+            "address4",
+        )
+        permissions = {
+            address1: [1000, 500, 0, 0, 5000, 200, 2000, 2],
+            address2: [5000, 800, 1000, 200, 8500, 400, 3000, 2],
+            address3: [0, 0, 0, 0, 0, 0],
+            address4: [100, 200, 7000, 700, 3000, 600],
+            "address5": [0, 500, 0, 0, 0, 0, 1000, 1],
+        }
+        amount1, permission1, amount2, permission2, amount3, permission3 = (
+            1000,
+            100,
+            2000,
+            200,
+            8000,
+            800,
+        )
+        amount4, amount5 = 4000, 3000
+        subscriptions = {
+            address2: [(amount1, permission1)],
+            address4: [(amount2, permission2), (amount3, permission3)],
+        }
+        stakings = {address1: amount4, address4: amount5}
+        permission4 = 100
+        mocked_permission = mocker.patch(
+            "network.permission_for_amount", return_value=permission4
+        )
+        mocked_write = mocker.patch("network.write_box")
+        check_and_update_changed_subscriptions_and_staking(
+            client, app_id, writing_parameters, permissions, subscriptions, stakings
+        )
+        mocked_permission.assert_called_once()
+        mocked_permission.assert_called_with(amount4)
+        calls = [
+            mocker.call(
+                client,
+                app_id,
+                writing_parameters,
+                address1,
+                "AAAAAAAAAAAAAAAAAAAINAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPoAAAAAAAAABkAAAAAAAAB9AC",
+            ),
+            mocker.call(
+                client,
+                app_id,
+                writing_parameters,
+                address4,
+                "AAAAAAAAAAAAAAAAAAAGQAAAAAAAACcQAAAAAAAAA+gAAAAAAAALuAAAAAAAAAJY",
+            ),
+        ]
+        mocked_write.assert_has_calls(calls, any_order=True)
+        assert mocked_write.call_count == 2
+
+    # # check_and_update_new_stakers
+    def test_network_check_and_update_new_stakers_for_no_new_stakers(self, mocker):
+        permissions = {"address1": mocker.MagicMock(), "address2": mocker.MagicMock()}
+        stakings = {
+            "address1": [(mocker.MagicMock(), mocker.MagicMock())],
+            "address2": [(mocker.MagicMock(), mocker.MagicMock())],
+        }
+        mocked_write = mocker.patch("network.write_box")
+        check_and_update_new_stakers(
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            permissions,
+            stakings,
+        )
+        mocked_write.assert_not_called()
+
+    def test_network_check_and_update_new_stakers_functionality(self, mocker):
+        client, app_id, writing_parameters = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        address1, address2, address3 = "address1", "address2", "address3"
+        permissions = {"address4": mocker.MagicMock()}
+        amount1, amount2, amount3 = 1000, 2000, 5000
+        permission1, permission2, permission3 = 100, 0, 300
+        stakings = {
+            address1: amount1,
+            address2: amount2,
+            address3: amount3,
+            "address4": mocker.MagicMock(),
+        }
+        mocked_permission = mocker.patch(
+            "network.permission_for_amount",
+            side_effect=[permission1, permission2, permission3],
+        )
+        mocked_write = mocker.patch("network.write_box")
+        check_and_update_new_stakers(
+            client, app_id, writing_parameters, permissions, stakings
+        )
+        calls = [mocker.call(amount1), mocker.call(amount2), mocker.call(amount3)]
+        mocked_permission.assert_has_calls(calls, any_order=True)
+        assert mocked_permission.call_count == 3
+        calls = [
+            mocker.call(
+                client,
+                app_id,
+                writing_parameters,
+                address1,
+                "AAAAAAAAAAAAAAAAAAAAZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD6AAAAAAAAABk",
+            ),
+            mocker.call(
+                client,
+                app_id,
+                writing_parameters,
+                address3,
+                "AAAAAAAAAAAAAAAAAAABLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATiAAAAAAAAAEs",
+            ),
+        ]
+        mocked_write.assert_has_calls(calls, any_order=True)
+        assert mocked_write.call_count == 2
+
+    # # check_and_update_new_subscribers
+    def test_network_check_and_update_new_subscribers_for_no_new_subscibers(
+        self, mocker
+    ):
+        permissions = {"address1": mocker.MagicMock(), "address2": mocker.MagicMock()}
+        subscriptions = {
+            "address1": [(mocker.MagicMock(), mocker.MagicMock())],
+            "address2": [(mocker.MagicMock(), mocker.MagicMock())],
+        }
+        mocked_write = mocker.patch("network.write_box")
+        check_and_update_new_subscribers(
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            permissions,
+            subscriptions,
+        )
+        mocked_write.assert_not_called()
+
+    def test_network_check_and_update_new_subscribers_functionality(self, mocker):
+        client, app_id, writing_parameters = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        address2, address3 = "address2", "address3"
+        permissions = {"address1": mocker.MagicMock(), "address4": mocker.MagicMock()}
+        amount1, permission1, amount2, permission2, amount3, permission3 = (
+            1000,
+            100,
+            2000,
+            200,
+            5000,
+            500,
+        )
+        subscriptions = {
+            "address1": [(mocker.MagicMock(), mocker.MagicMock())],
+            address2: [(amount1, permission1)],
+            address3: [(amount2, permission2), (amount3, permission3)],
+            "address4": [(mocker.MagicMock(), mocker.MagicMock())],
+        }
+        mocked_write = mocker.patch("network.write_box")
+        check_and_update_new_subscribers(
+            client, app_id, writing_parameters, permissions, subscriptions
+        )
+        calls = [
+            mocker.call(
+                client,
+                app_id,
+                writing_parameters,
+                address2,
+                "AAAAAAAAAAAAAAAAAAAAZAAAAAAAAAPoAAAAAAAAAGQAAAAAAAAAAAAAAAAAAAAA",
+            ),
+            mocker.call(
+                client,
+                app_id,
+                writing_parameters,
+                address3,
+                "AAAAAAAAAAAAAAAAAAACvAAAAAAAABtYAAAAAAAAArwAAAAAAAAAAAAAAAAAAAAA",
+            ),
+        ]
+        mocked_write.assert_has_calls(calls, any_order=True)
+        assert mocked_write.call_count == 2
 
 
 class TestNetworkPermissionDappFunctions:

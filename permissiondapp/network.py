@@ -10,11 +10,20 @@ from algosdk.atomic_transaction_composer import AtomicTransactionComposer
 from algosdk.encoding import encode_address
 from algosdk.error import AlgodHTTPError
 
-from config import STAKING_APP_ID, STAKING_KEY, SUBSCRIPTION_PERMISSIONS
+from config import (
+    CURRENT_STAKING_POSITION,
+    DOCS_STARTING_POSITION,
+    STAKING_APP_ID,
+    STAKING_KEY,
+    SUBSCRIPTION_PERMISSIONS,
+    SUBSCRIPTION_POSITION,
+)
 from helpers import (
     app_schemas,
     box_name_from_address,
+    calculate_votes_and_permission,
     deserialize_values_data,
+    permission_for_amount,
     serialize_values,
     wait_for_confirmation,
 )
@@ -128,19 +137,74 @@ def current_governance_staking_for_address(client, address):
     :type state: dict
     :return: int
     """
-    print(f"Checking current staking for {address[:5]}..{address[-5:]}")
     state = _cometa_app_local_state_for_address(client, address)
     return _cometa_app_amount(STAKING_KEY, state) if state else 0
 
 
 # # UPDATE
+def check_and_update_changed_subscriptions_and_staking(
+    client, app_id, writing_parameters, permissions, subscriptions, stakings
+):
+    """Check and update boxes for address with changed subscriptions and staking.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param app_id: currently processed subscription tier app
+    :type app_id: int
+    :param writing_parameters: instances sneeded for writing boxes to blockchain
+    :type writing_parameters: dict
+    :param permissions: collection of addresses and related votes and permission values
+    :type permissions: dict
+    :param subscriptions: Subtopia subscribers addresses and related tiers' values
+    :type subscriptions: dict
+    :param stakings: collection  of all governance staking addresses and related amounts
+    :type stakings: dict
+    :var address: currently processed address
+    :type address: str
+    :var values: currently processed address' values collection
+    :type values: list
+    :var update: value indicating if update is needed or not
+    :type update: Boolean
+    :var staking_amount: current staking amount for currently processed address
+    :type staking_amount: int
+    :var subscription_values: collection of amount and permission pairs
+    :type subscription_values: list
+    :var subscribed_amuunt: current subscribed amount for currently processed address
+    :type subscribed_amuunt: int
+    """
+    for address, values in permissions.items():
+        update = False
+        staking_amount = stakings.get(address)
+        if staking_amount is not None:
+            if staking_amount != values[CURRENT_STAKING_POSITION]:
+                values[CURRENT_STAKING_POSITION] = staking_amount
+                values[CURRENT_STAKING_POSITION + 1] = permission_for_amount(
+                    staking_amount
+                )
+                update = True
+
+        subscription_values = subscriptions.get(address)
+        if subscription_values is not None:
+            subscribed_amuunt = sum(amount for amount, _ in subscription_values)
+            if subscribed_amuunt != values[SUBSCRIPTION_POSITION]:
+                values[SUBSCRIPTION_POSITION] = subscribed_amuunt
+                values[SUBSCRIPTION_POSITION + 1] = sum(
+                    permission for _, permission in subscription_values
+                )
+                update = True
+
+        if update:
+            values[0], values[1] = calculate_votes_and_permission(values)
+            write_box(
+                client, app_id, writing_parameters, address, serialize_values(values)
+            )
+
+
 def check_and_update_new_stakers(
     client, app_id, writing_parameters, permissions, stakings
 ):
     """Check and update boxes for completely new staking addresses.
 
-    TODO: implement and tests
-
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
     :param app_id: currently processed subscription tier app
@@ -151,22 +215,35 @@ def check_and_update_new_stakers(
     :type permissions: dict
     :param stakings: collection  of all governance staking addresses and related amounts
     :type stakings: dict
+    :var new_stakers: collection of new staking addresses with related values
+    :type new_stakers: dict
+    :var address: currently processed staking address
+    :type address: str
+    :var amount: staking amount
+    :type amount: int
+    :var values: collection of votes and permissions
+    :type values: list
     """
     new_stakers = {
         address: amount
         for address, amount in stakings.items()
-        if address not in permissions
+        if amount and address not in permissions
     }
-    if new_stakers:
-        pass
+    for address, amount in new_stakers.items():
+        values = [0] * DOCS_STARTING_POSITION
+        values[CURRENT_STAKING_POSITION] = amount
+        values[CURRENT_STAKING_POSITION + 1] = permission_for_amount(amount)
+        values[0], values[1] = calculate_votes_and_permission(values)
+        if values[1]:
+            write_box(
+                client, app_id, writing_parameters, address, serialize_values(values)
+            )
 
 
 def check_and_update_new_subscribers(
     client, app_id, writing_parameters, permissions, subscriptions
 ):
-    """Check and update boxes for completely new staking addresses.
-
-    TODO: implement and tests
+    """Check and update boxes for completely new subscriber addresses.
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
@@ -178,36 +255,28 @@ def check_and_update_new_subscribers(
     :type permissions: dict
     :param subscriptions: Subtopia subscribers addresses and related tiers' values
     :type subscriptions: dict
+    :var new_subscribers: collection of new subscribers with related values
+    :type new_subscribers: dict
+    :var address: currently processed staking address
+    :type address: str
+    :var subscription_values: collection of amount and permission pairs
+    :type subscription_values: list
+    :var values: collection of votes and permissions
+    :type values: list
     """
     new_subscribers = {
-        address: (amount, permission)
-        for address, (amount, permission) in subscriptions.items()
+        address: subscription_values
+        for address, subscription_values in subscriptions.items()
         if address not in permissions
     }
-    if new_subscribers:
-        pass
-
-
-def check_and_update_changed_subscriptions_and_staking(
-    client, app_id, writing_parameters, permissions, subscriptions, stakings
-):
-    """Check and update boxes for completely new staking addresses.
-
-    TODO: implement and tests
-
-    :param client: Algorand Node client instance
-    :type client: :class:`AlgodClient`
-    :param app_id: currently processed subscription tier app
-    :type app_id: int
-    :param writing_parameters: instances sneeded for writing boxes to blockchain
-    :type writing_parameters: dict
-    :param permissions: collection of addresses and related votes and permission values
-    :type permissions: dict
-    :param subscriptions: Subtopia subscribers addresses and related tiers' values
-    :type subscriptions: dict
-    :param stakings: collection  of all governance staking addresses and related amounts
-    :type stakings: dict
-    """
+    for address, subscription_values in new_subscribers.items():
+        values = [0] * DOCS_STARTING_POSITION
+        values[SUBSCRIPTION_POSITION] = sum(amount for amount, _ in subscription_values)
+        values[SUBSCRIPTION_POSITION + 1] = sum(
+            permission for _, permission in subscription_values
+        )
+        values[0], values[1] = calculate_votes_and_permission(values)
+        write_box(client, app_id, writing_parameters, address, serialize_values(values))
 
 
 # # PERMISSION DAPP
@@ -419,9 +488,8 @@ def write_box(client, app_id, writing_parameters, address, value):
         boxes=[(app_id, box_name.encode())],
     )
 
+    print(f"Writing box for {address[:5]}..{address[-5:]}")
     response = atc.execute(client, 2)
-
-    # wait for confirmation
     print("TXID: ", response.tx_ids[0])
     print("Result confirmed in round: {}".format(response.confirmed_round))
 
@@ -446,5 +514,4 @@ def write_foundation_boxes(client, app_id, writing_parameters, data):
     """
     for address, values in data.items():
         value = serialize_values(values)
-        print(f"Writting box for {address[:5]}..{address[-5:]}")
         write_box(client, app_id, writing_parameters, address, value)

@@ -6,7 +6,7 @@ from algosdk.encoding import decode_address, encode_address
 from algosdk.v2client.algod import AlgodClient
 from algosdk.atomic_transaction_composer import AccountTransactionSigner
 
-from helpers import environment_variables, load_contract, private_key_from_mnemonic
+from helpers import box_writing_parameters, environment_variables, load_contract, private_key_from_mnemonic
 from network import delete_box, permission_dapp_values_from_boxes
 
 
@@ -20,20 +20,14 @@ def delete_boxes():
 
     app_id = int(env.get("permission_app_id"))
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-
-    creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
-
-    sender = account.address_from_private_key(creator_private_key)
-    signer = AccountTransactionSigner(creator_private_key)
-
-    contract = load_contract()
+    writing_parameters = box_writing_parameters(env)
 
     boxes = client.application_boxes(app_id)
     for box in boxes.get("boxes", []):
         box_name = base64.b64decode(box.get("name"))
         address = encode_address(base64.b64decode(box_name))
         print(f"Deleting box for {address[:5]}..{address[-5:]}")
-        delete_box(client, sender, signer, app_id, contract, address)
+        delete_box(client, app_id, writing_parameters, address)
 
 
 def print_box_values():
