@@ -21,7 +21,7 @@ class TestIntegrationForNonCreator:
     """Testing class for Permission dApp integration tests."""
 
     # # delete_box
-    def test_helpers_delete_box_raises_error_for_non_creator_caller(self):
+    def test_integration_delete_box_raises_error_for_non_creator_caller(self):
         env = environment_variables()
         client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
         user_private_key = private_key_from_mnemonic(env.get("user_mnemonic"))
@@ -34,7 +34,7 @@ class TestIntegrationForNonCreator:
             delete_box(client, sender, signer, app_id, contract, address)
         assert "logic eval error" in str(exception.value)
 
-    def test_helpers_delete_box_for_creator_caller(self):
+    def test_integration_delete_box_for_creator_caller(self):
         env = environment_variables()
         if "testnet" not in env.get("algod_address"):
             return
@@ -57,7 +57,7 @@ class TestIntegrationForNonCreator:
         assert returned is None
 
     # # write_box
-    def test_helpers_write_box_raises_error_for_non_creator_caller(self):
+    def test_integration_write_box_raises_error_for_non_creator_caller(self):
         env = environment_variables()
         client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
         user_private_key = private_key_from_mnemonic(env.get("user_mnemonic"))
@@ -71,7 +71,7 @@ class TestIntegrationForNonCreator:
             write_box(client, sender, signer, app_id, contract, address, value)
         assert "logic eval error" in str(exception.value)
 
-    def test_helpers_write_box_for_creator_caller(self):
+    def test_integration_write_box_for_creator_caller(self):
         env = environment_variables()
         if "testnet" not in env.get("algod_address"):
             return

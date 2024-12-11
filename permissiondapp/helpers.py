@@ -156,6 +156,16 @@ def serialize_values(values):
 
 
 # # BOXES
+def box_name_from_address(address):
+    """Return string representation of base64 encoded public Algorand `address`.
+
+    :param address: governance seat address
+    :type address: str
+    :return: str
+    """
+    return base64.b64encode(decode_address(address)).decode("utf-8")
+
+
 def permission_dapp_values_from_boxes(verbose=True):
     """TODO: docstring and tests"""
     env = environment_variables()
@@ -315,16 +325,6 @@ def governance_staking_addresses():
 
 
 # # HELPERS
-def box_name_from_address(address):
-    """Return string representation of base64 encoded public Algorand `address`.
-
-    :param address: governance seat address
-    :type address: str
-    :return: str
-    """
-    return base64.b64encode(decode_address(address)).decode("utf-8")
-
-
 def environment_variables():
     """Return collection of required environment variables.
 

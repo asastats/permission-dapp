@@ -14,8 +14,6 @@ from helpers import environment_variables
 def fetch_subscriptions_from_boxes():
     """Return collection of all subscribed addresses with related subscription values.
 
-    TODO: tests
-
     Box value contains the following uints:
     (tier_asset_id, 2, subscription_start, subscription_end, subscription_duration)
     

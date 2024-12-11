@@ -30,7 +30,7 @@ class TestFoundationHelpersFunctions:
     """Testing class for :py:mod:`foundation` helpers functions."""
 
     # # _calculate_and_update_votes_and_permissions
-    def test_calculate_and_update_votes_and_permissions_functionality(self, mocker):
+    def test_foundation_calculate_and_update_votes_and_permissions_functionality(self, mocker):
         address1, address2, address3, address4, address5 = (
             "address1",
             "address2",
