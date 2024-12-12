@@ -10,7 +10,7 @@
         },
         {
           "type": "string",
-          "name": "new_name"
+          "name": "value"
         }
       ],
       "returns": {

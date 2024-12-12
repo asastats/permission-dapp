@@ -1,12 +1,10 @@
 import base64
 import sys
 
-from algosdk import account
-from algosdk.encoding import decode_address, encode_address
+from algosdk.encoding import encode_address
 from algosdk.v2client.algod import AlgodClient
-from algosdk.atomic_transaction_composer import AccountTransactionSigner
 
-from helpers import box_writing_parameters, environment_variables, load_contract, private_key_from_mnemonic
+from helpers import box_writing_parameters, environment_variables
 from network import delete_box, permission_dapp_values_from_boxes
 
 
@@ -41,8 +39,37 @@ def print_box_values():
     print(sorted(permissions.items(), key=lambda e: e[1][1], reverse=True))
 
 
-def to_bytes(address):
-    print(base64.b64encode(decode_address(address)).decode("utf-8"))
+def check_test_box(app_id_str):
+    app_id = int(app_id_str)
+    env = environment_variables()
+    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+
+    boxes = client.application_boxes(app_id)
+    for box in boxes.get("boxes", []):
+        box_name = base64.b64decode(box.get("name"))
+        address = encode_address(box_name)
+        response = client.application_box_by_name(app_id, box_name)
+        hexed = base64.b64decode(response.get("value")).hex()
+        assert len(hexed) == 80, hexed
+        print(address)
+        for start in range(0, 80, 16):
+            value = int(hexed[start : start + 16], 16)
+            print(start, value)
+        print()
+
+        # KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ
+        # 0 730727847
+        # 16 2
+        # 32 1734003205
+        # 48 1734089605
+        # 64 86400
+
+        # OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I
+        # 0 730727773
+        # 16 2
+        # 32 1734003053
+        # 48 1734089453
+        # 64 86400
 
 
 if __name__ == "__main__":
