@@ -25,7 +25,7 @@ class TestIntegrationForNonCreator:
     def test_integration_delete_box_raises_error_for_non_creator_caller(self):
         env = environment_variables()
         client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-        app_id = int(env.get("permission_app_id"))
+        app_id = int(env.get("permission_app_id_testnet"))
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         writing_parameters = box_writing_parameters(env)
         with pytest.raises(AlgodHTTPError) as exception:
@@ -38,7 +38,7 @@ class TestIntegrationForNonCreator:
             return
 
         client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-        app_id = int(env.get("permission_app_id"))
+        app_id = int(env.get("permission_app_id_testnet"))
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         value = serialize_values(values)
@@ -55,7 +55,7 @@ class TestIntegrationForNonCreator:
     def test_integration_write_box_raises_error_for_non_creator_caller(self):
         env = environment_variables()
         client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-        app_id = int(env.get("permission_app_id"))
+        app_id = int(env.get("permission_app_id_testnet"))
         user_private_key = private_key_from_mnemonic(env.get("user_mnemonic"))
         sender = address_from_private_key(user_private_key)
         signer = AccountTransactionSigner(user_private_key)
@@ -73,7 +73,7 @@ class TestIntegrationForNonCreator:
             return
 
         client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-        app_id = int(env.get("permission_app_id"))
+        app_id = int(env.get("permission_app_id_testnet"))
         writing_parameters = box_writing_parameters(env)
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         box_name = box_name_from_address(address)
