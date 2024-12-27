@@ -15,6 +15,7 @@ from config import (
     DOCS_STARTING_POSITION,
     STAKING_APP_ID,
     STAKING_KEY,
+    SUBSCRIPTION_PERIOD_EXTENSION,
     SUBSCRIPTION_PERMISSIONS,
     SUBSCRIPTION_POSITION,
 )
@@ -72,7 +73,8 @@ def fetch_subscriptions_from_boxes(client):
             start = 48
             subscription_end = int(hexed[start : start + 16], 16)
             if (
-                subscription_end > datetime.now(UTC).timestamp()
+                subscription_end
+                > datetime.now(UTC).timestamp() + SUBSCRIPTION_PERIOD_EXTENSION
                 or subscription_end == 0
             ):
                 subscriptions[address].append((amount, permission))
@@ -147,8 +149,8 @@ def check_and_update_changed_subscriptions_and_staking(
 ):
     """Check and update boxes for address with changed subscriptions and staking.
 
-    FIXME: remove subscription/staking entries if they exist in permissions
-           and subscriptions/stakings don't have them
+    FIXME: remove subscription entries if they exist in permissions
+           and subscriptions don't have them
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`

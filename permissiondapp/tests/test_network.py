@@ -121,12 +121,23 @@ class TestNetworkSubscriptionsFunctions:
             "VKENBO5W2DZAZFQR45SOQO6IMWS5UMVZCHLPEACNOII7BDJTGBZKSEL4Y4",
         )
         with mock.patch("network.datetime") as mocked_datetime:
-            mocked_datetime.now.return_value.timestamp.return_value = 1736000000
+            mocked_datetime.now.return_value.timestamp.side_effect = [
+                1736000000,
+                1736000000,
+                1776000000,
+                1736000000,
+                1736000000,
+                1736000000,
+                1736000000,
+                1736000000,
+                1736000000,
+                1756000000,
+                1536000000,
+            ]
             returned = fetch_subscriptions_from_boxes(client)
         assert returned == {
             address1: [(500000000000, 3236067977500), (0, 0)],
             address2: [(2500000000, 2329968943), (18000000000, 23299689438)],
-            address3: [(2500000000, 2329968943)],
             address4: [(18000000000, 23299689438), (0, 0)],
             address5: [(38000000000, 258885438200)],
             address6: [(500000000000, 3236067977500), (0, 0)],
@@ -637,21 +648,11 @@ class TestNetworkPermissionDappFunctions:
         app_id = 5050
         boxes = {
             "boxes": [
-                {
-                    "name": "kh+jKvvPrg8LnAjH5OrWstXqJLucdZLRBUJCtsuFyBQ="
-                },
-                {
-                    "name": "wKicAOgLIKzPmAA0twVXMMBVwaVLVuoXHl9+Jf3wWAE="
-                },
-                {
-                    "name": "hBV+y5sLUru3xZ5GdkhVkl+dL5901V/Jxvh+YzNG3JE="
-                },
-                {
-                    "name": "DdECAhXvBtesYfyhYV8kFX/c5WBt/83UxUPS4O4/Avk="
-                },
-                {
-                    "name": "tdFRqNIIwrC1T95wS6adscJH4Wp0AWuHBTJ9UdcwBuw="
-                },
+                {"name": "kh+jKvvPrg8LnAjH5OrWstXqJLucdZLRBUJCtsuFyBQ="},
+                {"name": "wKicAOgLIKzPmAA0twVXMMBVwaVLVuoXHl9+Jf3wWAE="},
+                {"name": "hBV+y5sLUru3xZ5GdkhVkl+dL5901V/Jxvh+YzNG3JE="},
+                {"name": "DdECAhXvBtesYfyhYV8kFX/c5WBt/83UxUPS4O4/Avk="},
+                {"name": "tdFRqNIIwrC1T95wS6adscJH4Wp0AWuHBTJ9UdcwBuw="},
             ]
         }
         client.application_boxes.return_value = boxes

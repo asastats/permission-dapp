@@ -293,7 +293,7 @@ def box_name_from_address(address):
     """Return string representation of base64 encoded public Algorand `address`.
 
     :param address: governance seat address
-    :type address: str
+    :type address: bytes
     :return: str
     """
     return decode_address(address)
