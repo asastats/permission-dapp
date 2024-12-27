@@ -44,7 +44,7 @@ class TestIntegrationForNonCreator:
         value = serialize_values(values)
         writing_parameters = box_writing_parameters(env)
         write_box(client, app_id, writing_parameters, address, value)
-        box_name = box_name_from_address(address).encode()
+        box_name = box_name_from_address(address)
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned == values
         delete_box(client, app_id, writing_parameters, address)
@@ -76,7 +76,7 @@ class TestIntegrationForNonCreator:
         app_id = int(env.get("permission_app_id"))
         writing_parameters = box_writing_parameters(env)
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
-        box_name = box_name_from_address(address).encode()
+        box_name = box_name_from_address(address)
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         if returned:
             delete_box(client, app_id, writing_parameters, address)

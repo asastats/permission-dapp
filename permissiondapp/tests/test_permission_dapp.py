@@ -45,7 +45,10 @@ class TestPermissionDappFunctions:
 
     def test_permission_dapp_writebox_arguments(self):
         assert len(writeBox.subroutine.abi_args) == 2
-        assert isinstance(writeBox.subroutine.abi_args["box_name"], abi.StringTypeSpec)
+        assert isinstance(
+            writeBox.subroutine.abi_args["box_name"], abi.StaticBytesTypeSpec
+        )
+        assert writeBox.subroutine.abi_args["box_name"].array_length == 32
         assert isinstance(writeBox.subroutine.abi_args["value"], abi.StringTypeSpec)
 
     # # deleteBox
@@ -54,4 +57,7 @@ class TestPermissionDappFunctions:
 
     def test_permission_dapp_deletebox_arguments(self):
         assert len(deleteBox.subroutine.abi_args) == 1
-        assert isinstance(deleteBox.subroutine.abi_args["box_name"], abi.StringTypeSpec)
+        assert isinstance(
+            deleteBox.subroutine.abi_args["box_name"], abi.StaticBytesTypeSpec
+        )
+        assert deleteBox.subroutine.abi_args["box_name"].array_length == 32

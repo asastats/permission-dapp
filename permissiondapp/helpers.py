@@ -296,7 +296,7 @@ def box_name_from_address(address):
     :type address: str
     :return: str
     """
-    return base64.b64encode(decode_address(address)).decode("utf-8")
+    return decode_address(address)
 
 
 def box_writing_parameters(env):

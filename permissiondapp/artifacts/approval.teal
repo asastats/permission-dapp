@@ -4,11 +4,11 @@ int 0
 ==
 bnz main_l6
 txna ApplicationArgs 0
-method "writeBox(string,string)void"
+method "writeBox(byte[32],string)void"
 ==
 bnz main_l5
 txna ApplicationArgs 0
-method "deleteBox(string)void"
+method "deleteBox(byte[32])void"
 ==
 bnz main_l4
 err
@@ -88,7 +88,6 @@ writeBox_1:
 proto 2 0
 callsub assertsenderiscreator_0
 frame_dig -2
-extract 2 0
 frame_dig -1
 extract 2 0
 box_put
@@ -99,7 +98,6 @@ deleteBox_2:
 proto 1 0
 callsub assertsenderiscreator_0
 frame_dig -1
-extract 2 0
 box_del
 assert
 retsub

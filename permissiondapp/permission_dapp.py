@@ -1,5 +1,7 @@
 """Permisssion dApp smart contract module."""
 
+from typing import Literal
+
 from pyteal import (
     App,
     Approve,
@@ -64,7 +66,7 @@ router = Router(
 
 
 @router.method
-def writeBox(box_name: abi.String, value: abi.String):
+def writeBox(box_name: abi.StaticBytes[Literal[32]], value: abi.String):
     return Seq(
         assert_sender_is_creator(),
         App.box_put(box_name.get(), value.get()),
@@ -90,7 +92,7 @@ def writeBox(box_name: abi.String, value: abi.String):
 
 ## DELETE
 @router.method
-def deleteBox(box_name: abi.String):
+def deleteBox(box_name: abi.StaticBytes[Literal[32]]):
     return Seq(
         assert_sender_is_creator(),
         Assert(App.box_delete(box_name.get())),

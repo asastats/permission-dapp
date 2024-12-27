@@ -542,7 +542,10 @@ class TestNetworkPermissionDappFunctions:
     def test_network_delete_box_functionality(self, mocker):
         client, app_id = mocker.MagicMock(), mocker.MagicMock()
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
-        box_name = "0Sps8CZ0l7T7lMDJoNDTbMOc5WjvK0hBucrwIbhrxvc="
+        box_name = (
+            b"\xd1*l\xf0&t\x97\xb4\xfb\x94\xc0\xc9\xa0\xd0"
+            b"\xd3l\xc3\x9c\xe5h\xef+HA\xb9\xca\xf0!\xb8k\xc6\xf7"
+        )
         atc = mocker.MagicMock()
         mocked_composer = mocker.patch(
             "network.AtomicTransactionComposer", return_value=atc
@@ -570,7 +573,7 @@ class TestNetworkPermissionDappFunctions:
             sp=client.suggested_params.return_value,
             signer=signer,
             method_args=[box_name],
-            boxes=[(app_id, box_name.encode())],
+            boxes=[(app_id, box_name)],
         )
         atc.execute.assert_called_once()
         atc.execute.assert_called_with(client, 2)
@@ -635,19 +638,19 @@ class TestNetworkPermissionDappFunctions:
         boxes = {
             "boxes": [
                 {
-                    "name": "SGkvcklnR0VhT1RWM1JJNEpzMzZjQmxIekliNkUwOEUrbWtadUhMMVAyST0="
+                    "name": "kh+jKvvPrg8LnAjH5OrWstXqJLucdZLRBUJCtsuFyBQ="
                 },
                 {
-                    "name": "NnZRcUZkSDY4VlJYNm5HcDVlNTNac1dhbDIvVDRqVytZREJGb0J4eWF5TT0="
+                    "name": "wKicAOgLIKzPmAA0twVXMMBVwaVLVuoXHl9+Jf3wWAE="
                 },
                 {
-                    "name": "bjdWdWpYNEhjNWs4QTAvSXk1MjQxNS90M0ZYY0Z3ODJDcElQdWw1bWpYQT0="
+                    "name": "hBV+y5sLUru3xZ5GdkhVkl+dL5901V/Jxvh+YzNG3JE="
                 },
                 {
-                    "name": "eGpIelhFUWVNL3ZlTzF0bnN5ZndrMTV5aDhzUExXT0tFbVh5YmxrNWJ1Yz0="
+                    "name": "DdECAhXvBtesYfyhYV8kFX/c5WBt/83UxUPS4O4/Avk="
                 },
                 {
-                    "name": "bnpnem5WRkllT01lVFhrRTM3aEw1eUNsdHFlQ0tVRE1yVjl4SW50VUxQMD0="
+                    "name": "tdFRqNIIwrC1T95wS6adscJH4Wp0AWuHBTJ9UdcwBuw="
                 },
             ]
         }
@@ -663,10 +666,10 @@ class TestNetworkPermissionDappFunctions:
             side_effect=[values1, values2, None, values3, values4],
         )
         address1, address2, address3, address4 = (
-            "DYX6WIQBQRUOJVO5CI4CNTP2OAMUPTEG7IJU6BH2NEM3Q4XVH5RPVE3KDU",
-            "5L2CUFOR7LYVIV7KOGU6L3TXM3CZVF3P2PRDLPTAGBC2AHDSNMRZX6GKOI",
-            "YYY7GXCEDYZ7XXR3LNT3GJ7QSNPHFB6LB4WWHCQSMXZG4WJZN3T6RC7SUU",
-            "T44DHHKRJB4OGHSNPECN7OCL44QKLNVHQIUUBTFNL5YSE62UFT6RMR5GGU",
+            "SIP2GKX3Z6XA6C44BDD6J2WWWLK6UJF3TR2ZFUIFIJBLNS4FZAKKTADUQU",
+            "YCUJYAHIBMQKZT4YAA2LOBKXGDAFLQNFJNLOUFY6L57CL7PQLAAYCLLV2A",
+            "BXIQEAQV54DNPLDB7SQWCXZECV75ZZLANX743VGFIPJOB3R7AL4TA7WYNY",
+            "WXIVDKGSBDBLBNKP3ZYEXJU5WHBEPYLKOQAWXBYFGJ6VDVZQA3WCLSE4WA",
         )
         returned = permission_dapp_values_from_boxes(client, app_id)
         assert returned == {
@@ -693,7 +696,10 @@ class TestNetworkPermissionDappFunctions:
             mocker.MagicMock(),
         )
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
-        box_name = "0Sps8CZ0l7T7lMDJoNDTbMOc5WjvK0hBucrwIbhrxvc="
+        box_name = (
+            b"\xd1*l\xf0&t\x97\xb4\xfb\x94\xc0\xc9\xa0\xd0"
+            b"\xd3l\xc3\x9c\xe5h\xef+HA\xb9\xca\xf0!\xb8k\xc6\xf7"
+        )
         atc = mocker.MagicMock()
         mocked_composer = mocker.patch(
             "network.AtomicTransactionComposer", return_value=atc
@@ -722,7 +728,7 @@ class TestNetworkPermissionDappFunctions:
             sp=client.suggested_params.return_value,
             signer=signer,
             method_args=[box_name, value],
-            boxes=[(app_id, box_name.encode())],
+            boxes=[(app_id, box_name)],
         )
         atc.execute.assert_called_once()
         atc.execute.assert_called_with(client, 2)

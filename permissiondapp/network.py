@@ -383,7 +383,7 @@ def delete_box(client, app_id, writing_parameters, address):
         sp=client.suggested_params(),
         signer=writing_parameters.get("signer"),
         method_args=[box_name],
-        boxes=[(app_id, box_name.encode())],
+        boxes=[(app_id, box_name)],
     )
 
     # send transaction
@@ -445,7 +445,7 @@ def permission_dapp_values_from_boxes(client, app_id):
     boxes = client.application_boxes(app_id)
     for box in boxes.get("boxes", []):
         box_name = base64.b64decode(box.get("name"))
-        address = encode_address(base64.b64decode(box_name))
+        address = encode_address(box_name)
         values = deserialized_permission_dapp_box_value(client, app_id, box_name)
         if not values:
             continue
@@ -485,7 +485,7 @@ def write_box(client, app_id, writing_parameters, address, value):
         sp=client.suggested_params(),
         signer=writing_parameters.get("signer"),
         method_args=[box_name, value],
-        boxes=[(app_id, box_name.encode())],
+        boxes=[(app_id, box_name)],
     )
 
     print(f"Writing box for {address[:5]}..{address[-5:]}")

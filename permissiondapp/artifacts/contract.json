@@ -5,7 +5,7 @@
       "name": "writeBox",
       "args": [
         {
-          "type": "string",
+          "type": "byte[32]",
           "name": "box_name"
         },
         {
@@ -21,7 +21,7 @@
       "name": "deleteBox",
       "args": [
         {
-          "type": "string",
+          "type": "byte[32]",
           "name": "box_name"
         }
       ],

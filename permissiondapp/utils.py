@@ -23,7 +23,7 @@ def delete_boxes():
     boxes = client.application_boxes(app_id)
     for box in boxes.get("boxes", []):
         box_name = base64.b64decode(box.get("name"))
-        address = encode_address(base64.b64decode(box_name))
+        address = encode_address(box_name)
         print(f"Deleting box for {address[:5]}..{address[-5:]}")
         delete_box(client, app_id, writing_parameters, address)
 
@@ -64,6 +64,29 @@ def check_test_box(app_id_str):
         # 48 1734089605
         # 64 86400
 
+        # OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I
+        # 0 730727773
+        # 16 2
+        # 32 1734003053
+        # 48 1734089453
+        # 64 86400
+
+        # # AFTER EXPIRATION EVERYTHING'S THE SAME:
+        # KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ
+        # 0 730727847
+        # 16 2
+        # 32 1734003205
+        # 48 1734089605
+        # 64 86400
+
+        # OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I
+        # 0 730727773
+        # 16 2
+        # 32 1734003053
+        # 48 1734089453
+        # 64 86400
+
+        # # AFTER CANCELING KGTSK..PSHPQ:
         # OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I
         # 0 730727773
         # 16 2
