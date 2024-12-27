@@ -432,11 +432,7 @@ class TestHelpersHelpersFunctions:
             algod_address,
             mainnet_algod_address,
             mainnet_algod_token,
-            permission_app_id,
-            permission_app_id_testnet,
         ) = (
-            mocker.MagicMock(),
-            mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -454,8 +450,6 @@ class TestHelpersHelpersFunctions:
                 algod_address,
                 mainnet_algod_token,
                 mainnet_algod_address,
-                permission_app_id,
-                permission_app_id_testnet,
             ],
         ) as mocked_getenv:
             returned = environment_variables()
@@ -466,8 +460,6 @@ class TestHelpersHelpersFunctions:
                 "algod_address": algod_address,
                 "mainnet_algod_token": mainnet_algod_token,
                 "mainnet_algod_address": mainnet_algod_address,
-                "permission_app_id": permission_app_id,
-                "permission_app_id_testnet": permission_app_id_testnet,
             }
             calls = [
                 mocker.call("CREATOR_MNEMONIC"),
@@ -476,11 +468,9 @@ class TestHelpersHelpersFunctions:
                 mocker.call("ALGOD_ADDRESS"),
                 mocker.call("MAINNET_ALGOD_TOKEN"),
                 mocker.call("MAINNET_ALGOD_ADDRESS"),
-                mocker.call("PERMISSION_APP_ID"),
-                mocker.call("PERMISSION_APP_ID_TESTNET"),
             ]
             mocked_getenv.assert_has_calls(calls, any_order=True)
-            assert mocked_getenv.call_count == 8
+            assert mocked_getenv.call_count == 6
         mocked_load_dotenv.assert_called_once()
         mocked_load_dotenv.assert_called_with()
 

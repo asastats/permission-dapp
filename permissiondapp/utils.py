@@ -4,19 +4,17 @@ import sys
 from algosdk.encoding import encode_address
 from algosdk.v2client.algod import AlgodClient
 
+from config import PERMISSION_APP_ID, PERMISSION_APP_ID_TESTNET
 from helpers import box_writing_parameters, environment_variables
 from network import delete_box, permission_dapp_values_from_boxes
 
 
 def delete_boxes():
     env = environment_variables()
-    if env.get("permission_app_id") is None:
-        raise ValueError("Permission dApp ID isn't set!")
-
     if "testnet" not in env.get("algod_address"):
         raise ValueError("Can't delete non-testnet dApp!")
 
-    app_id = int(env.get("permission_app_id"))
+    app_id = PERMISSION_APP_ID_TESTNET
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
     writing_parameters = box_writing_parameters(env)
 
@@ -31,7 +29,7 @@ def delete_boxes():
 def print_box_values():
     env = environment_variables()
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-    app_id = int(env.get("permission_app_id"))
+    app_id = PERMISSION_APP_ID
     permissions = permission_dapp_values_from_boxes(client, app_id)
     if not permissions:
         print("There are no boxes!")

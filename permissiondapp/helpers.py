@@ -362,8 +362,6 @@ def environment_variables():
         "algod_address": os.getenv("ALGOD_ADDRESS"),
         "mainnet_algod_token": os.getenv("MAINNET_ALGOD_TOKEN"),
         "mainnet_algod_address": os.getenv("MAINNET_ALGOD_ADDRESS"),
-        "permission_app_id": os.getenv("PERMISSION_APP_ID"),
-        "permission_app_id_testnet": os.getenv("PERMISSION_APP_ID_TESTNET"),
     }
 
 

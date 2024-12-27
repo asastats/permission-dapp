@@ -9,6 +9,7 @@ from config import (
     CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DOCS_STARTING_POSITION,
+    PERMISSION_APP_ID,
     STAKING_DOCS,
 )
 import foundation
@@ -111,26 +112,13 @@ class TestFoundationHelpersFunctions:
         }
 
     # # _initial_check
-    def test_foundation_initial_check_raises_for_no_permission_app_id(self, mocker):
-        mocked_client = mocker.patch("foundation.AlgodClient")
-        env = {"foo": "bar"}
-        mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
-        with pytest.raises(ValueError) as exception:
-            _initial_check()
-            assert str(exception.value) == "Permission dApp ID isn't set!"
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
-        mocked_client.assert_not_called()
-
     def test_foundation_initial_check_raises_for_existing_boxes(self, mocker):
         client = mocker.MagicMock()
         mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
         boxes = {"boxes": [1, 2, 3, 4]}
         client.application_boxes.return_value = boxes
-        permission_app_id = 5050
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
         env = {
-            "permission_app_id": str(permission_app_id),
             "algod_token": algod_token,
             "algod_address": algod_address,
         }
@@ -143,17 +131,15 @@ class TestFoundationHelpersFunctions:
         mocked_client.assert_called_once()
         mocked_client.assert_called_with(algod_token, algod_address)
         client.application_boxes.assert_called_once()
-        client.application_boxes.assert_called_with(permission_app_id)
+        client.application_boxes.assert_called_with(PERMISSION_APP_ID)
 
     def test_foundation_initial_check_functionality(self, mocker):
         client = mocker.MagicMock()
         mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
         boxes = {"boxes": []}
         client.application_boxes.return_value = boxes
-        permission_app_id = 5050
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
         env = {
-            "permission_app_id": str(permission_app_id),
             "algod_token": algod_token,
             "algod_address": algod_address,
         }
@@ -165,7 +151,7 @@ class TestFoundationHelpersFunctions:
         mocked_client.assert_called_once()
         mocked_client.assert_called_with(algod_token, algod_address)
         client.application_boxes.assert_called_once()
-        client.application_boxes.assert_called_with(permission_app_id)
+        client.application_boxes.assert_called_with(PERMISSION_APP_ID)
 
 
 # # FOUNDATION
@@ -419,9 +405,7 @@ class TestFoundationFoundationFunctions:
 
     # # prepare_and_write_data
     def test_foundation_prepare_and_write_data_functionality(self, mocker):
-        client = mocker.MagicMock()
-        permission_app_id = 5050
-        env = {"permission_app_id": permission_app_id}
+        env, client = mocker.MagicMock(), mocker.MagicMock()
         mocked_initial = mocker.patch(
             "foundation._initial_check", return_value=[env, client]
         )
@@ -438,7 +422,7 @@ class TestFoundationFoundationFunctions:
         mocked_write.assert_called_once()
         mocked_write.assert_called_with(
             client,
-            permission_app_id,
+            PERMISSION_APP_ID,
             mocked_parameters.return_value,
             mocked_data.return_value,
         )
@@ -544,14 +528,12 @@ class TestFoundationUpdateFunctions:
     def test_foundation_check_and_update_permission_dapp_boxes_functionality(
         self, mocker
     ):
-        permission_app_id = 5050
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
         mainnet_algod_token, mainnet_algod_address = (
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
         env = {
-            "permission_app_id": str(permission_app_id),
             "algod_token": algod_token,
             "algod_address": algod_address,
             "mainnet_algod_token": mainnet_algod_token,
@@ -614,11 +596,11 @@ class TestFoundationUpdateFunctions:
         mocked_staking.assert_has_calls(calls, any_order=True)
         assert mocked_staking.call_count == 3
         mocked_permissions.assert_called_once()
-        mocked_permissions.assert_called_with(client, permission_app_id)
+        mocked_permissions.assert_called_with(client, PERMISSION_APP_ID)
         mocked_check_subscribers.assert_called_once()
         mocked_check_subscribers.assert_called_with(
             client,
-            permission_app_id,
+            PERMISSION_APP_ID,
             writing_parameters,
             mocked_permissions.return_value,
             mocked_subscriptions.return_value,
@@ -626,7 +608,7 @@ class TestFoundationUpdateFunctions:
         mocked_check_stakers.assert_called_once()
         mocked_check_stakers.assert_called_with(
             client,
-            permission_app_id,
+            PERMISSION_APP_ID,
             writing_parameters,
             mocked_permissions.return_value,
             {address1: staking1, address2: staking2, address3: staking3},
@@ -634,7 +616,7 @@ class TestFoundationUpdateFunctions:
         mocked_check_changed.assert_called_once()
         mocked_check_changed.assert_called_with(
             client,
-            permission_app_id,
+            PERMISSION_APP_ID,
             writing_parameters,
             mocked_permissions.return_value,
             mocked_subscriptions.return_value,

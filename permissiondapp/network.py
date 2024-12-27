@@ -147,6 +147,9 @@ def check_and_update_changed_subscriptions_and_staking(
 ):
     """Check and update boxes for address with changed subscriptions and staking.
 
+    FIXME: remove subscription/staking entries if they exist in permissions
+           and subscriptions/stakings don't have them
+
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
     :param app_id: currently processed subscription tier app

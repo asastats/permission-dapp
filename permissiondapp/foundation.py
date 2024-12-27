@@ -11,6 +11,7 @@ from config import (
     DAO_DISCUSSIONS_DOCS_STARTING_INDEX,
     DOCS_STARTING_POSITION,
     MERGED_ACCOUNTS,
+    PERMISSION_APP_ID,
     STAKING_DOCS,
     STAKING_DOCS_STARTING_INDEX,
 )
@@ -69,11 +70,8 @@ def _initial_check():
     :return: two-tuple
     """
     env = environment_variables()
-    if env.get("permission_app_id") is None:
-        raise ValueError("Permission dApp ID isn't set!")
-
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-    boxes = client.application_boxes(int(env.get("permission_app_id")))
+    boxes = client.application_boxes(PERMISSION_APP_ID)
     if len(boxes.get("boxes", [])):
         raise ValueError("Some boxes are already populated!")
 
@@ -189,16 +187,13 @@ def prepare_and_write_data():
     :type client: :class:`AlgodClient`
     :var data: collection of addresses and related permission and votes values
     :type data: dict
-    :var app_id: Permission dApp identifier
-    :type app_id: int
     :var writing_parameters: instances sneeded for writing boxes to blockchain
     :type writing_parameters: dict
     """
     env, client = _initial_check()
     data = _prepare_data(env)
-    app_id = int(env.get("permission_app_id"))
     writing_parameters = box_writing_parameters(env)
-    write_foundation_boxes(client, app_id, writing_parameters, data)
+    write_foundation_boxes(client, PERMISSION_APP_ID, writing_parameters, data)
 
 
 # # STAKING
@@ -267,7 +262,7 @@ def check_and_update_permission_dapp_boxes():
     :type client: :class:`AlgodClient`
     :var mainnet_client: Algorand Mainnet Node client instance
     :type mainnet_client: :class:`AlgodClient`
-    :var app_id: currently processed subscription tier app
+    :var app_id: Pewrmission dApp identifier
     :type app_id: int
     :var writing_parameters: instances sneeded for writing boxes to blockchain
     :type writing_parameters: dict
@@ -279,7 +274,7 @@ def check_and_update_permission_dapp_boxes():
     :type permissions: dict
     """
     env = environment_variables()
-    app_id = int(env.get("permission_app_id"))
+    app_id = PERMISSION_APP_ID
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
     mainnet_client = AlgodClient(
         env.get("mainnet_algod_token"), env.get("mainnet_algod_address")
