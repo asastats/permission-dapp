@@ -430,9 +430,13 @@ class TestHelpersHelpersFunctions:
             user_mnemonic,
             algod_token,
             algod_address,
-            mainnet_algod_address,
-            mainnet_algod_token,
+            algod_token_mainnet,
+            algod_address_mainnet,
+            algod_address_testnet,
+            algod_token_testnet,
         ) = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -448,8 +452,10 @@ class TestHelpersHelpersFunctions:
                 user_mnemonic,
                 algod_token,
                 algod_address,
-                mainnet_algod_token,
-                mainnet_algod_address,
+                algod_token_mainnet,
+                algod_address_mainnet,
+                algod_token_testnet,
+                algod_address_testnet,
             ],
         ) as mocked_getenv:
             returned = environment_variables()
@@ -458,19 +464,23 @@ class TestHelpersHelpersFunctions:
                 "user_mnemonic": user_mnemonic,
                 "algod_token": algod_token,
                 "algod_address": algod_address,
-                "mainnet_algod_token": mainnet_algod_token,
-                "mainnet_algod_address": mainnet_algod_address,
+                "algod_token_mainnet": algod_token_mainnet,
+                "algod_address_mainnet": algod_address_mainnet,
+                "algod_token_testnet": algod_token_testnet,
+                "algod_address_testnet": algod_address_testnet,
             }
             calls = [
                 mocker.call("CREATOR_MNEMONIC"),
                 mocker.call("USER_MNEMONIC"),
                 mocker.call("ALGOD_TOKEN"),
                 mocker.call("ALGOD_ADDRESS"),
-                mocker.call("MAINNET_ALGOD_TOKEN"),
-                mocker.call("MAINNET_ALGOD_ADDRESS"),
+                mocker.call("ALGOD_TOKEN_MAINNET"),
+                mocker.call("ALGOD_ADDRESS_MAINNET"),
+                mocker.call("ALGOD_TOKEN_TESTNET"),
+                mocker.call("ALGOD_ADDRESS_TESTNET"),
             ]
             mocked_getenv.assert_has_calls(calls, any_order=True)
-            assert mocked_getenv.call_count == 6
+            assert mocked_getenv.call_count == 8
         mocked_load_dotenv.assert_called_once()
         mocked_load_dotenv.assert_called_with()
 

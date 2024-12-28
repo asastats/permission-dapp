@@ -11,11 +11,10 @@ from network import delete_box, permission_dapp_values_from_boxes
 
 def delete_boxes():
     env = environment_variables()
-    if "testnet" not in env.get("algod_address"):
-        raise ValueError("Can't delete non-testnet dApp!")
-
     app_id = PERMISSION_APP_ID_TESTNET
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    client = AlgodClient(
+        env.get("algod_token_testnet"), env.get("algod_address_testnet")
+    )
     writing_parameters = box_writing_parameters(env)
 
     boxes = client.application_boxes(app_id)
@@ -40,7 +39,9 @@ def print_box_values():
 def check_test_box(app_id_str):
     app_id = int(app_id_str)
     env = environment_variables()
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    client = AlgodClient(
+        env.get("algod_token_testnet"), env.get("algod_address_testnet")
+    )
 
     boxes = client.application_boxes(app_id)
     for box in boxes.get("boxes", []):
@@ -54,6 +55,17 @@ def check_test_box(app_id_str):
             value = int(hexed[start : start + 16], 16)
             print(start, value)
         print()
+
+        # # new test python utils.py check_test_box 731655204
+
+        # KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ
+        # 0 731655244
+        # 16 2
+        # 32 1735381835
+        # 48 1735468235
+        # 64 86400
+
+        # # old test
 
         # KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ
         # 0 730727847

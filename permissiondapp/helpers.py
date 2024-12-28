@@ -360,8 +360,10 @@ def environment_variables():
         "user_mnemonic": os.getenv("USER_MNEMONIC"),
         "algod_token": os.getenv("ALGOD_TOKEN"),
         "algod_address": os.getenv("ALGOD_ADDRESS"),
-        "mainnet_algod_token": os.getenv("MAINNET_ALGOD_TOKEN"),
-        "mainnet_algod_address": os.getenv("MAINNET_ALGOD_ADDRESS"),
+        "algod_token_mainnet": os.getenv("ALGOD_TOKEN_MAINNET"),
+        "algod_address_mainnet": os.getenv("ALGOD_ADDRESS_MAINNET"),
+        "algod_token_testnet": os.getenv("ALGOD_TOKEN_TESTNET"),
+        "algod_address_testnet": os.getenv("ALGOD_ADDRESS_TESTNET"),
     }
 
 

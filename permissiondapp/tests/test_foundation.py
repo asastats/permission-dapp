@@ -118,10 +118,7 @@ class TestFoundationHelpersFunctions:
         boxes = {"boxes": [1, 2, 3, 4]}
         client.application_boxes.return_value = boxes
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        env = {
-            "algod_token": algod_token,
-            "algod_address": algod_address,
-        }
+        env = {"algod_token": algod_token, "algod_address": algod_address}
         mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
         with pytest.raises(ValueError) as exception:
             _initial_check()
@@ -139,10 +136,7 @@ class TestFoundationHelpersFunctions:
         boxes = {"boxes": []}
         client.application_boxes.return_value = boxes
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        env = {
-            "algod_token": algod_token,
-            "algod_address": algod_address,
-        }
+        env = {"algod_token": algod_token, "algod_address": algod_address}
         mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
         returned = _initial_check()
         assert returned == (env, client)
@@ -376,14 +370,8 @@ class TestFoundationFoundationFunctions:
             "foundation._calculate_and_update_votes_and_permissions"
         )
         data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
-        mainnet_algod_token, mainnet_algod_address = (
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-        )
-        env = {
-            "mainnet_algod_token": mainnet_algod_token,
-            "mainnet_algod_address": mainnet_algod_address,
-        }
+        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
+        env = {"algod_token": algod_token, "algod_address": algod_address}
         returned = _prepare_data(env)
         assert returned == data
         mocked_foundation.assert_called_once()
@@ -391,7 +379,7 @@ class TestFoundationFoundationFunctions:
         mocked_staking.assert_called_once()
         mocked_staking.assert_called_with(data, items=STAKING_DOCS)
         mocked_client.assert_called_once()
-        mocked_client.assert_called_with(mainnet_algod_token, mainnet_algod_address)
+        mocked_client.assert_called_with(algod_token, algod_address)
         mocked_staking_foundation.assert_called_once()
         mocked_staking_foundation.assert_called_with(
             client, data, starting_position=CURRENT_STAKING_POSITION
@@ -529,15 +517,15 @@ class TestFoundationUpdateFunctions:
         self, mocker
     ):
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        mainnet_algod_token, mainnet_algod_address = (
+        algod_token_mainnet, algod_address_mainnet = (
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
         env = {
             "algod_token": algod_token,
             "algod_address": algod_address,
-            "mainnet_algod_token": mainnet_algod_token,
-            "mainnet_algod_address": mainnet_algod_address,
+            "algod_token_mainnet": algod_token_mainnet,
+            "algod_address_mainnet": algod_address_mainnet,
         }
         mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
         client, mainnet_client = mocker.MagicMock(), mocker.MagicMock()
@@ -578,7 +566,7 @@ class TestFoundationUpdateFunctions:
         mocked_env.assert_called_with()
         calls = [
             mocker.call(algod_token, algod_address),
-            mocker.call(mainnet_algod_token, mainnet_algod_address),
+            mocker.call(algod_token_mainnet, algod_address_mainnet),
         ]
         mocked_client.assert_has_calls(calls, any_order=True)
         assert mocked_client.call_count == 2

@@ -164,9 +164,7 @@ def _prepare_data(env):
     _load_and_parse_foundation_data(data, items=DAO_DISCUSSIONS_DOCS)
     _load_and_parse_staking_data(data, items=STAKING_DOCS)
 
-    client = AlgodClient(
-        env.get("mainnet_algod_token"), env.get("mainnet_algod_address")
-    )
+    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
     _update_current_staking_for_foundation(
         client, data, starting_position=CURRENT_STAKING_POSITION
     )
@@ -277,7 +275,7 @@ def check_and_update_permission_dapp_boxes():
     app_id = PERMISSION_APP_ID
     client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
     mainnet_client = AlgodClient(
-        env.get("mainnet_algod_token"), env.get("mainnet_algod_address")
+        env.get("algod_token_mainnet"), env.get("algod_address_mainnet")
     )
     writing_parameters = box_writing_parameters(env)
 
