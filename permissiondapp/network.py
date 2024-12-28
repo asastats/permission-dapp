@@ -149,9 +149,6 @@ def check_and_update_changed_subscriptions_and_staking(
 ):
     """Check and update boxes for address with changed subscriptions and staking.
 
-    FIXME: remove subscription entries if they exist in permissions
-           and subscriptions don't have them
-
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
     :param app_id: currently processed subscription tier app
@@ -180,13 +177,13 @@ def check_and_update_changed_subscriptions_and_staking(
     for address, values in permissions.items():
         update = False
         staking_amount = stakings.get(address)
-        if staking_amount is not None:
-            if staking_amount != values[CURRENT_STAKING_POSITION]:
-                values[CURRENT_STAKING_POSITION] = staking_amount
-                values[CURRENT_STAKING_POSITION + 1] = permission_for_amount(
-                    staking_amount
-                )
-                update = True
+        if (
+            staking_amount is not None
+            and staking_amount != values[CURRENT_STAKING_POSITION]
+        ):
+            values[CURRENT_STAKING_POSITION] = staking_amount
+            values[CURRENT_STAKING_POSITION + 1] = permission_for_amount(staking_amount)
+            update = True
 
         subscription_values = subscriptions.get(address)
         if subscription_values is not None:
@@ -197,6 +194,11 @@ def check_and_update_changed_subscriptions_and_staking(
                     permission for _, permission in subscription_values
                 )
                 update = True
+
+        elif values[SUBSCRIPTION_POSITION] != 0:
+            values[SUBSCRIPTION_POSITION] = 0
+            values[SUBSCRIPTION_POSITION + 1] = 0
+            update = True
 
         if update:
             values[0], values[1] = calculate_votes_and_permission(values)

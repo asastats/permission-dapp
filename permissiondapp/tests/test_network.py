@@ -371,7 +371,7 @@ class TestNetworkUpdateFunctions:
         permissions = {
             address1: [1000, 500, 0, 0, 5000, 200, 2000, 2],
             address2: [5000, 800, 1000, 200, 8500, 400, 3000, 2],
-            address3: [0, 0, 0, 0, 0, 0],
+            address3: [750, 7500, 18000, 1500, 0, 0],
             address4: [100, 200, 7000, 700, 3000, 600],
             "address5": [0, 500, 0, 0, 0, 0, 1000, 1],
         }
@@ -411,12 +411,19 @@ class TestNetworkUpdateFunctions:
                 client,
                 app_id,
                 writing_parameters,
+                address3,
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            ),
+            mocker.call(
+                client,
+                app_id,
+                writing_parameters,
                 address4,
                 "AAAAAAAAAAAAAAAAAAAGQAAAAAAAACcQAAAAAAAAA+gAAAAAAAALuAAAAAAAAAJY",
             ),
         ]
         mocked_write.assert_has_calls(calls, any_order=True)
-        assert mocked_write.call_count == 2
+        assert mocked_write.call_count == 3
 
     # # check_and_update_new_stakers
     def test_network_check_and_update_new_stakers_for_no_new_stakers(self, mocker):
