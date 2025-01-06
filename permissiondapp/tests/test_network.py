@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from algosdk.error import AlgodHTTPError
 
-from config import (
+from permissiondapp.config import (
     STAKING_KEY,
     SUBSCRIPTION_PERMISSIONS,
     SUBTOPIA_INTRO_APP_ID,
@@ -15,7 +15,7 @@ from config import (
     SUBTOPIA_CLUSTER_APP_ID,
     SUBTOPIA_DAO_APP_ID,
 )
-from network import (
+from permissiondapp.network import (
     _cometa_app_amount,
     _cometa_app_local_state_for_address,
     check_and_update_changed_subscriptions_and_staking,
@@ -112,15 +112,14 @@ class TestNetworkSubscriptionsFunctions:
             response10,
             response11,
         ]
-        address1, address2, address3, address4, address5, address6 = (
+        address1, address2, address3, address4, address5 = (
             "OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I",
             "KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ",
-            "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU",
             "VW55KZ3NF4GDOWI7IPWLGZDFWNXWKSRD5PETRLDABZVU5XPKRJJRK3CBSU",
             "LXJ3Q6RZ2TJ6VCJDFMSM4ZVNYYYE4KVSL3N2TYR23PLNCJCIXBM3NYTBYE",
             "VKENBO5W2DZAZFQR45SOQO6IMWS5UMVZCHLPEACNOII7BDJTGBZKSEL4Y4",
         )
-        with mock.patch("network.datetime") as mocked_datetime:
+        with mock.patch("permissiondapp.network.datetime") as mocked_datetime:
             mocked_datetime.now.return_value.timestamp.side_effect = [
                 1736000000,
                 1736000000,
@@ -138,9 +137,9 @@ class TestNetworkSubscriptionsFunctions:
         assert returned == {
             address1: [(500000000000, 3236067977500), (0, 0)],
             address2: [(2500000000, 2329968943), (18000000000, 23299689438)],
-            address4: [(18000000000, 23299689438), (0, 0)],
-            address5: [(38000000000, 258885438200)],
-            address6: [(500000000000, 3236067977500), (0, 0)],
+            address3: [(18000000000, 23299689438), (0, 0)],
+            address4: [(38000000000, 258885438200)],
+            address5: [(500000000000, 3236067977500), (0, 0)],
         }
         calls = [mocker.call(app_id) for app_id in SUBSCRIPTION_PERMISSIONS]
         client.application_boxes.assert_has_calls(calls, any_order=True)
@@ -306,9 +305,9 @@ class TestNetworkStakingFunctions:
     def test_network_current_governance_staking_for_address_for_no_state(self, mocker):
         client, address = mocker.MagicMock(), mocker.MagicMock()
         mocked_state = mocker.patch(
-            "network._cometa_app_local_state_for_address", return_value=None
+            "permissiondapp.network._cometa_app_local_state_for_address", return_value=None
         )
-        mocked_amount = mocker.patch("network._cometa_app_amount")
+        mocked_amount = mocker.patch("permissiondapp.network._cometa_app_amount")
         returned = current_governance_staking_for_address(client, address)
         assert returned == 0
         mocked_state.assert_called_once()
@@ -319,9 +318,9 @@ class TestNetworkStakingFunctions:
         client, address = mocker.MagicMock(), mocker.MagicMock()
         state = mocker.MagicMock()
         mocked_state = mocker.patch(
-            "network._cometa_app_local_state_for_address", return_value=state
+            "permissiondapp.network._cometa_app_local_state_for_address", return_value=state
         )
-        mocked_amount = mocker.patch("network._cometa_app_amount")
+        mocked_amount = mocker.patch("permissiondapp.network._cometa_app_amount")
         returned = current_governance_staking_for_address(client, address)
         assert returned == mocked_amount.return_value
         mocked_state.assert_called_once()
@@ -343,7 +342,7 @@ class TestNetworkUpdateFunctions:
         }
         subscriptions = {"address1": [(1000, 100)], "address2": [(2000, 200)]}
         stakings = {"address1": 5000, "address2": 8000}
-        mocked_write = mocker.patch("network.write_box")
+        mocked_write = mocker.patch("permissiondapp.network.write_box")
         check_and_update_changed_subscriptions_and_staking(
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -391,9 +390,9 @@ class TestNetworkUpdateFunctions:
         stakings = {address1: amount4, address4: amount5}
         permission4 = 100
         mocked_permission = mocker.patch(
-            "network.permission_for_amount", return_value=permission4
+            "permissiondapp.network.permission_for_amount", return_value=permission4
         )
-        mocked_write = mocker.patch("network.write_box")
+        mocked_write = mocker.patch("permissiondapp.network.write_box")
         check_and_update_changed_subscriptions_and_staking(
             client, app_id, writing_parameters, permissions, subscriptions, stakings
         )
@@ -432,7 +431,7 @@ class TestNetworkUpdateFunctions:
             "address1": [(mocker.MagicMock(), mocker.MagicMock())],
             "address2": [(mocker.MagicMock(), mocker.MagicMock())],
         }
-        mocked_write = mocker.patch("network.write_box")
+        mocked_write = mocker.patch("permissiondapp.network.write_box")
         check_and_update_new_stakers(
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -459,10 +458,10 @@ class TestNetworkUpdateFunctions:
             "address4": mocker.MagicMock(),
         }
         mocked_permission = mocker.patch(
-            "network.permission_for_amount",
+            "permissiondapp.network.permission_for_amount",
             side_effect=[permission1, permission2, permission3],
         )
-        mocked_write = mocker.patch("network.write_box")
+        mocked_write = mocker.patch("permissiondapp.network.write_box")
         check_and_update_new_stakers(
             client, app_id, writing_parameters, permissions, stakings
         )
@@ -497,7 +496,7 @@ class TestNetworkUpdateFunctions:
             "address1": [(mocker.MagicMock(), mocker.MagicMock())],
             "address2": [(mocker.MagicMock(), mocker.MagicMock())],
         }
-        mocked_write = mocker.patch("network.write_box")
+        mocked_write = mocker.patch("permissiondapp.network.write_box")
         check_and_update_new_subscribers(
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -529,7 +528,7 @@ class TestNetworkUpdateFunctions:
             address3: [(amount2, permission2), (amount3, permission3)],
             "address4": [(mocker.MagicMock(), mocker.MagicMock())],
         }
-        mocked_write = mocker.patch("network.write_box")
+        mocked_write = mocker.patch("permissiondapp.network.write_box")
         check_and_update_new_subscribers(
             client, app_id, writing_parameters, permissions, subscriptions
         )
@@ -566,7 +565,7 @@ class TestNetworkPermissionDappFunctions:
         )
         atc = mocker.MagicMock()
         mocked_composer = mocker.patch(
-            "network.AtomicTransactionComposer", return_value=atc
+            "permissiondapp.network.AtomicTransactionComposer", return_value=atc
         )
         sender, signer, contract = (
             mocker.MagicMock(),
@@ -603,7 +602,7 @@ class TestNetworkPermissionDappFunctions:
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
-        mocked_deserialize = mocker.patch("network.deserialize_values_data")
+        mocked_deserialize = mocker.patch("permissiondapp.network.deserialize_values_data")
         client.application_box_by_name.side_effect = AlgodHTTPError("box not found")
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned is None
@@ -617,7 +616,7 @@ class TestNetworkPermissionDappFunctions:
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
-        mocked_deserialize = mocker.patch("network.deserialize_values_data")
+        mocked_deserialize = mocker.patch("permissiondapp.network.deserialize_values_data")
         client.application_box_by_name.side_effect = AlgodHTTPError("foo bar")
         with pytest.raises(AlgodHTTPError):
             deserialized_permission_dapp_box_value(client, app_id, box_name)
@@ -670,7 +669,7 @@ class TestNetworkPermissionDappFunctions:
             mocker.MagicMock(),
         )
         mocked_deserialized = mocker.patch(
-            "network.deserialized_permission_dapp_box_value",
+            "permissiondapp.network.deserialized_permission_dapp_box_value",
             side_effect=[values1, values2, None, values3, values4],
         )
         address1, address2, address3, address4 = (
@@ -710,7 +709,7 @@ class TestNetworkPermissionDappFunctions:
         )
         atc = mocker.MagicMock()
         mocked_composer = mocker.patch(
-            "network.AtomicTransactionComposer", return_value=atc
+            "permissiondapp.network.AtomicTransactionComposer", return_value=atc
         )
         sender, signer, contract = (
             mocker.MagicMock(),
@@ -754,9 +753,9 @@ class TestNetworkPermissionDappFunctions:
             mocker.MagicMock(),
         )
         mocked_serialize = mocker.patch(
-            "network.serialize_values", side_effect=[value1, value2, value3]
+            "permissiondapp.network.serialize_values", side_effect=[value1, value2, value3]
         )
-        mocked_write = mocker.patch("network.write_box")
+        mocked_write = mocker.patch("permissiondapp.network.write_box")
         address1, address2, address3 = "address1", "address2", "address3"
         values1, values2, values3 = (
             mocker.MagicMock(),

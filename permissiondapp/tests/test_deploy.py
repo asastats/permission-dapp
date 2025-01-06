@@ -3,8 +3,8 @@
 from pathlib import Path
 from unittest import mock
 
-import deploy
-from deploy import deploy_app
+import permissiondapp.deploy
+from permissiondapp.deploy import deploy_app
 
 
 # # VALUES
@@ -23,33 +23,43 @@ class TestDeployFunctions:
             "algod_address": algod_address,
             "creator_mnemonic": creator_mnemonic,
         }
-        mocked_env = mocker.patch("deploy.environment_variables", return_value=env)
+        mocked_env = mocker.patch(
+            "permissiondapp.deploy.environment_variables", return_value=env
+        )
         client = mocker.MagicMock()
-        mocked_client = mocker.patch("deploy.AlgodClient", return_value=client)
+        mocked_client = mocker.patch(
+            "permissiondapp.deploy.AlgodClient", return_value=client
+        )
         creator_private_key = mocker.MagicMock()
         mocked_private_key = mocker.patch(
-            "deploy.private_key_from_mnemonic", return_value=creator_private_key
+            "permissiondapp.deploy.private_key_from_mnemonic",
+            return_value=creator_private_key,
         )
         approval_program, clear_program = mocker.MagicMock(), mocker.MagicMock()
         mocked_compile = mocker.patch(
-            "deploy.compile_program", side_effect=[approval_program, clear_program]
+            "permissiondapp.deploy.compile_program",
+            side_effect=[approval_program, clear_program],
         )
         app_id = 5050
-        mocked_create = mocker.patch("deploy.create_app", return_value=app_id)
+        mocked_create = mocker.patch(
+            "permissiondapp.deploy.create_app", return_value=app_id
+        )
         approval_source, clear_source = mocker.MagicMock(), mocker.MagicMock()
         with mock.patch(
-            "deploy.open", side_effect=[approval_source, clear_source]
+            "permissiondapp.deploy.open", side_effect=[approval_source, clear_source]
         ) as mocked_open:
             returned = deploy_app()
             assert returned == app_id
             calls = [
                 mocker.call(
-                    Path(deploy.__file__).resolve().parent
+                    Path(permissiondapp.deploy.__file__).resolve().parent
                     / "artifacts"
                     / "approval.teal"
                 ),
                 mocker.call(
-                    Path(deploy.__file__).resolve().parent / "artifacts" / "clear.teal"
+                    Path(permissiondapp.deploy.__file__).resolve().parent
+                    / "artifacts"
+                    / "clear.teal"
                 ),
             ]
             mocked_open.assert_has_calls(calls, any_order=True)

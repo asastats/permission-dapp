@@ -5,7 +5,7 @@ from pathlib import Path
 
 from algosdk.v2client.algod import AlgodClient
 
-from config import (
+from .config import (
     CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DAO_DISCUSSIONS_DOCS_STARTING_INDEX,
@@ -15,7 +15,7 @@ from config import (
     STAKING_DOCS,
     STAKING_DOCS_STARTING_INDEX,
 )
-from helpers import (
+from .helpers import (
     calculate_votes_and_permission,
     box_writing_parameters,
     environment_variables,
@@ -23,7 +23,7 @@ from helpers import (
     permission_for_amount,
     read_json,
 )
-from network import (
+from .network import (
     check_and_update_changed_subscriptions_and_staking,
     check_and_update_new_stakers,
     check_and_update_new_subscribers,

@@ -2,7 +2,12 @@
 
 from pyteal import ABIReturnSubroutine, CallConfig, Router, SubroutineFnWrapper, abi
 
-from permission_dapp import assert_sender_is_creator, deleteBox, router, writeBox
+from permissiondapp.permission_dapp import (
+    assert_sender_is_creator,
+    deleteBox,
+    router,
+    writeBox,
+)
 
 
 class TestPermissionDappFunctions:

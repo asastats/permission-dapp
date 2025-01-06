@@ -16,7 +16,7 @@ from algosdk.transaction import StateSchema
 from algosdk.v2client.indexer import IndexerClient
 from dotenv import load_dotenv
 
-from config import (
+from .config import (
     CURRENT_STAKING_POSITION,
     DOCS_STARTING_POSITION,
     INDEXER_ADDRESS,

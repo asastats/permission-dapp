@@ -4,8 +4,8 @@ from pathlib import Path
 
 from algosdk.v2client.algod import AlgodClient
 
-from helpers import compile_program, environment_variables, private_key_from_mnemonic
-from network import create_app
+from .helpers import compile_program, environment_variables, private_key_from_mnemonic
+from .network import create_app
 
 
 def deploy_app():
