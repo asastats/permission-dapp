@@ -298,5 +298,9 @@ def check_and_update_permission_dapp_boxes():
 
 
 if __name__ == "__main__":
-    prepare_and_write_data()
-    # check_and_update_permission_dapp_boxes()
+    # prepare_and_write_data()
+    import time
+
+    start = time.time()
+    check_and_update_permission_dapp_boxes()
+    print("Duration:", time.time() - start)
