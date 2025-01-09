@@ -3,8 +3,8 @@
 from pathlib import Path
 from unittest import mock
 
-import dapp.deploy
-from dapp.deploy import deploy_app
+import deploy
+from deploy import deploy_app
 
 
 # # VALUES
@@ -24,40 +24,40 @@ class TestDeployFunctions:
             "creator_mnemonic": creator_mnemonic,
         }
         mocked_env = mocker.patch(
-            "dapp.deploy.environment_variables", return_value=env
+            "deploy.environment_variables", return_value=env
         )
         client = mocker.MagicMock()
         mocked_client = mocker.patch(
-            "dapp.deploy.AlgodClient", return_value=client
+            "deploy.AlgodClient", return_value=client
         )
         creator_private_key = mocker.MagicMock()
         mocked_private_key = mocker.patch(
-            "dapp.deploy.private_key_from_mnemonic",
+            "deploy.private_key_from_mnemonic",
             return_value=creator_private_key,
         )
         approval_program, clear_program = mocker.MagicMock(), mocker.MagicMock()
         mocked_compile = mocker.patch(
-            "dapp.deploy.compile_program",
+            "deploy.compile_program",
             side_effect=[approval_program, clear_program],
         )
         app_id = 5050
         mocked_create = mocker.patch(
-            "dapp.deploy.create_app", return_value=app_id
+            "deploy.create_app", return_value=app_id
         )
         approval_source, clear_source = mocker.MagicMock(), mocker.MagicMock()
         with mock.patch(
-            "dapp.deploy.open", side_effect=[approval_source, clear_source]
+            "deploy.open", side_effect=[approval_source, clear_source]
         ) as mocked_open:
             returned = deploy_app()
             assert returned == app_id
             calls = [
                 mocker.call(
-                    Path(dapp.deploy.__file__).resolve().parent
+                    Path(deploy.__file__).resolve().parent
                     / "artifacts"
                     / "approval.teal"
                 ),
                 mocker.call(
-                    Path(dapp.deploy.__file__).resolve().parent
+                    Path(deploy.__file__).resolve().parent
                     / "artifacts"
                     / "clear.teal"
                 ),

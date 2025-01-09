@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from algosdk.error import AlgodHTTPError
 
-from dapp.config import (
+from config import (
     STAKING_KEY,
     SUBSCRIPTION_PERMISSIONS,
     SUBTOPIA_INTRO_APP_ID,
@@ -15,7 +15,7 @@ from dapp.config import (
     SUBTOPIA_CLUSTER_APP_ID,
     SUBTOPIA_DAO_APP_ID,
 )
-from dapp.network import (
+from network import (
     _cometa_app_amount,
     _cometa_app_local_state_for_address,
     check_and_update_changed_subscriptions_and_staking,

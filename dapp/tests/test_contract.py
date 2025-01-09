@@ -2,7 +2,7 @@
 
 from pyteal import ABIReturnSubroutine, CallConfig, Router, SubroutineFnWrapper, abi
 
-from dapp.contract import (
+from contract import (
     assert_sender_is_creator,
     deleteBox,
     router,

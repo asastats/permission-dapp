@@ -10,7 +10,7 @@ from algosdk.atomic_transaction_composer import AtomicTransactionComposer
 from algosdk.encoding import encode_address
 from algosdk.error import AlgodHTTPError
 
-from .config import (
+from config import (
     CURRENT_STAKING_POSITION,
     DOCS_STARTING_POSITION,
     STAKING_APP_ID,
@@ -19,7 +19,7 @@ from .config import (
     SUBSCRIPTION_PERMISSIONS,
     SUBSCRIPTION_POSITION,
 )
-from .helpers import (
+from helpers import (
     app_schemas,
     box_name_from_address,
     calculate_votes_and_permission,

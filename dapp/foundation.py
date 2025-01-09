@@ -5,7 +5,7 @@ from pathlib import Path
 
 from algosdk.v2client.algod import AlgodClient
 
-from .config import (
+from config import (
     CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DAO_DISCUSSIONS_DOCS_STARTING_INDEX,
@@ -15,7 +15,7 @@ from .config import (
     STAKING_DOCS,
     STAKING_DOCS_STARTING_INDEX,
 )
-from .helpers import (
+from helpers import (
     calculate_votes_and_permission,
     box_writing_parameters,
     environment_variables,
@@ -23,7 +23,7 @@ from .helpers import (
     permission_for_amount,
     read_json,
 )
-from .network import (
+from network import (
     check_and_update_changed_subscriptions_and_staking,
     check_and_update_new_stakers,
     check_and_update_new_subscribers,
@@ -298,9 +298,9 @@ def check_and_update_permission_dapp_boxes():
 
 
 if __name__ == "__main__":
-    # prepare_and_write_data()
-    import time
+    prepare_and_write_data()
+    # import time
 
-    start = time.time()
-    check_and_update_permission_dapp_boxes()
-    print("Duration:", time.time() - start)
+    # start = time.time()
+    # check_and_update_permission_dapp_boxes()
+    # print("Duration:", time.time() - start)
