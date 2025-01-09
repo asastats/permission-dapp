@@ -125,7 +125,7 @@ class TestNetworkSubscriptionsFunctions:
                 1736000000,
                 1776000000,
                 1736000000,
-                1736000000,
+                1736512069,
                 1736000000,
                 1736000000,
                 1736000000,
@@ -136,7 +136,7 @@ class TestNetworkSubscriptionsFunctions:
             returned = fetch_subscriptions_from_boxes(client)
         assert returned == {
             address1: [(500000000000, 3236067977500), (0, 0)],
-            address2: [(2500000000, 2329968943), (18000000000, 23299689438)],
+            address2: [(2500000000, 2329968943)],
             address3: [(18000000000, 23299689438), (0, 0)],
             address4: [(38000000000, 258885438200)],
             address5: [(500000000000, 3236067977500), (0, 0)],

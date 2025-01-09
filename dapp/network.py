@@ -74,7 +74,7 @@ def fetch_subscriptions_from_boxes(client):
             subscription_end = int(hexed[start : start + 16], 16)
             if (
                 subscription_end
-                > datetime.now(UTC).timestamp() + SUBSCRIPTION_PERIOD_EXTENSION
+                > datetime.now(UTC).timestamp() - SUBSCRIPTION_PERIOD_EXTENSION
                 or subscription_end == 0
             ):
                 subscriptions[address].append((amount, permission))
