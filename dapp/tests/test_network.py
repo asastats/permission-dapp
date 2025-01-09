@@ -13,8 +13,8 @@ from config import (
     SUBTOPIA_ASASTATSER_APP_ID,
     SUBTOPIA_PROFESSIONAL_APP_ID,
     SUBTOPIA_CLUSTER_APP_ID,
-    SUBTOPIA_DAO_APP_ID,
 )
+from helpers import box_name_from_address
 from network import (
     _cometa_app_amount,
     _cometa_app_local_state_for_address,
@@ -22,6 +22,7 @@ from network import (
     check_and_update_new_stakers,
     check_and_update_new_subscribers,
     current_governance_staking_for_address,
+    fetch_subscriptions_for_address,
     fetch_subscriptions_from_boxes,
     delete_box,
     deserialized_permission_dapp_box_value,
@@ -34,6 +35,40 @@ from network import (
 # # SUBSCRIPTIONS
 class TestNetworkSubscriptionsFunctions:
     """Testing class for :py:mod:`network` subscriptions functions."""
+
+    # # fetch_subscriptions_for_address``
+    def test_network_fetch_subscriptions_for_address_functionality(self, mocker):
+        client = mocker.MagicMock()
+        address = "OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I"
+        response1 = {
+            "value": "AAAAACuMc0sAAAAAAAAAAgAAAABnWCsBAAAAAGdp/8AAAAAAACeNAA=="
+        }
+        response2 = {
+            "value": "AAAAACuMc0sAAAAAAAAAAgAAAABnWDCdAAAAAGd/vZ0AAAAAACeNAA=="
+        }
+        response3 = {
+            "value": "AAAAACuMejoAAAAAAAAAAgAAAABnWDPFAAAAAGd/wMUAAAAAACeNAA=="
+        }
+        client.application_box_by_name.side_effect = [
+            response1,
+            AlgodHTTPError(""),
+            response2,
+            response3,
+        ]
+        returned = fetch_subscriptions_for_address(client, address)
+        assert returned == {
+            "Intro": 1735000000,
+            "Professional": 1736424861,
+            "Cluster": 1736425669,
+        }
+        calls = [
+            mocker.call(SUBTOPIA_INTRO_APP_ID, box_name_from_address(address)),
+            mocker.call(SUBTOPIA_ASASTATSER_APP_ID, box_name_from_address(address)),
+            mocker.call(SUBTOPIA_PROFESSIONAL_APP_ID, box_name_from_address(address)),
+            mocker.call(SUBTOPIA_CLUSTER_APP_ID, box_name_from_address(address)),
+        ]
+        client.application_box_by_name.assert_has_calls(calls, any_order=True)
+        assert client.application_box_by_name.call_count == 4
 
     # # fetch_subscriptions_from_boxes
     def test_network_fetch_subscriptions_from_boxes_functionality(self, mocker):
@@ -135,11 +170,11 @@ class TestNetworkSubscriptionsFunctions:
             ]
             returned = fetch_subscriptions_from_boxes(client)
         assert returned == {
-            address1: [(500000000000, 3236067977500), (0, 0)],
+            address1: [(500000000000, 3236067977500)],
             address2: [(2500000000, 2329968943)],
-            address3: [(18000000000, 23299689438), (0, 0)],
+            address3: [(18000000000, 23299689438)],
             address4: [(38000000000, 258885438200)],
-            address5: [(500000000000, 3236067977500), (0, 0)],
+            address5: [(500000000000, 3236067977500)],
         }
         calls = [mocker.call(app_id) for app_id in SUBSCRIPTION_PERMISSIONS]
         client.application_boxes.assert_has_calls(calls, any_order=True)
@@ -170,18 +205,9 @@ class TestNetworkSubscriptionsFunctions:
             mocker.call(
                 SUBTOPIA_CLUSTER_APP_ID, base64.b64decode(boxes4["boxes"][1]["name"])
             ),
-            mocker.call(
-                SUBTOPIA_DAO_APP_ID, base64.b64decode(boxes5["boxes"][0]["name"])
-            ),
-            mocker.call(
-                SUBTOPIA_DAO_APP_ID, base64.b64decode(boxes5["boxes"][1]["name"])
-            ),
-            mocker.call(
-                SUBTOPIA_DAO_APP_ID, base64.b64decode(boxes5["boxes"][2]["name"])
-            ),
         ]
         client.application_box_by_name.assert_has_calls(calls, any_order=True)
-        assert client.application_box_by_name.call_count == 11
+        assert client.application_box_by_name.call_count == 8
 
 
 # # STAKING

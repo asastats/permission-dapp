@@ -31,6 +31,51 @@ from helpers import (
 
 
 # # SUBCRIPTIONS
+def fetch_subscriptions_for_address(client, address):
+    """Return collection of all subscriptions for provided `address`.
+
+    Box value contains the following uints:
+    (tier_asset_id, 2, subscription_start, subscription_end, subscription_duration)
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param address: currently processed box's user address
+    :type address: str
+    :var subscriptions: collection of tier names and related expiration timestamps
+    :type subscriptions: dict
+    :var app_id: currently processed subscription tier app
+    :type app_id: int
+    :var tier_name: subscription tier name
+    :type tier_name: str
+    :var box_name: currently processed box's name
+    :type box_name: bytes
+    :var response: user's box response instance
+    :type response: dict
+    :var hexed: user box value's hexadecimal string representation
+    :type hexed: str
+    :var start: starting position of subscription's end value
+    :type start: int
+    :var subscription_end: timestamp when subscription expires
+    :type subscription_end: int
+    :return: dict
+    """
+    subscriptions = defaultdict(int)
+    for app_id, (_, _, tier_name) in SUBSCRIPTION_PERMISSIONS.items():
+        box_name = box_name_from_address(address)
+        try:
+            response = client.application_box_by_name(app_id, box_name)
+        except AlgodHTTPError:
+            continue
+
+        if response:
+            hexed = base64.b64decode(response.get("value")).hex()
+            start = 48
+            subscription_end = int(hexed[start : start + 16], 16)
+            subscriptions[tier_name] = subscription_end
+
+    return subscriptions
+
+
 def fetch_subscriptions_from_boxes(client):
     """Return collection of all subscribed addresses with related subscription values.
 
@@ -59,10 +104,12 @@ def fetch_subscriptions_from_boxes(client):
     :type hexed: str
     :var start: starting position of subscription's end value
     :type start: int
+    :var subscription_end: timestamp when subscription expires
+    :type subscription_end: int
     :return: dict
     """
     subscriptions = defaultdict(list)
-    for app_id, (amount, permission) in SUBSCRIPTION_PERMISSIONS.items():
+    for app_id, (amount, permission, _) in SUBSCRIPTION_PERMISSIONS.items():
         boxes = client.application_boxes(app_id)
         for box in boxes.get("boxes", []):
             box_name = base64.b64decode(box.get("name"))
