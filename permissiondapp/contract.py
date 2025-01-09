@@ -39,55 +39,13 @@ router = Router(
 )
 
 
-# ## CREATE
-# @router.method
-# def createBox(box_name: abi.String):
-#     return Seq(
-#         assert_sender_is_creator(),
-#         Assert(App.box_create(box_name.get(), Int(ACCOUNT_STATE_SIZE))),
-#     )
-
-
-# @router.method
-# def createBoxWithPut(box_name: abi.String, box_value: abi.String):
-#     return Seq(
-#         assert_sender_is_creator(),
-#         App.box_put(box_name.get(), box_value.get()),
-#     )
-
-
 ## WRITE
-# @router.method
-# def replaceBox(box_name: abi.String, value: abi.String):
-#     return Seq(
-#         assert_sender_is_creator(),
-#         App.box_replace(box_name.get(), Int(0), value.get()),
-#     )
-
-
 @router.method
 def writeBox(box_name: abi.StaticBytes[Literal[32]], value: abi.String):
     return Seq(
         assert_sender_is_creator(),
         App.box_put(box_name.get(), value.get()),
     )
-
-
-# ## READ
-# @router.method
-# def extractBox(
-#     box_name: abi.String, start: abi.Uint8, end: abi.Uint8, *, output: abi.String
-# ):
-#     return output.set(App.box_extract(box_name.get(), start.get(), end.get()))
-
-
-# @router.method
-# def getBox(box_name: abi.String, *, output: abi.String):
-#     return Seq(
-#         contents := App.box_get(box_name.get()),
-#         Assert(contents.hasValue()),
-#         output.set(contents.value()),
-#     )
 
 
 ## DELETE
@@ -97,16 +55,6 @@ def deleteBox(box_name: abi.StaticBytes[Literal[32]]):
         assert_sender_is_creator(),
         Assert(App.box_delete(box_name.get())),
     )
-
-
-# ## BOX SIZE
-# @router.method
-# def getBoxSize(box_name: abi.String, *, output: abi.Uint64):
-#     return Seq(
-#         length := App.box_length(box_name.get()),
-#         Assert(length.hasValue()),
-#         output.set(length.value()),
-#     )
 
 
 if __name__ == "__main__":
