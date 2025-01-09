@@ -3,8 +3,8 @@
 from pathlib import Path
 from unittest import mock
 
-import permissiondapp.deploy
-from permissiondapp.deploy import deploy_app
+import dapp.deploy
+from dapp.deploy import deploy_app
 
 
 # # VALUES
@@ -24,40 +24,40 @@ class TestDeployFunctions:
             "creator_mnemonic": creator_mnemonic,
         }
         mocked_env = mocker.patch(
-            "permissiondapp.deploy.environment_variables", return_value=env
+            "dapp.deploy.environment_variables", return_value=env
         )
         client = mocker.MagicMock()
         mocked_client = mocker.patch(
-            "permissiondapp.deploy.AlgodClient", return_value=client
+            "dapp.deploy.AlgodClient", return_value=client
         )
         creator_private_key = mocker.MagicMock()
         mocked_private_key = mocker.patch(
-            "permissiondapp.deploy.private_key_from_mnemonic",
+            "dapp.deploy.private_key_from_mnemonic",
             return_value=creator_private_key,
         )
         approval_program, clear_program = mocker.MagicMock(), mocker.MagicMock()
         mocked_compile = mocker.patch(
-            "permissiondapp.deploy.compile_program",
+            "dapp.deploy.compile_program",
             side_effect=[approval_program, clear_program],
         )
         app_id = 5050
         mocked_create = mocker.patch(
-            "permissiondapp.deploy.create_app", return_value=app_id
+            "dapp.deploy.create_app", return_value=app_id
         )
         approval_source, clear_source = mocker.MagicMock(), mocker.MagicMock()
         with mock.patch(
-            "permissiondapp.deploy.open", side_effect=[approval_source, clear_source]
+            "dapp.deploy.open", side_effect=[approval_source, clear_source]
         ) as mocked_open:
             returned = deploy_app()
             assert returned == app_id
             calls = [
                 mocker.call(
-                    Path(permissiondapp.deploy.__file__).resolve().parent
+                    Path(dapp.deploy.__file__).resolve().parent
                     / "artifacts"
                     / "approval.teal"
                 ),
                 mocker.call(
-                    Path(permissiondapp.deploy.__file__).resolve().parent
+                    Path(dapp.deploy.__file__).resolve().parent
                     / "artifacts"
                     / "clear.teal"
                 ),

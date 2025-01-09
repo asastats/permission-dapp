@@ -5,15 +5,15 @@ from pathlib import Path
 
 import pytest
 
-from permissiondapp.config import (
+from dapp.config import (
     CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DOCS_STARTING_POSITION,
     PERMISSION_APP_ID,
     STAKING_DOCS,
 )
-import permissiondapp.foundation
-from permissiondapp.foundation import (
+import dapp.foundation
+from dapp.foundation import (
     _calculate_and_update_votes_and_permissions,
     _initial_check,
     _load_and_merge_accounts,
@@ -114,12 +114,12 @@ class TestFoundationHelpersFunctions:
     # # _initial_check
     def test_foundation_initial_check_raises_for_existing_boxes(self, mocker):
         client = mocker.MagicMock()
-        mocked_client = mocker.patch("permissiondapp.foundation.AlgodClient", return_value=client)
+        mocked_client = mocker.patch("dapp.foundation.AlgodClient", return_value=client)
         boxes = {"boxes": [1, 2, 3, 4]}
         client.application_boxes.return_value = boxes
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
         env = {"algod_token": algod_token, "algod_address": algod_address}
-        mocked_env = mocker.patch("permissiondapp.foundation.environment_variables", return_value=env)
+        mocked_env = mocker.patch("dapp.foundation.environment_variables", return_value=env)
         with pytest.raises(ValueError) as exception:
             _initial_check()
             assert str(exception.value) == "Some boxes are already populated!"
@@ -132,12 +132,12 @@ class TestFoundationHelpersFunctions:
 
     def test_foundation_initial_check_functionality(self, mocker):
         client = mocker.MagicMock()
-        mocked_client = mocker.patch("permissiondapp.foundation.AlgodClient", return_value=client)
+        mocked_client = mocker.patch("dapp.foundation.AlgodClient", return_value=client)
         boxes = {"boxes": []}
         client.application_boxes.return_value = boxes
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
         env = {"algod_token": algod_token, "algod_address": algod_address}
-        mocked_env = mocker.patch("permissiondapp.foundation.environment_variables", return_value=env)
+        mocked_env = mocker.patch("dapp.foundation.environment_variables", return_value=env)
         returned = _initial_check()
         assert returned == (env, client)
         mocked_env.assert_called_once()
@@ -169,7 +169,7 @@ class TestFoundationFoundationFunctions:
             address4: value4,
             address5: value5,
         }
-        mocked_read = mocker.patch("permissiondapp.foundation.read_json", return_value=doc_data)
+        mocked_read = mocker.patch("dapp.foundation.read_json", return_value=doc_data)
         doc_id = "doc1"
         returned = _load_and_merge_accounts(doc_id)
         assert returned == {
@@ -181,7 +181,7 @@ class TestFoundationFoundationFunctions:
         }
         mocked_read.assert_called_once()
         mocked_read.assert_called_with(
-            Path(permissiondapp.foundation.__file__).resolve().parent
+            Path(dapp.foundation.__file__).resolve().parent
             / "DAO"
             / doc_id
             / "allocations.json"
@@ -191,14 +191,14 @@ class TestFoundationFoundationFunctions:
         address1, address2, address3 = "address1", "address2", "address3"
         value1, value2, value3 = 100, 200, 300
         doc_data = {address1: value1, address2: value2, address3: value3}
-        mocked_read = mocker.patch("permissiondapp.foundation.read_json", return_value=doc_data)
+        mocked_read = mocker.patch("dapp.foundation.read_json", return_value=doc_data)
         doc_id = "doc1"
         stem = "some_stem"
         returned = _load_and_merge_accounts(doc_id, stem=stem)
         assert returned == {address1: value1, address2: value2, address3: value3}
         mocked_read.assert_called_once()
         mocked_read.assert_called_with(
-            Path(permissiondapp.foundation.__file__).resolve().parent / "DAO" / doc_id / f"{stem}.json"
+            Path(dapp.foundation.__file__).resolve().parent / "DAO" / doc_id / f"{stem}.json"
         )
 
     # # _load_and_parse_foundation_data
@@ -236,7 +236,7 @@ class TestFoundationFoundationFunctions:
         doc_data4 = {address4: value6, address5: value6}
         doc_data5 = {address1: value7, address2: value8, address5: value9}
         mocked_load = mocker.patch(
-            "permissiondapp.foundation._load_and_merge_accounts",
+            "dapp.foundation._load_and_merge_accounts",
             side_effect=[doc_data1, doc_data2, doc_data3, doc_data4, doc_data5],
         )
         items = ("doc1", "doc2", "doc3", "doc4", "doc5")
@@ -310,7 +310,7 @@ class TestFoundationFoundationFunctions:
         doc_data3 = {address2: [value5]}
         doc_data4 = {address4: [value6], address5: [value6]}
         mocked_load = mocker.patch(
-            "permissiondapp.foundation._load_and_merge_accounts",
+            "dapp.foundation._load_and_merge_accounts",
             side_effect=[doc_data1, doc_data2, doc_data3, doc_data4],
         )
         items = ("doc1", "doc2")
@@ -357,17 +357,17 @@ class TestFoundationFoundationFunctions:
     # # _prepare_data
     def test_foundation_prepare_data_functionality(self, mocker):
         client = mocker.MagicMock()
-        mocked_foundation = mocker.patch("permissiondapp.foundation._load_and_parse_foundation_data")
-        mocked_staking = mocker.patch("permissiondapp.foundation._load_and_parse_staking_data")
-        mocked_client = mocker.patch("permissiondapp.foundation.AlgodClient", return_value=client)
+        mocked_foundation = mocker.patch("dapp.foundation._load_and_parse_foundation_data")
+        mocked_staking = mocker.patch("dapp.foundation._load_and_parse_staking_data")
+        mocked_client = mocker.patch("dapp.foundation.AlgodClient", return_value=client)
         mocked_staking_foundation = mocker.patch(
-            "permissiondapp.foundation._update_current_staking_for_foundation"
+            "dapp.foundation._update_current_staking_for_foundation"
         )
         mocked_staking_non_foundation = mocker.patch(
-            "permissiondapp.foundation._update_current_staking_for_non_foundation"
+            "dapp.foundation._update_current_staking_for_non_foundation"
         )
         mocked_calculate = mocker.patch(
-            "permissiondapp.foundation._calculate_and_update_votes_and_permissions"
+            "dapp.foundation._calculate_and_update_votes_and_permissions"
         )
         data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
@@ -395,11 +395,11 @@ class TestFoundationFoundationFunctions:
     def test_foundation_prepare_and_write_data_functionality(self, mocker):
         env, client = mocker.MagicMock(), mocker.MagicMock()
         mocked_initial = mocker.patch(
-            "permissiondapp.foundation._initial_check", return_value=[env, client]
+            "dapp.foundation._initial_check", return_value=[env, client]
         )
-        mocked_data = mocker.patch("permissiondapp.foundation._prepare_data")
-        mocked_parameters = mocker.patch("permissiondapp.foundation.box_writing_parameters")
-        mocked_write = mocker.patch("permissiondapp.foundation.write_foundation_boxes")
+        mocked_data = mocker.patch("dapp.foundation._prepare_data")
+        mocked_parameters = mocker.patch("dapp.foundation.box_writing_parameters")
+        mocked_write = mocker.patch("dapp.foundation.write_foundation_boxes")
         prepare_and_write_data()
         mocked_initial.assert_called_once()
         mocked_initial.assert_called_with()
@@ -427,11 +427,11 @@ class TestFoundationStakingFunctions:
         client = mocker.MagicMock()
         starting_position = 4
         mocked_staking = mocker.patch(
-            "permissiondapp.foundation.current_governance_staking_for_address",
+            "dapp.foundation.current_governance_staking_for_address",
             side_effect=[50000, 0, 100000],
         )
         mocked_permission = mocker.patch(
-            "permissiondapp.foundation.permission_for_amount", side_effect=[2000, 3000]
+            "dapp.foundation.permission_for_amount", side_effect=[2000, 3000]
         )
         address1, address2, address3 = "address1", "address2", "address3"
         data = {
@@ -472,15 +472,15 @@ class TestFoundationStakingFunctions:
             "address7",
         )
         mocked_addresses = mocker.patch(
-            "permissiondapp.foundation.governance_staking_addresses",
+            "dapp.foundation.governance_staking_addresses",
             return_value=[address1, address3, address4, address5, address6, address7],
         )
         mocked_staking = mocker.patch(
-            "permissiondapp.foundation.current_governance_staking_for_address",
+            "dapp.foundation.current_governance_staking_for_address",
             side_effect=[100000, 0, 20000, 0],
         )
         mocked_permission = mocker.patch(
-            "permissiondapp.foundation.permission_for_amount", side_effect=[5000, 0]
+            "dapp.foundation.permission_for_amount", side_effect=[5000, 0]
         )
         data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
         data[address1] = [0, 1, 2, 3, 0, 0]
@@ -527,19 +527,19 @@ class TestFoundationUpdateFunctions:
             "algod_token_mainnet": algod_token_mainnet,
             "algod_address_mainnet": algod_address_mainnet,
         }
-        mocked_env = mocker.patch("permissiondapp.foundation.environment_variables", return_value=env)
+        mocked_env = mocker.patch("dapp.foundation.environment_variables", return_value=env)
         client, mainnet_client = mocker.MagicMock(), mocker.MagicMock()
         mocked_client = mocker.patch(
-            "permissiondapp.foundation.AlgodClient", side_effect=[client, mainnet_client]
+            "dapp.foundation.AlgodClient", side_effect=[client, mainnet_client]
         )
         writing_parameters = mocker.MagicMock()
         mocked_parameters = mocker.patch(
-            "permissiondapp.foundation.box_writing_parameters", return_value=writing_parameters
+            "dapp.foundation.box_writing_parameters", return_value=writing_parameters
         )
-        mocked_subscriptions = mocker.patch("permissiondapp.foundation.fetch_subscriptions_from_boxes")
+        mocked_subscriptions = mocker.patch("dapp.foundation.fetch_subscriptions_from_boxes")
         address1, address2, address3 = "address1", "address2", "address3"
         mocked_governance = mocker.patch(
-            "permissiondapp.foundation.governance_staking_addresses",
+            "dapp.foundation.governance_staking_addresses",
             return_value=[address1, address2, address3],
         )
         staking1, staking2, staking3 = (
@@ -548,18 +548,18 @@ class TestFoundationUpdateFunctions:
             mocker.MagicMock(),
         )
         mocked_staking = mocker.patch(
-            "permissiondapp.foundation.current_governance_staking_for_address",
+            "dapp.foundation.current_governance_staking_for_address",
             side_effect=[staking1, staking2, staking3],
         )
         mocked_permissions = mocker.patch(
-            "permissiondapp.foundation.permission_dapp_values_from_boxes"
+            "dapp.foundation.permission_dapp_values_from_boxes"
         )
         mocked_check_subscribers = mocker.patch(
-            "permissiondapp.foundation.check_and_update_new_subscribers"
+            "dapp.foundation.check_and_update_new_subscribers"
         )
-        mocked_check_stakers = mocker.patch("permissiondapp.foundation.check_and_update_new_stakers")
+        mocked_check_stakers = mocker.patch("dapp.foundation.check_and_update_new_stakers")
         mocked_check_changed = mocker.patch(
-            "permissiondapp.foundation.check_and_update_changed_subscriptions_and_staking"
+            "dapp.foundation.check_and_update_changed_subscriptions_and_staking"
         )
         check_and_update_permission_dapp_boxes()
         mocked_env.assert_called_once()

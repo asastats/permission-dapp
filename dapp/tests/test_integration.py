@@ -6,8 +6,8 @@ from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.error import AlgodHTTPError
 from algosdk.v2client.algod import AlgodClient
 
-from permissiondapp.config import PERMISSION_APP_ID_TESTNET
-from permissiondapp.helpers import (
+from dapp.config import PERMISSION_APP_ID_TESTNET
+from dapp.helpers import (
     box_name_from_address,
     box_writing_parameters,
     environment_variables,
@@ -15,7 +15,7 @@ from permissiondapp.helpers import (
     private_key_from_mnemonic,
     serialize_values,
 )
-from permissiondapp.network import delete_box, deserialized_permission_dapp_box_value, write_box
+from dapp.network import delete_box, deserialized_permission_dapp_box_value, write_box
 
 
 # # VALUES

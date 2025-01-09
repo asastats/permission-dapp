@@ -7,9 +7,9 @@ from unittest import mock
 
 import pytest
 
-import permissiondapp.helpers
-from permissiondapp.config import INDEXER_ADDRESS, INDEXER_TOKEN, STAKING_APP_ID, STAKING_APP_MIN_ROUND
-from permissiondapp.helpers import (
+import dapp.helpers
+from dapp.config import INDEXER_ADDRESS, INDEXER_TOKEN, STAKING_APP_ID, STAKING_APP_MIN_ROUND
+from dapp.helpers import (
     _docs_positions_offset_and_length_pairs,
     _extract_uint,
     _indexer_instance,
@@ -251,11 +251,11 @@ class TestHelpersValuesFunctions:
         starting = [(0, 8), (8, 1)]
         docs = [(48, 8), (56, 1)]
         mocked_starting = mocker.patch(
-            "permissiondapp.helpers._starting_positions_offset_and_length_pairs",
+            "dapp.helpers._starting_positions_offset_and_length_pairs",
             return_value=starting,
         )
         mocked_docs = mocker.patch(
-            "permissiondapp.helpers._docs_positions_offset_and_length_pairs",
+            "dapp.helpers._docs_positions_offset_and_length_pairs",
             return_value=docs,
         )
         returned = _values_offset_and_length_pairs(docs_data_size)
@@ -286,7 +286,7 @@ class TestHelpersContractFunctions:
     def test_helpers_app_schemas_functionality(self, mocker):
         schema1, schema2 = mocker.MagicMock(), mocker.MagicMock()
         mocked_schema = mocker.patch(
-            "permissiondapp.helpers.StateSchema", side_effect=[schema1, schema2]
+            "dapp.helpers.StateSchema", side_effect=[schema1, schema2]
         )
         returned = app_schemas()
         assert returned == (schema1, schema2)
@@ -307,13 +307,13 @@ class TestHelpersContractFunctions:
     # # load_contract
     def test_helpers_load_contract_functionality(self, mocker):
         contract_json = mocker.MagicMock()
-        mocked_read = mocker.patch("permissiondapp.helpers.read_json", return_value=contract_json)
-        mocked_undictify = mocker.patch("permissiondapp.helpers.Contract.undictify")
+        mocked_read = mocker.patch("dapp.helpers.read_json", return_value=contract_json)
+        mocked_undictify = mocker.patch("dapp.helpers.Contract.undictify")
         returned = load_contract()
         assert returned == mocked_undictify.return_value
         mocked_read.assert_called_once()
         mocked_read.assert_called_with(
-            Path(permissiondapp.helpers.__file__).resolve().parent / "artifacts" / "contract.json"
+            Path(dapp.helpers.__file__).resolve().parent / "artifacts" / "contract.json"
         )
         mocked_undictify.assert_called_once()
         mocked_undictify.assert_called_with(contract_json)
@@ -325,7 +325,7 @@ class TestHelpersStakingFunctions:
 
     # # _indexer_instance
     def test_helpers_indexer_instance_functionality(self, mocker):
-        mocked_indexer = mocker.patch("permissiondapp.helpers.IndexerClient")
+        mocked_indexer = mocker.patch("dapp.helpers.IndexerClient")
         returned = _indexer_instance()
         assert returned == mocked_indexer.return_value
         mocked_indexer.assert_called_once()
@@ -335,7 +335,7 @@ class TestHelpersStakingFunctions:
 
     # # governance_staking_addresses
     def test_helpers_governance_staking_addresses_functionality(self, mocker):
-        mocked_indexer = mocker.patch("permissiondapp.helpers._indexer_instance")
+        mocked_indexer = mocker.patch("dapp.helpers._indexer_instance")
         address1, address2, address3, address4, address5 = (
             "address1",
             "address2",
@@ -353,7 +353,7 @@ class TestHelpersStakingFunctions:
             {"sender": address5},
         ]
         mocked_transaction = mocker.patch(
-            "permissiondapp.helpers._application_transaction", return_value=txns
+            "dapp.helpers._application_transaction", return_value=txns
         )
         params = {
             "application_id": STAKING_APP_ID,
@@ -444,9 +444,9 @@ class TestHelpersHelpersFunctions:
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
-        mocked_load_dotenv = mocker.patch("permissiondapp.helpers.load_dotenv")
+        mocked_load_dotenv = mocker.patch("dapp.helpers.load_dotenv")
         with mock.patch(
-            "permissiondapp.helpers.os.getenv",
+            "dapp.helpers.os.getenv",
             side_effect=[
                 creator_mnemonic,
                 user_mnemonic,
@@ -546,7 +546,7 @@ class TestHelpersHelpersFunctions:
     # # private_key_from_mnemonic
     def test_helpers_private_key_from_mnemonic_functionality(self, mocker):
         passphrase = mocker.MagicMock()
-        mocked_key = mocker.patch("permissiondapp.helpers.to_private_key")
+        mocked_key = mocker.patch("dapp.helpers.to_private_key")
         returned = private_key_from_mnemonic(passphrase)
         assert returned == mocked_key.return_value
         mocked_key.assert_called_once()
@@ -556,8 +556,8 @@ class TestHelpersHelpersFunctions:
     def test_helpers_read_json_returns_empty_dict_for_no_file(self, mocker):
         path = mocker.MagicMock()
         with (
-            mock.patch("permissiondapp.helpers.os.path.exists", return_value=False) as mocked_exist,
-            mock.patch("permissiondapp.helpers.open") as mocked_open,
+            mock.patch("dapp.helpers.os.path.exists", return_value=False) as mocked_exist,
+            mock.patch("dapp.helpers.open") as mocked_open,
         ):
             assert read_json(path) == {}
             mocked_exist.assert_called_once()
@@ -566,10 +566,10 @@ class TestHelpersHelpersFunctions:
 
     def test_helpers_read_json_returns_empty_dict_for_exception(self, mocker):
         with (
-            mock.patch("permissiondapp.helpers.os.path.exists", return_value=True),
-            mock.patch("permissiondapp.helpers.open"),
+            mock.patch("dapp.helpers.os.path.exists", return_value=True),
+            mock.patch("dapp.helpers.open"),
             mock.patch(
-                "permissiondapp.helpers.json.load", side_effect=json.JSONDecodeError("", "", 0)
+                "dapp.helpers.json.load", side_effect=json.JSONDecodeError("", "", 0)
             ),
         ):
             assert read_json(mocker.MagicMock()) == {}
@@ -577,9 +577,9 @@ class TestHelpersHelpersFunctions:
     def test_helpers_read_json_returns_json_file_content(self, mocker):
         path = mocker.MagicMock()
         with (
-            mock.patch("permissiondapp.helpers.os.path.exists", return_value=True),
-            mock.patch("permissiondapp.helpers.open") as mocked_open,
-            mock.patch("permissiondapp.helpers.json.load") as mocked_load,
+            mock.patch("dapp.helpers.os.path.exists", return_value=True),
+            mock.patch("dapp.helpers.open") as mocked_open,
+            mock.patch("dapp.helpers.json.load") as mocked_load,
         ):
             assert read_json(path) == mocked_load.return_value
             mocked_open.assert_called_once()
