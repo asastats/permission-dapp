@@ -39,6 +39,7 @@ DAO_DISCUSSIONS_DOCS = (
     "update-16",
     "update-17",
     "update-18",
+    "update-19",
 )
 DAO_DISCUSSIONS_DOCS_STARTING_INDEX = 1
 STAKING_DOCS = ("staking-first-year-1128",)
