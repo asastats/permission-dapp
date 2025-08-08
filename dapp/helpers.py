@@ -275,17 +275,18 @@ def governance_staking_addresses():
     :type transaction: dict
     :return: set
     """
-    addresses = set()
-    indexer_client = _indexer_instance()
-    params = {
-        "application_id": STAKING_APP_ID,
-        "limit": 1000,
-        "min_round": STAKING_APP_MIN_ROUND,
-    }
-    for transaction in _application_transaction(params, indexer_client):
-        addresses.add(transaction.get("sender"))
+    return set()
+    # addresses = set()
+    # indexer_client = _indexer_instance()
+    # params = {
+    #     "application_id": STAKING_APP_ID,
+    #     "limit": 1000,
+    #     "min_round": STAKING_APP_MIN_ROUND,
+    # }
+    # for transaction in _application_transaction(params, indexer_client):
+    #     addresses.add(transaction.get("sender"))
 
-    return addresses
+    # return addresses
 
 
 # # HELPERS

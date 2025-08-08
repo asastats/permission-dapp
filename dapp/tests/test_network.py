@@ -328,6 +328,15 @@ class TestNetworkStakingFunctions:
         client.account_info.assert_called_with(address)
 
     # # current_governance_staking_for_address
+    def test_network_current_governance_staking_for_address_functionality_new(
+        self, mocker
+    ):
+        returned = current_governance_staking_for_address(
+            mocker.MagicMock(), mocker.MagicMock()
+        )
+        assert returned == 0
+
+    @pytest.mark.skip(reason="No running staking programs")
     def test_network_current_governance_staking_for_address_for_no_state(self, mocker):
         client, address = mocker.MagicMock(), mocker.MagicMock()
         mocked_state = mocker.patch(
@@ -340,6 +349,7 @@ class TestNetworkStakingFunctions:
         mocked_state.assert_called_with(client, address)
         mocked_amount.assert_not_called()
 
+    @pytest.mark.skip(reason="No running staking programs")
     def test_network_current_governance_staking_for_address_functionality(self, mocker):
         client, address = mocker.MagicMock(), mocker.MagicMock()
         state = mocker.MagicMock()

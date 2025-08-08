@@ -186,8 +186,9 @@ def current_governance_staking_for_address(client, address):
     :type state: dict
     :return: int
     """
-    state = _cometa_app_local_state_for_address(client, address)
-    return _cometa_app_amount(STAKING_KEY, state) if state else 0
+    return 0
+    # state = _cometa_app_local_state_for_address(client, address)
+    # return _cometa_app_amount(STAKING_KEY, state) if state else 0
 
 
 # # UPDATE

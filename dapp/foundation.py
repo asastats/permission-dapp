@@ -115,7 +115,7 @@ def _load_and_parse_foundation_data(data, items):
     for index, doc_id in enumerate(items):
         doc_data = _load_and_merge_accounts(doc_id)
         for address, value in doc_data.items():
-            data[address].append(value * 1_000_000)
+            data[address].append(int(value * 1_000_000))
             data[address].append(DAO_DISCUSSIONS_DOCS_STARTING_INDEX + index)
 
 

@@ -334,6 +334,11 @@ class TestHelpersStakingFunctions:
         )
 
     # # governance_staking_addresses
+    def test_helpers_governance_staking_addresses_functionality_new(self):
+        returned = governance_staking_addresses()
+        assert returned == set()
+
+    @pytest.mark.skip(reason="No running staking programs")
     def test_helpers_governance_staking_addresses_functionality(self, mocker):
         mocked_indexer = mocker.patch("helpers._indexer_instance")
         address1, address2, address3, address4, address5 = (
