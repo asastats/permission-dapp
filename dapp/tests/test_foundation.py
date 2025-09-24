@@ -123,12 +123,9 @@ class TestFoundationHelpersFunctions:
         with pytest.raises(ValueError) as exception:
             _initial_check()
             assert str(exception.value) == "Some boxes are already populated!"
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
-        mocked_client.assert_called_once()
-        mocked_client.assert_called_with(algod_token, algod_address)
-        client.application_boxes.assert_called_once()
-        client.application_boxes.assert_called_with(PERMISSION_APP_ID)
+        mocked_env.assert_called_once_with()
+        mocked_client.assert_called_once_with(algod_token, algod_address)
+        client.application_boxes.assert_called_once_with(PERMISSION_APP_ID)
 
     def test_foundation_initial_check_functionality(self, mocker):
         client = mocker.MagicMock()
@@ -140,12 +137,9 @@ class TestFoundationHelpersFunctions:
         mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
         returned = _initial_check()
         assert returned == (env, client)
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
-        mocked_client.assert_called_once()
-        mocked_client.assert_called_with(algod_token, algod_address)
-        client.application_boxes.assert_called_once()
-        client.application_boxes.assert_called_with(PERMISSION_APP_ID)
+        mocked_env.assert_called_once_with()
+        mocked_client.assert_called_once_with(algod_token, algod_address)
+        client.application_boxes.assert_called_once_with(PERMISSION_APP_ID)
 
 
 # # FOUNDATION
@@ -179,8 +173,7 @@ class TestFoundationFoundationFunctions:
             address4: value4,
             "ZJEPH66G4C2YLVAOL6NH6ZP3GPCRG3BDZQJ4KCHDN3BD6GZ3YWCHTGOTMA": value5,
         }
-        mocked_read.assert_called_once()
-        mocked_read.assert_called_with(
+        mocked_read.assert_called_once_with(
             Path(foundation.__file__).resolve().parent
             / "DAO"
             / doc_id
@@ -196,8 +189,7 @@ class TestFoundationFoundationFunctions:
         stem = "some_stem"
         returned = _load_and_merge_accounts(doc_id, stem=stem)
         assert returned == {address1: value1, address2: value2, address3: value3}
-        mocked_read.assert_called_once()
-        mocked_read.assert_called_with(
+        mocked_read.assert_called_once_with(
             Path(foundation.__file__).resolve().parent / "DAO" / doc_id / f"{stem}.json"
         )
 
@@ -374,22 +366,16 @@ class TestFoundationFoundationFunctions:
         env = {"algod_token": algod_token, "algod_address": algod_address}
         returned = _prepare_data(env)
         assert returned == data
-        mocked_foundation.assert_called_once()
-        mocked_foundation.assert_called_with(data, items=DAO_DISCUSSIONS_DOCS)
-        mocked_staking.assert_called_once()
-        mocked_staking.assert_called_with(data, items=STAKING_DOCS)
-        mocked_client.assert_called_once()
-        mocked_client.assert_called_with(algod_token, algod_address)
-        mocked_staking_foundation.assert_called_once()
-        mocked_staking_foundation.assert_called_with(
+        mocked_foundation.assert_called_once_with(data, items=DAO_DISCUSSIONS_DOCS)
+        mocked_staking.assert_called_once_with(data, items=STAKING_DOCS)
+        mocked_client.assert_called_once_with(algod_token, algod_address)
+        mocked_staking_foundation.assert_called_once_with(
             client, data, starting_position=CURRENT_STAKING_POSITION
         )
-        mocked_staking_non_foundation.assert_called_once()
-        mocked_staking_non_foundation.assert_called_with(
+        mocked_staking_non_foundation.assert_called_once_with(
             client, data, starting_position=CURRENT_STAKING_POSITION
         )
-        mocked_calculate.assert_called_once()
-        mocked_calculate.assert_called_with(data)
+        mocked_calculate.assert_called_once_with(data)
 
     # # prepare_and_write_data
     def test_foundation_prepare_and_write_data_functionality(self, mocker):
@@ -401,14 +387,10 @@ class TestFoundationFoundationFunctions:
         mocked_parameters = mocker.patch("foundation.box_writing_parameters")
         mocked_write = mocker.patch("foundation.write_foundation_boxes")
         prepare_and_write_data()
-        mocked_initial.assert_called_once()
-        mocked_initial.assert_called_with()
-        mocked_data.assert_called_once()
-        mocked_data.assert_called_with(env)
-        mocked_parameters.assert_called_once()
-        mocked_parameters.assert_called_with(env)
-        mocked_write.assert_called_once()
-        mocked_write.assert_called_with(
+        mocked_initial.assert_called_once_with()
+        mocked_data.assert_called_once_with(env)
+        mocked_parameters.assert_called_once_with(env)
+        mocked_write.assert_called_once_with(
             client,
             PERMISSION_APP_ID,
             mocked_parameters.return_value,
@@ -487,8 +469,7 @@ class TestFoundationStakingFunctions:
         data[address2] = [0, 1, 2, 3, 0, 0]
         data[address3] = [0, 1, 2, 3, 0, 0]
         _update_current_staking_for_non_foundation(client, data, starting_position)
-        mocked_addresses.assert_called_once()
-        mocked_addresses.assert_called_with()
+        mocked_addresses.assert_called_once_with()
         assert data == {
             address1: [0, 1, 2, 3, 0, 0],
             address2: [0, 1, 2, 3, 0, 0],
@@ -562,20 +543,16 @@ class TestFoundationUpdateFunctions:
             "foundation.check_and_update_changed_subscriptions_and_staking"
         )
         check_and_update_permission_dapp_boxes()
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
+        mocked_env.assert_called_once_with()
         calls = [
             mocker.call(algod_token, algod_address),
             mocker.call(algod_token_mainnet, algod_address_mainnet),
         ]
         mocked_client.assert_has_calls(calls, any_order=True)
         assert mocked_client.call_count == 2
-        mocked_parameters.assert_called_once()
-        mocked_parameters.assert_called_with(env)
-        mocked_subscriptions.assert_called_once()
-        mocked_subscriptions.assert_called_with(client)
-        mocked_governance.assert_called_once()
-        mocked_governance.assert_called_with()
+        mocked_parameters.assert_called_once_with(env)
+        mocked_subscriptions.assert_called_once_with(client)
+        mocked_governance.assert_called_once_with()
         calls = [
             mocker.call(mainnet_client, address1),
             mocker.call(mainnet_client, address2),
@@ -583,26 +560,22 @@ class TestFoundationUpdateFunctions:
         ]
         mocked_staking.assert_has_calls(calls, any_order=True)
         assert mocked_staking.call_count == 3
-        mocked_permissions.assert_called_once()
-        mocked_permissions.assert_called_with(client, PERMISSION_APP_ID)
-        mocked_check_subscribers.assert_called_once()
-        mocked_check_subscribers.assert_called_with(
+        mocked_permissions.assert_called_once_with(client, PERMISSION_APP_ID)
+        mocked_check_subscribers.assert_called_once_with(
             client,
             PERMISSION_APP_ID,
             writing_parameters,
             mocked_permissions.return_value,
             mocked_subscriptions.return_value,
         )
-        mocked_check_stakers.assert_called_once()
-        mocked_check_stakers.assert_called_with(
+        mocked_check_stakers.assert_called_once_with(
             client,
             PERMISSION_APP_ID,
             writing_parameters,
             mocked_permissions.return_value,
             {address1: staking1, address2: staking2, address3: staking3},
         )
-        mocked_check_changed.assert_called_once()
-        mocked_check_changed.assert_called_with(
+        mocked_check_changed.assert_called_once_with(
             client,
             PERMISSION_APP_ID,
             writing_parameters,

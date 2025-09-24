@@ -1,0 +1,38 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r dapp/requirements.txt
+
+      - name: Run Pytest
+        run: |
+          echo "ALGOD_TOKEN_TESTNET=https://testnet-api.4160.nodely.dev" >> "$GITHUB_ENV"
+          echo "ALGOD_ADDRESS_TESTNET=''" >> "$GITHUB_ENV"
+          echo "CREATOR_MNEMONIC_TESTNET='fruit jeans surface glide metal relax mutual capital supreme repeat scorpion indicate matrix guess decade mountain observe suspect poem forward dismiss figure lemon about dumb'" >> "$GITHUB_ENV"
+          pytest

@@ -14,7 +14,6 @@ from config import (
     CURRENT_STAKING_POSITION,
     DOCS_STARTING_POSITION,
     STAKING_APP_ID,
-    STAKING_KEY,
     SUBSCRIPTION_PERIOD_EXTENSION,
     SUBSCRIPTION_PERMISSIONS,
     SUBSCRIPTION_POSITION,
@@ -175,20 +174,26 @@ def _cometa_app_local_state_for_address(client, address):
     )
 
 
-def current_governance_staking_for_address(client, address):
+def current_governance_staking_for_address(client, address, staking_key=None):
     """Return staking amount for `address` from Cometa's staking program.
+
+    NOTE: checking is currently suppressed by default
 
     :param client: Algorand Node client instance
     :type client: :class:`AlgodClient`
     :param address: governance seat address associated with the box
     :type address: str
+    :param staking_key: staking program's staking key
+    :type staking_key: str
     :var state: staking application's local state object
     :type state: dict
     :return: int
     """
-    return 0
-    # state = _cometa_app_local_state_for_address(client, address)
-    # return _cometa_app_amount(STAKING_KEY, state) if state else 0
+    if staking_key is None:
+        return 0
+
+    state = _cometa_app_local_state_for_address(client, address)
+    return _cometa_app_amount(staking_key, state) if state else 0
 
 
 # # UPDATE

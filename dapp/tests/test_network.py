@@ -282,8 +282,7 @@ class TestNetworkStakingFunctions:
         address = "address"
         returned = _cometa_app_local_state_for_address(client, address)
         assert returned is None
-        client.account_info.assert_called_once()
-        client.account_info.assert_called_with(address)
+        client.account_info.assert_called_once_with(address)
 
     def test_network_cometa_app_local_state_functionality(self, mocker):
         client = mocker.MagicMock()
@@ -324,11 +323,10 @@ class TestNetworkStakingFunctions:
         address = "address"
         returned = _cometa_app_local_state_for_address(client, address)
         assert returned == state2
-        client.account_info.assert_called_once()
-        client.account_info.assert_called_with(address)
+        client.account_info.assert_called_once_with(address)
 
     # # current_governance_staking_for_address
-    def test_network_current_governance_staking_for_address_functionality_new(
+    def test_network_current_governance_staking_for_address_functionality_no_staking(
         self, mocker
     ):
         returned = current_governance_staking_for_address(
@@ -336,20 +334,19 @@ class TestNetworkStakingFunctions:
         )
         assert returned == 0
 
-    @pytest.mark.skip(reason="No running staking programs")
     def test_network_current_governance_staking_for_address_for_no_state(self, mocker):
         client, address = mocker.MagicMock(), mocker.MagicMock()
         mocked_state = mocker.patch(
             "network._cometa_app_local_state_for_address", return_value=None
         )
         mocked_amount = mocker.patch("network._cometa_app_amount")
-        returned = current_governance_staking_for_address(client, address)
+        returned = current_governance_staking_for_address(
+            client, address, staking_key=STAKING_KEY
+        )
         assert returned == 0
-        mocked_state.assert_called_once()
-        mocked_state.assert_called_with(client, address)
+        mocked_state.assert_called_once_with(client, address)
         mocked_amount.assert_not_called()
 
-    @pytest.mark.skip(reason="No running staking programs")
     def test_network_current_governance_staking_for_address_functionality(self, mocker):
         client, address = mocker.MagicMock(), mocker.MagicMock()
         state = mocker.MagicMock()
@@ -357,12 +354,13 @@ class TestNetworkStakingFunctions:
             "network._cometa_app_local_state_for_address", return_value=state
         )
         mocked_amount = mocker.patch("network._cometa_app_amount")
-        returned = current_governance_staking_for_address(client, address)
+        staking_key = STAKING_KEY
+        returned = current_governance_staking_for_address(
+            client, address, staking_key=staking_key
+        )
         assert returned == mocked_amount.return_value
-        mocked_state.assert_called_once()
-        mocked_state.assert_called_with(client, address)
-        mocked_amount.assert_called_once()
-        mocked_amount.assert_called_with(STAKING_KEY, state)
+        mocked_state.assert_called_once_with(client, address)
+        mocked_amount.assert_called_once_with(staking_key, state)
 
 
 class TestNetworkUpdateFunctions:
@@ -432,8 +430,7 @@ class TestNetworkUpdateFunctions:
         check_and_update_changed_subscriptions_and_staking(
             client, app_id, writing_parameters, permissions, subscriptions, stakings
         )
-        mocked_permission.assert_called_once()
-        mocked_permission.assert_called_with(amount4)
+        mocked_permission.assert_called_once_with(amount4)
         calls = [
             mocker.call(
                 client,
@@ -612,14 +609,10 @@ class TestNetworkPermissionDappFunctions:
         writing_parameters = {"sender": sender, "signer": signer, "contract": contract}
         contract.get_method_by_name.return_value = method
         delete_box(client, app_id, writing_parameters, address)
-        mocked_composer.assert_called_once()
-        mocked_composer.assert_called_with()
-        client.suggested_params.assert_called_once()
-        client.suggested_params.assert_called_with()
-        contract.get_method_by_name.assert_called_once()
-        contract.get_method_by_name.assert_called_with("deleteBox")
-        atc.add_method_call.assert_called_once()
-        atc.add_method_call.assert_called_with(
+        mocked_composer.assert_called_once_with()
+        client.suggested_params.assert_called_once_with()
+        contract.get_method_by_name.assert_called_once_with("deleteBox")
+        atc.add_method_call.assert_called_once_with(
             app_id=app_id,
             method=contract.get_method_by_name.return_value,
             sender=sender,
@@ -628,8 +621,7 @@ class TestNetworkPermissionDappFunctions:
             method_args=[box_name],
             boxes=[(app_id, box_name)],
         )
-        atc.execute.assert_called_once()
-        atc.execute.assert_called_with(client, 2)
+        atc.execute.assert_called_once_with(client, 2)
 
     # # deserialized_permission_dapp_box_value
     def test_network_deserialized_permission_dapp_returns_none_for_no_box(self, mocker):
@@ -642,8 +634,7 @@ class TestNetworkPermissionDappFunctions:
         client.application_box_by_name.side_effect = AlgodHTTPError("box not found")
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned is None
-        client.application_box_by_name.assert_called_once()
-        client.application_box_by_name.assert_called_with(app_id, box_name)
+        client.application_box_by_name.assert_called_once_with(app_id, box_name)
         mocked_deserialize.assert_not_called()
 
     def test_network_deserialized_permission_dapp_raises_for_other_errors(self, mocker):
@@ -656,8 +647,7 @@ class TestNetworkPermissionDappFunctions:
         client.application_box_by_name.side_effect = AlgodHTTPError("foo bar")
         with pytest.raises(AlgodHTTPError):
             deserialized_permission_dapp_box_value(client, app_id, box_name)
-        client.application_box_by_name.assert_called_once()
-        client.application_box_by_name.assert_called_with(app_id, box_name)
+        client.application_box_by_name.assert_called_once_with(app_id, box_name)
         mocked_deserialize.assert_not_called()
 
     def test_network_deserialized_permission_dapp_box_value_functionality(self, mocker):
@@ -674,8 +664,7 @@ class TestNetworkPermissionDappFunctions:
         client.application_box_by_name.return_value = response
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
         assert returned == [500000, 500000000000, 0, 0, 0, 0, 500000000000, 4]
-        client.application_box_by_name.assert_called_once()
-        client.application_box_by_name.assert_called_with(app_id, box_name)
+        client.application_box_by_name.assert_called_once_with(app_id, box_name)
 
     # # permission_dapp_values_from_boxes
     def test_network_permission_dapp_values_from_boxes_raises_for_no_app_id(
@@ -721,8 +710,7 @@ class TestNetworkPermissionDappFunctions:
             address3: values3,
             address4: values4,
         }
-        client.application_boxes.assert_called_once()
-        client.application_boxes.assert_called_with(app_id)
+        client.application_boxes.assert_called_once_with(app_id)
         calls = [
             mocker.call(client, app_id, base64.b64decode(boxes["boxes"][i]["name"]))
             for i in range(len(boxes["boxes"]))
@@ -757,14 +745,10 @@ class TestNetworkPermissionDappFunctions:
         method = mocker.MagicMock()
         contract.get_method_by_name.return_value = method
         write_box(client, app_id, writing_parameters, address, value)
-        mocked_composer.assert_called_once()
-        mocked_composer.assert_called_with()
-        client.suggested_params.assert_called_once()
-        client.suggested_params.assert_called_with()
-        contract.get_method_by_name.assert_called_once()
-        contract.get_method_by_name.assert_called_with("writeBox")
-        atc.add_method_call.assert_called_once()
-        atc.add_method_call.assert_called_with(
+        mocked_composer.assert_called_once_with()
+        client.suggested_params.assert_called_once_with()
+        contract.get_method_by_name.assert_called_once_with("writeBox")
+        atc.add_method_call.assert_called_once_with(
             app_id=app_id,
             method=contract.get_method_by_name.return_value,
             sender=sender,
@@ -773,8 +757,7 @@ class TestNetworkPermissionDappFunctions:
             method_args=[box_name, value],
             boxes=[(app_id, box_name)],
         )
-        atc.execute.assert_called_once()
-        atc.execute.assert_called_with(client, 2)
+        atc.execute.assert_called_once_with(client, 2)
 
     # # write_foundation_boxes
     def test_network_write_foundation_boxes_functionality(self, mocker):

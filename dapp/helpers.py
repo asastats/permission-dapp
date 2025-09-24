@@ -23,8 +23,6 @@ from config import (
     INDEXER_TOKEN,
     MANDATORY_VALUES_SIZE,
     STAKING_AMOUNT_VOTES,
-    STAKING_APP_ID,
-    STAKING_APP_MIN_ROUND,
     SUBSCRIPTION_POSITION,
 )
 
@@ -42,9 +40,11 @@ def _docs_positions_offset_and_length_pairs(
     :return: list
     """
     return [
-        (start + (index // 2) * 9, 8)
-        if divmod(index, 2)[1] == 0
-        else (start + (index // 2) * 9 + 8, 1)
+        (
+            (start + (index // 2) * 9, 8)
+            if divmod(index, 2)[1] == 0
+            else (start + (index // 2) * 9 + 8, 1)
+        )
         for counter, index in enumerate(range(30))
         if counter // 2 < docs_data_size // 9
     ]
@@ -210,19 +210,79 @@ def load_contract():
 
 # # STAKING
 def _application_transaction(params, indexer_client):
-    """TODO: docstring and tests"""
+    """Yield transaction connected with application defined by provided `params`.
+
+    :param params: collection of arguments to search transactions endpoint
+    :type params: dict
+    :param indexer_client: Algorand Indexer client instance
+    :type indexer_client: :class:`IndexerClient`
+    :var results: fetched page of transactions
+    :type results: dict
+    :var transaction: transaction instance
+    :type transaction: dict
+    :yield: dict
+    """
     results = _application_transactions(params, indexer_client, delay=1)
     while results.get("transactions"):
         for transaction in results.get("transactions"):
             yield transaction
 
-        time.sleep(1)
+        pause(1)
         results = _application_transactions(
             params,
             indexer_client,
             next_page=results.get("next-token"),
             delay=1,
         )
+
+
+def _application_transactions(
+    params, indexer_client, next_page=None, delay=1, error_delay=5, retries=20
+):
+    """Fetch and return transactions from indexer instance based on provided params.
+
+    :param params: collection of parameters to indexer search method
+    :type params: dict
+    :param indexer_client: Algorand Indexer client instance
+    :type indexer_client: :class:`IndexerClient`
+    :param next_page: custom code identifying very next page of search results
+    :type next_page: str
+    :param delay: delay in seconds before Indexer call
+    :type delay: float
+    :param error_delay: delay in seconds after error
+    :type error_delay: int
+    :param retries: maximum number of retries before system exit
+    :type retries: int
+    :var _params: updated parameters to indexer search method
+    :type _params: dict
+    :var counter: current number of retries to fetch the block
+    :type counter: int
+    :return: dict
+    """
+    _params = deepcopy(params)
+    if next_page:
+        _params.update({"next_page": next_page})
+
+    counter = 0
+    while True:
+        try:
+            pause(delay)
+            return indexer_client.search_transactions(**_params)
+
+        except Exception as e:
+            if counter >= retries:
+                print("Maximum number of retries reached. Exiting...")
+                return {}
+
+            print(
+                "Exception %s raised searching transactions: %s; Paused..."
+                % (
+                    e,
+                    _params,
+                )
+            )
+            pause(error_delay)
+            counter += 1
 
 
 def _indexer_instance():
@@ -235,36 +295,11 @@ def _indexer_instance():
     )
 
 
-def _application_transactions(
-    params, indexer_client, next_page=None, delay=1, error_delay=5, retries=20
-):
-    """TODO: docstring and tests"""
-    _params = deepcopy(params)
-    if next_page:
-        _params.update({"next_page": next_page})
-    counter = 0
-    while True:
-        try:
-            time.sleep(delay)
-            return indexer_client.search_transactions(**_params)
-        except Exception as e:
-            if counter >= retries:
-                print("Maximum number of retries reached. Exiting...")
-                return {}
-            print(
-                "Exception %s raised searching transactions: %s; Paused..."
-                % (
-                    e,
-                    _params,
-                )
-            )
-            time.sleep(error_delay)
-            counter += 1
+def governance_staking_addresses(staking_app_id=None, staking_min_round=None):
+    """Return all addresses involved in the staking program run by `staking_app_id`.
 
-
-def governance_staking_addresses():
-    """Return all addresses involved in the last governance staking iteration.
-
+    :param staking_app_id: Algorand application identifier
+    :type staking_app_id: int
     :var addresses: collection of public Algorand adresses
     :type addresses: set
     :var indexer_client: Algorand Indexer client instance
@@ -275,18 +310,20 @@ def governance_staking_addresses():
     :type transaction: dict
     :return: set
     """
-    return set()
-    # addresses = set()
-    # indexer_client = _indexer_instance()
-    # params = {
-    #     "application_id": STAKING_APP_ID,
-    #     "limit": 1000,
-    #     "min_round": STAKING_APP_MIN_ROUND,
-    # }
-    # for transaction in _application_transaction(params, indexer_client):
-    #     addresses.add(transaction.get("sender"))
+    if staking_app_id is None:
+        return set()
 
-    # return addresses
+    addresses = set()
+    indexer_client = _indexer_instance()
+    params = {
+        "application_id": staking_app_id,
+        "limit": 1000,
+        "min_round": staking_min_round,
+    }
+    for transaction in _application_transaction(params, indexer_client):
+        addresses.add(transaction.get("sender"))
+
+    return addresses
 
 
 # # HELPERS
@@ -300,11 +337,13 @@ def box_name_from_address(address):
     return decode_address(address)
 
 
-def box_writing_parameters(env):
+def box_writing_parameters(env, network_suffix=""):
     """Instantiate and return arguments needed for writing boxes to blockchain.
 
     :param env: environment variables collection
     :type env: dict
+    :param network_suffix: network suffix for environment variable keys
+    :type network_suffix: str
     :var creator_private_key: application creator's base64 encoded private key
     :type creator_private_key: str
     :var sender: application caller's address
@@ -315,7 +354,9 @@ def box_writing_parameters(env):
     :type contract: :class:`Contract`
     :return: dict
     """
-    creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
+    creator_private_key = private_key_from_mnemonic(
+        env.get(f"creator_mnemonic{network_suffix}")
+    )
     sender = address_from_private_key(creator_private_key)
     signer = AccountTransactionSigner(creator_private_key)
     contract = load_contract()
@@ -365,7 +406,17 @@ def environment_variables():
         "algod_address_mainnet": os.getenv("ALGOD_ADDRESS_MAINNET"),
         "algod_token_testnet": os.getenv("ALGOD_TOKEN_TESTNET"),
         "algod_address_testnet": os.getenv("ALGOD_ADDRESS_TESTNET"),
+        "creator_mnemonic_testnet": os.getenv("CREATOR_MNEMONIC_TESTNET"),
     }
+
+
+def pause(seconds=1):
+    """Sleep for provided number of seconds.
+
+    :param seconds: number of seconds to pause
+    :type seconds: int
+    """
+    time.sleep(seconds)
 
 
 def permission_for_amount(amount):

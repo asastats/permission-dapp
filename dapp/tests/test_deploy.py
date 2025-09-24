@@ -23,13 +23,9 @@ class TestDeployFunctions:
             "algod_address": algod_address,
             "creator_mnemonic": creator_mnemonic,
         }
-        mocked_env = mocker.patch(
-            "deploy.environment_variables", return_value=env
-        )
+        mocked_env = mocker.patch("deploy.environment_variables", return_value=env)
         client = mocker.MagicMock()
-        mocked_client = mocker.patch(
-            "deploy.AlgodClient", return_value=client
-        )
+        mocked_client = mocker.patch("deploy.AlgodClient", return_value=client)
         creator_private_key = mocker.MagicMock()
         mocked_private_key = mocker.patch(
             "deploy.private_key_from_mnemonic",
@@ -41,9 +37,7 @@ class TestDeployFunctions:
             side_effect=[approval_program, clear_program],
         )
         app_id = 5050
-        mocked_create = mocker.patch(
-            "deploy.create_app", return_value=app_id
-        )
+        mocked_create = mocker.patch("deploy.create_app", return_value=app_id)
         approval_source, clear_source = mocker.MagicMock(), mocker.MagicMock()
         with mock.patch(
             "deploy.open", side_effect=[approval_source, clear_source]
@@ -57,34 +51,24 @@ class TestDeployFunctions:
                     / "approval.teal"
                 ),
                 mocker.call(
-                    Path(deploy.__file__).resolve().parent
-                    / "artifacts"
-                    / "clear.teal"
+                    Path(deploy.__file__).resolve().parent / "artifacts" / "clear.teal"
                 ),
             ]
             mocked_open.assert_has_calls(calls, any_order=True)
             assert mocked_open.call_count == 2
-            approval_source.read.assert_called_once()
-            approval_source.read.assert_called_with()
-            approval_source.read.return_value.encode.assert_called_once()
-            approval_source.read.return_value.encode.assert_called_with()
-            clear_source.read.assert_called_once()
-            clear_source.read.assert_called_with()
-            clear_source.read.return_value.encode.assert_called_once()
-            clear_source.read.return_value.encode.assert_called_with()
-        mocked_env.assert_called_once()
-        mocked_env.assert_called_with()
-        mocked_client.assert_called_once()
-        mocked_client.assert_called_with(algod_token, algod_address)
-        mocked_private_key.assert_called_once()
-        mocked_private_key.assert_called_with(creator_mnemonic)
+            approval_source.read.assert_called_once_with()
+            approval_source.read.return_value.encode.assert_called_once_with()
+            clear_source.read.assert_called_once_with()
+            clear_source.read.return_value.encode.assert_called_once_with()
+        mocked_env.assert_called_once_with()
+        mocked_client.assert_called_once_with(algod_token, algod_address)
+        mocked_private_key.assert_called_once_with(creator_mnemonic)
         calls = [
             mocker.call(client, approval_source.read.return_value.encode.return_value),
             mocker.call(client, clear_source.read.return_value.encode.return_value),
         ]
         mocked_compile.assert_has_calls(calls, any_order=True)
         assert mocked_compile.call_count == 2
-        mocked_create.assert_called_once()
-        mocked_create.assert_called_with(
+        mocked_create.assert_called_once_with(
             client, creator_private_key, approval_program, clear_program
         )

@@ -44,7 +44,7 @@ class TestIntegrationForNonCreator:
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         value = serialize_values(values)
-        writing_parameters = box_writing_parameters(env)
+        writing_parameters = box_writing_parameters(env, network_suffix="_testnet")
         write_box(client, app_id, writing_parameters, address, value)
         box_name = box_name_from_address(address)
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
@@ -77,7 +77,7 @@ class TestIntegrationForNonCreator:
             env.get("algod_token_testnet"), env.get("algod_address_testnet")
         )
         app_id = PERMISSION_APP_ID_TESTNET
-        writing_parameters = box_writing_parameters(env)
+        writing_parameters = box_writing_parameters(env, network_suffix="_testnet")
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         box_name = box_name_from_address(address)
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
