@@ -33,6 +33,7 @@ jobs:
       - name: Run Pytest
         run: |
           echo "ALGOD_TOKEN_TESTNET=https://testnet-api.4160.nodely.dev" >> "$GITHUB_ENV"
-          echo "ALGOD_ADDRESS_TESTNET=''" >> "$GITHUB_ENV"
-          echo "CREATOR_MNEMONIC_TESTNET='fruit jeans surface glide metal relax mutual capital supreme repeat scorpion indicate matrix guess decade mountain observe suspect poem forward dismiss figure lemon about dumb'" >> "$GITHUB_ENV"
+          echo "ALGOD_ADDRESS_TESTNET=" >> "$GITHUB_ENV"
+          echo "CREATOR_MNEMONIC_TESTNET=fruit jeans surface glide metal relax mutual capital supreme repeat scorpion indicate matrix guess decade mountain observe suspect poem forward dismiss figure lemon about dumb" >> "$GITHUB_ENV"
+          printf '%s\n' "$CREATOR_MNEMONIC_TESTNET"  # for debugging purpose
           pytest
