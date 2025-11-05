@@ -1,4 +1,4 @@
-"""Module with Permisssion dApp constants."""
+"""Module with Permission dApp constants."""
 
 PERMISSION_APP_ID = 2685515413
 PERMISSION_APP_ID_TESTNET = 732206032

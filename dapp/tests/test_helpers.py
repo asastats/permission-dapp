@@ -32,6 +32,7 @@ from helpers import (
     private_key_from_mnemonic,
     read_json,
     serialize_values,
+    wait_for_confirmation,
 )
 
 
@@ -866,3 +867,22 @@ class TestHelpersHelpersFunctions:
             mocked_load.assert_called_once_with(
                 mocked_open.return_value.__enter__.return_value
             )
+
+    # # wait_for_confirmation
+    def test_helpers_wait_for_confirmation_functionality(self, mocker):
+        client = mocker.MagicMock()
+        txid = "12345"
+
+        # Simulate pending tx then confirmed tx
+        client.status.return_value = {"last-round": 1}
+        client.pending_transaction_info.side_effect = [
+            {"confirmed-round": None},
+            {"confirmed-round": 5},
+        ]
+
+        returned = wait_for_confirmation(client, txid)
+
+        assert returned == {"confirmed-round": 5}
+        client.status.assert_called_once_with()
+        assert client.pending_transaction_info.call_count == 2
+        client.status_after_block.assert_called_with(2)

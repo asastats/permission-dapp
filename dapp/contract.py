@@ -1,4 +1,4 @@
-"""Permisssion dApp smart contract module."""
+"""Permission dApp smart contract module."""
 
 from typing import Literal
 

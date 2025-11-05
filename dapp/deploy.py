@@ -1,4 +1,4 @@
-"""Module with functions for deploying Permisssion dApp smart contract to blockchain."""
+"""Module with functions for deploying Permission dApp smart contract to blockchain."""
 
 from pathlib import Path
 

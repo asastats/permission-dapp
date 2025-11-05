@@ -1,4 +1,4 @@
-:mod:`dapp.config` --Module with Permisssion dApp constants
+:mod:`dapp.config` --Module with Permission dApp constants
 ***********************************************************
 
 .. automodule:: config
@@ -7,7 +7,7 @@
   :show-inheritance:
 
 
-:mod:`dapp.contract` -- Permisssion dApp smart contract module
+:mod:`dapp.contract` -- Permission dApp smart contract module
 **************************************************************
 
 .. automodule:: contract
@@ -16,7 +16,7 @@
   :show-inheritance:
 
 
-:mod:`dapp.deploy` -- Module with functions for deploying Permisssion dApp smart contract to blockchain
+:mod:`dapp.deploy` -- Module with functions for deploying Permission dApp smart contract to blockchain
 *******************************************************************************************************
 
 .. automodule:: deploy

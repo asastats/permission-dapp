@@ -1,4 +1,4 @@
-"""Module with Permisssion dApp helpers functions."""
+"""Module with Permission dApp helpers functions."""
 
 import base64
 import json
@@ -465,7 +465,19 @@ def read_json(filename):
 
 
 def wait_for_confirmation(client, txid):
-    """TODO: docstring and tests"""
+    """Wait for a blockchain transaction to be confirmed.
+
+    Polls Algorand node until the transaction referenced by `txid`
+    is confirmed in a round. Prints waiting messages until confirmation
+    then returns full pending transaction information.
+
+    :param client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :param txid: blockchain transaction ID
+    :type txid: str
+    :return: pending transaction info including confirmed round
+    :rtype: dict
+    """
     last_round = client.status().get("last-round")
     txinfo = client.pending_transaction_info(txid)
     while not (txinfo.get("confirmed-round") and txinfo.get("confirmed-round") > 0):
