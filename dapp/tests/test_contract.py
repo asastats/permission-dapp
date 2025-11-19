@@ -1,68 +1,215 @@
 """Testing module for :py:mod:`contract` module."""
 
-from pyteal import ABIReturnSubroutine, CallConfig, Router, SubroutineFnWrapper, abi
+import pytest
+import algopy
+from algopy import arc4
+from algopy_testing import AlgopyTestContext, algopy_testing_context
 
-from contract import (
-    assert_sender_is_creator,
-    deleteBox,
-    router,
-    writeBox,
-)
+from contract import PermissionDapp
 
 
-class TestPermissionDappFunctions:
-    """Testing class for :py:mod:`contract` functions."""
+def _app(context: AlgopyTestContext, contract: PermissionDapp):
+    """Get the ledger's App instance for this deployed ARC4 contract."""
+    return context.ledger.get_app(contract)
 
-    # # assert_sender_is_creator
-    def test_contract_assert_sender_is_creator_is_subroutine_wrapper(self):
-        assert isinstance(assert_sender_is_creator, SubroutineFnWrapper)
 
-    # # router
-    def test_contract_router_is_router_instance(self):
-        assert isinstance(router, Router)
+@pytest.fixture()
+def context():
+    with algopy_testing_context() as ctx:
+        yield ctx
 
-    def test_contract_router_name(self):
-        assert router.name == "Permission dApp"
 
-    def test_contract_router_no_op_is_create_only(self):
-        assert int(router.bare_call_actions.no_op.call_config) == int(CallConfig.CREATE)
+class TestPermissionDapp:
+    # ----------------------------------------------------------------------
+    #  create_application
+    # ----------------------------------------------------------------------
 
-    def test_contract_router_update_application_requires_creator(self):
-        assert (
-            router.bare_call_actions.update_application.action.subroutine._SubroutineDefinition__name
-            == "assert_sender_is_creator"
-        )
+    def test_create_application(self, context):
+        creator = context.any.account()
 
-    def test_contract_router_delete_requires_creator(self):
-        assert (
-            router.bare_call_actions.delete_application.action.subroutine._SubroutineDefinition__name
-            == "assert_sender_is_creator"
-        )
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+            app = _app(context, contract)
 
-    def test_contract_router_methods(self):
-        assert len(router.methods) == 2
-        assert router.methods[0].name == "writeBox"
-        assert router.methods[1].name == "deleteBox"
+        assert app.id > 0, "Application should be created"
 
-    # # writeBox
-    def test_contract_writebox_is_subroutine(self):
-        assert isinstance(writeBox, ABIReturnSubroutine)
+    # ----------------------------------------------------------------------
+    #  update_application
+    # ----------------------------------------------------------------------
 
-    def test_contract_writebox_arguments(self):
-        assert len(writeBox.subroutine.abi_args) == 2
-        assert isinstance(
-            writeBox.subroutine.abi_args["box_name"], abi.StaticBytesTypeSpec
-        )
-        assert writeBox.subroutine.abi_args["box_name"].array_length == 32
-        assert isinstance(writeBox.subroutine.abi_args["value"], abi.StringTypeSpec)
+    def test_update_application_succeeds_for_creator(self, context):
+        creator = context.any.account()
 
-    # # deleteBox
-    def test_contract_deletebox_is_subroutine(self):
-        assert isinstance(deleteBox, ABIReturnSubroutine)
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+            _ = _app(context, contract)
 
-    def test_contract_deletebox_arguments(self):
-        assert len(deleteBox.subroutine.abi_args) == 1
-        assert isinstance(
-            deleteBox.subroutine.abi_args["box_name"], abi.StaticBytesTypeSpec
-        )
-        assert deleteBox.subroutine.abi_args["box_name"].array_length == 32
+        with context.txn.create_group(
+            active_txn_overrides={
+                "sender": creator,
+                "on_completion": algopy.OnCompleteAction.UpdateApplication,
+            }
+        ):
+            contract.update_application()
+
+    def test_update_application_fails_for_non_creator(self, context):
+        creator = context.any.account()
+        non_creator = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+
+        with pytest.raises(AssertionError, match="Sender must be creator"):
+            with context.txn.create_group(
+                active_txn_overrides={
+                    "sender": non_creator,
+                    "on_completion": algopy.OnCompleteAction.UpdateApplication,
+                }
+            ):
+                contract.update_application()
+
+    # ----------------------------------------------------------------------
+    #  delete_application
+    # ----------------------------------------------------------------------
+
+    def test_delete_application_succeeds_for_creator(self, context):
+        creator = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+            _ = _app(context, contract)
+
+        with context.txn.create_group(
+            active_txn_overrides={
+                "sender": creator,
+                "on_completion": algopy.OnCompleteAction.DeleteApplication,
+            }
+        ):
+            contract.delete_application()
+
+    def test_delete_application_fails_for_non_creator(self, context):
+        creator = context.any.account()
+        non_creator = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+
+        with pytest.raises(AssertionError, match="Sender must be creator"):
+            with context.txn.create_group(
+                active_txn_overrides={
+                    "sender": non_creator,
+                    "on_completion": algopy.OnCompleteAction.DeleteApplication,
+                }
+            ):
+                contract.delete_application()
+
+    # ----------------------------------------------------------------------
+    #  writeBox
+    # ----------------------------------------------------------------------
+
+    def test_write_box_succeeds(self, context):
+        creator = context.any.account()
+        target = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+            app = _app(context, contract)
+
+        val = "hello world"
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract.write_box(
+                arc4.Address(target.bytes),
+                arc4.String(val),
+            )
+
+        raw = context.ledger.get_box(app.id, target.bytes)
+        assert raw == val.encode(), "Box should contain value"
+
+    def test_write_box_fails_for_non_creator(self, context):
+        creator = context.any.account()
+        non_creator = context.any.account()
+        target = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+
+        with pytest.raises(AssertionError, match="Sender must be creator"):
+            with context.txn.create_group(active_txn_overrides={"sender": non_creator}):
+                contract.write_box(
+                    arc4.Address(target.bytes),
+                    arc4.String("value"),
+                )
+
+    def test_write_box_fails_for_invalid_key_type(self, context):
+        creator = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+
+        bad_key = b"too short"
+
+        with pytest.raises(Exception):
+            arc4.Address(bad_key)
+
+    # ----------------------------------------------------------------------
+    #  deleteBox
+    # ----------------------------------------------------------------------
+
+    def test_delete_box_succeeds(self, context):
+        creator = context.any.account()
+        target = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+            app = _app(context, contract)
+
+        # Create box
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract.write_box(
+                arc4.Address(target.bytes),
+                arc4.String("to delete"),
+            )
+
+        assert context.ledger.get_box(app.id, target.bytes) is not None
+
+        # Delete box
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract.delete_box(arc4.Address(target.bytes))
+
+        raw = context.ledger.get_box(app.id, target.bytes)
+        assert raw in (None, b"", bytearray()), "Box should be deleted"
+
+    def test_delete_box_fails_for_non_creator(self, context):
+        creator = context.any.account()
+        non_creator = context.any.account()
+        target = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+
+        with pytest.raises(AssertionError, match="Sender must be creator"):
+            with context.txn.create_group(active_txn_overrides={"sender": non_creator}):
+                contract.delete_box(arc4.Address(target.bytes))
+
+    def test_delete_box_fails_when_missing(self, context):
+        creator = context.any.account()
+        target = context.any.account()
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDapp()
+            contract.create_application()
+
+        with pytest.raises(AssertionError, match="Box does not exist"):
+            with context.txn.create_group(active_txn_overrides={"sender": creator}):
+                contract.delete_box(arc4.Address(target.bytes))

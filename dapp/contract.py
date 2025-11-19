@@ -1,76 +1,64 @@
-"""Permission dApp smart contract module."""
+"""Permission dApp smart contract implemented with Algorand Python (puyapy)."""
 
-from typing import Literal
-
-from pyteal import (
-    App,
-    Approve,
-    Assert,
-    BareCallActions,
-    CallConfig,
-    Expr,
-    Global,
-    OnCompleteAction,
-    Router,
-    Seq,
-    Subroutine,
-    Txn,
-    abi,
-)
-from pyteal.types import TealType
+from algopy import Global, Txn, Bytes, Box, arc4, subroutine
 
 
-@Subroutine(TealType.none)
-def assert_sender_is_creator() -> Expr:
-    return Assert(Txn.sender() == Global.creator_address())
+@subroutine
+def assert_sender_is_creator() -> None:
+    assert Txn.sender == Global.creator_address, "Sender must be creator"
 
 
-router = Router(
-    "Permission dApp",
-    BareCallActions(
-        no_op=OnCompleteAction.create_only(Approve()),
-        update_application=OnCompleteAction(
-            action=assert_sender_is_creator, call_config=CallConfig.CALL
-        ),
-        delete_application=OnCompleteAction(
-            action=assert_sender_is_creator, call_config=CallConfig.CALL
-        ),
-    ),
-)
+class PermissionDapp(arc4.ARC4Contract):
+    """
+    Permissioned box storage:
+      - Only the creator may write or delete boxes.
+      - Box name = Algorand address (32 raw bytes).
+      - Box contents = arbitrary string.
+    """
 
+    @arc4.baremethod(create="require", allow_actions=["NoOp"])
+    def create_application(self) -> None:
+        return
 
-## WRITE
-@router.method
-def writeBox(box_name: abi.StaticBytes[Literal[32]], value: abi.String):
-    return Seq(
-        assert_sender_is_creator(),
-        App.box_put(box_name.get(), value.get()),
-    )
+    @arc4.baremethod(allow_actions=["UpdateApplication"])
+    def update_application(self) -> None:
+        assert_sender_is_creator()
 
+    @arc4.baremethod(allow_actions=["DeleteApplication"])
+    def delete_application(self) -> None:
+        assert_sender_is_creator()
 
-## DELETE
-@router.method
-def deleteBox(box_name: abi.StaticBytes[Literal[32]]):
-    return Seq(
-        assert_sender_is_creator(),
-        Assert(App.box_delete(box_name.get())),
-    )
+    # ----------------------------------------------------------------------
+    #  writeBox
+    # ----------------------------------------------------------------------
+    @arc4.abimethod(name="writeBox")
+    def write_box(self, box_name: arc4.StaticBytes[arc4.Literal[32]], value: arc4.DynamicBytes) -> None:
+        assert_sender_is_creator()
 
+        key: Bytes = box_name.bytes
+        assert len(key) == 32
 
-if __name__ == "__main__":
-    import os
-    import json
+        raw_value: Bytes = value.bytes  # already raw UTF-8 bytes
 
-    path = os.path.dirname(os.path.abspath(__file__))
-    approval, clear, contract = router.compile_program(version=8)
+        box = Box(Bytes, key=key)
+        box.value = raw_value
 
-    # Dump out the contract as json that can be read in by any of the SDKs
-    with open(os.path.join(path, "artifacts/contract.json"), "w") as f:
-        f.write(json.dumps(contract.dictify(), indent=2))
+    # ----------------------------------------------------------------------
+    #  deleteBox
+    # ----------------------------------------------------------------------
+    @arc4.abimethod(name="deleteBox")
+    def delete_box(self, box_name: arc4.Address) -> None:
+        """
+        Deletes a box keyed by the raw 32-byte address.
+        """
+        assert_sender_is_creator()
 
-    # Write out the approval and clear programs
-    with open(os.path.join(path, "artifacts/approval.teal"), "w") as f:
-        f.write(approval)
+        key: Bytes = box_name.bytes
 
-    with open(os.path.join(path, "artifacts/clear.teal"), "w") as f:
-        f.write(clear)
+        assert len(key) == 32, "Box name must be 32 bytes"
+
+        box = Box(Bytes, key=key)
+        _, exists = box.maybe()
+        assert exists, "Box does not exist"
+
+        del box.value

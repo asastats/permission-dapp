@@ -4,6 +4,9 @@ Development
 Setup
 -----
 
+Starting with version `0.6`, and due to new requirements including Algokit, the Permission dApp requires Python 3.12 or later for development and deployment.
+
+
 Python environment
 ^^^^^^^^^^^^^^^^^^
 
@@ -87,6 +90,31 @@ Newer versions require authentication:
 .. code-block:: bash
 
   $ sonar-scanner -Dsonar.login=admin -Dsonar.password=password -Dsonar.projectKey=permission-dapp
+
+
+Smart contract
+--------------
+
+Compile
+^^^^^^^
+
+After you activated the Python environment, you can compile smart contract by issuing the following commands:
+
+.. code-block:: bash
+
+  algokit compile py contract.py --out-dir artifacts
+
+
+Deploy, fund, and setup dApp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Here's a shortcat Django management command that will deploy generated smart contract on the blockchain,
+fund the related account with required ALGO, and finally set up the dApp with rewards token ID and
+claim period duration values retrieved from the environemnt variables:
+
+.. code-block:: bash
+
+  python ........
 
 
 Tests
