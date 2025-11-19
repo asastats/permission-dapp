@@ -1,0 +1,1099 @@
+{
+  "version": 3,
+  "sources": [
+    "../contract.py"
+  ],
+  "mappings": ";;;;;;;AAeA;;AAAA;;;AAAA;;AAAA;AAAA;AAAA;;AAAA;AAAA;;;;;;;;;;;;AAAA;;;AAAA;;;;;;AAAA;AAAA;;AAAA;;;;;;;;;;;;;;AAAA;AAyBK;;AAAA;AAKU;;AAAc;;AAAd;AAAP;AALH;AAAA;AAPA;;AAAA;AAKU;;AAAc;;AAAd;AAAP;AALH;AAAA;AATA;;AAAA;AAAA;AAAA;AAAA;AAuBA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAAA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AASU;;AAAc;;AAAd;AAAP;AASkB;;AAA2B;AAA3B;;AAAA;AAIH;;AAAwB;AAAxB;;AAAA;AAER;;AAA0B;AAA1B;AAAP;AAMI;;AAAA;;AAGJ;AAjCH;AAAA;AAmCA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAQU;;AAAc;;AAAd;AAAP;AAOkB;AAA2B;AAA3B;;AAAA;AAEX;AAA0B;AAA1B;AAAP;AAGA;;AApBH;AAAA",
+  "op_pc_offset": 0,
+  "pc_events": {
+    "1": {
+      "subroutine": "algopy.arc4.ARC4Contract.approval_program",
+      "params": {},
+      "block": "main",
+      "stack_in": [],
+      "op": "intcblock 2 1 0 32"
+    },
+    "7": {
+      "op": "txn NumAppArgs",
+      "defined_out": [
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "tmp%0#1"
+      ]
+    },
+    "9": {
+      "op": "bz main_bare_routing@11",
+      "stack_out": []
+    },
+    "12": {
+      "op": "txn OnCompletion",
+      "defined_out": [
+        "tmp%2#0"
+      ],
+      "stack_out": [
+        "tmp%2#0"
+      ]
+    },
+    "14": {
+      "op": "!",
+      "defined_out": [
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "tmp%3#0"
+      ]
+    },
+    "15": {
+      "error": "OnCompletion must be NoOp",
+      "op": "assert // OnCompletion must be NoOp",
+      "stack_out": []
+    },
+    "16": {
+      "op": "txn ApplicationID",
+      "defined_out": [
+        "tmp%4#0"
+      ],
+      "stack_out": [
+        "tmp%4#0"
+      ]
+    },
+    "18": {
+      "op": "assert",
+      "stack_out": []
+    },
+    "19": {
+      "op": "pushbytess 0xf9c83219 0x18a423db // method \"write_box(byte[],string)void\", method \"delete_box(byte[])void\"",
+      "defined_out": [
+        "Method(delete_box(byte[])void)",
+        "Method(write_box(byte[],string)void)"
+      ],
+      "stack_out": [
+        "Method(write_box(byte[],string)void)",
+        "Method(delete_box(byte[])void)"
+      ]
+    },
+    "31": {
+      "op": "txna ApplicationArgs 0",
+      "defined_out": [
+        "Method(delete_box(byte[])void)",
+        "Method(write_box(byte[],string)void)",
+        "tmp%6#0"
+      ],
+      "stack_out": [
+        "Method(write_box(byte[],string)void)",
+        "Method(delete_box(byte[])void)",
+        "tmp%6#0"
+      ]
+    },
+    "34": {
+      "op": "match write_box delete_box",
+      "stack_out": []
+    },
+    "40": {
+      "block": "main_after_if_else@16",
+      "stack_in": [],
+      "op": "err"
+    },
+    "41": {
+      "block": "main_bare_routing@11",
+      "stack_in": [],
+      "op": "txn OnCompletion",
+      "defined_out": [
+        "tmp%7#0"
+      ],
+      "stack_out": [
+        "tmp%7#0"
+      ]
+    },
+    "43": {
+      "op": "switch main_create_application@12 main_after_if_else@16 main_after_if_else@16 main_after_if_else@16 main_update_application@13 main_delete_application@14",
+      "stack_out": []
+    },
+    "57": {
+      "op": "err"
+    },
+    "58": {
+      "block": "main_delete_application@14",
+      "stack_in": [],
+      "op": "txn ApplicationID",
+      "defined_out": [
+        "tmp%12#0"
+      ],
+      "stack_out": [
+        "tmp%12#0"
+      ]
+    },
+    "60": {
+      "error": "can only call when not creating",
+      "op": "assert // can only call when not creating",
+      "stack_out": []
+    },
+    "61": {
+      "op": "txn Sender",
+      "defined_out": [
+        "tmp%0#2"
+      ],
+      "stack_out": [
+        "tmp%0#2"
+      ]
+    },
+    "63": {
+      "op": "global CreatorAddress",
+      "defined_out": [
+        "tmp%0#2",
+        "tmp%1#2"
+      ],
+      "stack_out": [
+        "tmp%0#2",
+        "tmp%1#2"
+      ]
+    },
+    "65": {
+      "op": "==",
+      "defined_out": [
+        "tmp%2#1"
+      ],
+      "stack_out": [
+        "tmp%2#1"
+      ]
+    },
+    "66": {
+      "error": "Only creator can delete application",
+      "op": "assert // Only creator can delete application",
+      "stack_out": []
+    },
+    "67": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "1"
+      ]
+    },
+    "68": {
+      "op": "return",
+      "stack_out": []
+    },
+    "69": {
+      "block": "main_update_application@13",
+      "stack_in": [],
+      "op": "txn ApplicationID",
+      "defined_out": [
+        "tmp%10#0"
+      ],
+      "stack_out": [
+        "tmp%10#0"
+      ]
+    },
+    "71": {
+      "error": "can only call when not creating",
+      "op": "assert // can only call when not creating",
+      "stack_out": []
+    },
+    "72": {
+      "op": "txn Sender",
+      "defined_out": [
+        "tmp%0#2"
+      ],
+      "stack_out": [
+        "tmp%0#2"
+      ]
+    },
+    "74": {
+      "op": "global CreatorAddress",
+      "defined_out": [
+        "tmp%0#2",
+        "tmp%1#2"
+      ],
+      "stack_out": [
+        "tmp%0#2",
+        "tmp%1#2"
+      ]
+    },
+    "76": {
+      "op": "==",
+      "defined_out": [
+        "tmp%2#1"
+      ],
+      "stack_out": [
+        "tmp%2#1"
+      ]
+    },
+    "77": {
+      "error": "Only creator can update application",
+      "op": "assert // Only creator can update application",
+      "stack_out": []
+    },
+    "78": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "1"
+      ]
+    },
+    "79": {
+      "op": "return",
+      "stack_out": []
+    },
+    "80": {
+      "block": "main_create_application@12",
+      "stack_in": [],
+      "op": "txn ApplicationID",
+      "defined_out": [
+        "tmp%8#0"
+      ],
+      "stack_out": [
+        "tmp%8#0"
+      ]
+    },
+    "82": {
+      "op": "!",
+      "defined_out": [
+        "tmp%9#0"
+      ],
+      "stack_out": [
+        "tmp%9#0"
+      ]
+    },
+    "83": {
+      "error": "can only call when creating",
+      "op": "assert // can only call when creating",
+      "stack_out": []
+    },
+    "84": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "1"
+      ]
+    },
+    "85": {
+      "op": "return",
+      "stack_out": []
+    },
+    "86": {
+      "subroutine": "dapp.contract.PermissionDApp.write_box[routing]",
+      "params": {},
+      "block": "write_box",
+      "stack_in": [],
+      "op": "txna ApplicationArgs 1",
+      "defined_out": [
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0"
+      ]
+    },
+    "89": {
+      "op": "dup",
+      "defined_out": [
+        "box_name#0",
+        "box_name#0 (copy)"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "box_name#0 (copy)"
+      ]
+    },
+    "90": {
+      "op": "intc_2 // 0",
+      "defined_out": [
+        "0",
+        "box_name#0",
+        "box_name#0 (copy)"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "box_name#0 (copy)",
+        "0"
+      ]
+    },
+    "91": {
+      "error": "invalid array length header",
+      "op": "extract_uint16 // on error: invalid array length header",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0"
+      ]
+    },
+    "92": {
+      "op": "dup",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)"
+      ]
+    },
+    "93": {
+      "op": "intc_0 // 2",
+      "defined_out": [
+        "2",
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)",
+        "2"
+      ]
+    },
+    "94": {
+      "op": "+",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "add%0#0",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "add%0#0"
+      ]
+    },
+    "95": {
+      "op": "dig 2",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "add%0#0",
+        "box_name#0 (copy)"
+      ]
+    },
+    "97": {
+      "op": "len",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "add%0#0",
+        "box_name#0",
+        "len%0#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "add%0#0",
+        "len%0#0"
+      ]
+    },
+    "98": {
+      "op": "==",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "eq%0#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "eq%0#0"
+      ]
+    },
+    "99": {
+      "error": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
+      "op": "assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0"
+      ]
+    },
+    "100": {
+      "op": "txna ApplicationArgs 2",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0"
+      ]
+    },
+    "103": {
+      "op": "dup",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "value#0",
+        "value#0 (copy)"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "value#0 (copy)"
+      ]
+    },
+    "104": {
+      "op": "intc_2 // 0",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "value#0 (copy)",
+        "0"
+      ]
+    },
+    "105": {
+      "error": "invalid array length header",
+      "op": "extract_uint16 // on error: invalid array length header",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "box_name#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0"
+      ]
+    },
+    "106": {
+      "op": "dup",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "actual_value_length#0 (copy)",
+        "box_name#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "actual_value_length#0 (copy)"
+      ]
+    },
+    "107": {
+      "op": "intc_0 // 2",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "actual_value_length#0 (copy)",
+        "2"
+      ]
+    },
+    "108": {
+      "op": "+",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "add%1#0",
+        "box_name#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "add%1#0"
+      ]
+    },
+    "109": {
+      "op": "dig 2",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "add%1#0",
+        "value#0 (copy)"
+      ]
+    },
+    "111": {
+      "op": "len",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "add%1#0",
+        "box_name#0",
+        "len%1#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "add%1#0",
+        "len%1#0"
+      ]
+    },
+    "112": {
+      "op": "==",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "box_name#0",
+        "eq%1#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "eq%1#0"
+      ]
+    },
+    "113": {
+      "error": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
+      "op": "assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0"
+      ]
+    },
+    "114": {
+      "op": "txn Sender",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "box_name#0",
+        "tmp%0#1",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "tmp%0#1"
+      ]
+    },
+    "116": {
+      "op": "global CreatorAddress",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "box_name#0",
+        "tmp%0#1",
+        "tmp%1#1",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "tmp%0#1",
+        "tmp%1#1"
+      ]
+    },
+    "118": {
+      "op": "==",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "box_name#0",
+        "tmp%2#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "tmp%2#0"
+      ]
+    },
+    "119": {
+      "error": "Only creator can write to boxes",
+      "op": "assert // Only creator can write to boxes",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0"
+      ]
+    },
+    "120": {
+      "op": "uncover 3",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "box_name#0"
+      ]
+    },
+    "122": {
+      "op": "intc_0 // 2",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "box_name#0",
+        "2"
+      ]
+    },
+    "123": {
+      "op": "dig 4",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "box_name#0",
+        "2",
+        "actual_box_name_length#0 (copy)"
+      ]
+    },
+    "125": {
+      "op": "extract3",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_value_length#0",
+        "actual_box_name#0"
+      ]
+    },
+    "126": {
+      "op": "uncover 2",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "actual_box_name#0",
+        "value#0"
+      ]
+    },
+    "128": {
+      "op": "intc_0 // 2",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "actual_box_name#0",
+        "value#0",
+        "2"
+      ]
+    },
+    "129": {
+      "op": "uncover 3",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "actual_box_name#0",
+        "value#0",
+        "2",
+        "actual_value_length#0"
+      ]
+    },
+    "131": {
+      "op": "extract3",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "actual_value#0"
+      ],
+      "stack_out": [
+        "actual_box_name_length#0",
+        "actual_box_name#0",
+        "actual_value#0"
+      ]
+    },
+    "132": {
+      "op": "uncover 2",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "actual_box_name_length#0"
+      ]
+    },
+    "134": {
+      "op": "intc_3 // 32",
+      "defined_out": [
+        "32",
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "actual_value#0"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "actual_box_name_length#0",
+        "32"
+      ]
+    },
+    "135": {
+      "op": "==",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "tmp%7#0"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "tmp%7#0"
+      ]
+    },
+    "136": {
+      "error": "Box name must be exactly 32 bytes",
+      "op": "assert // Box name must be exactly 32 bytes",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0"
+      ]
+    },
+    "137": {
+      "op": "dig 1",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_box_name#0 (copy)",
+        "actual_value#0"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "actual_box_name#0 (copy)"
+      ]
+    },
+    "139": {
+      "op": "box_del",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "{box_del}"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "{box_del}"
+      ]
+    },
+    "140": {
+      "op": "pop",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0"
+      ]
+    },
+    "141": {
+      "op": "box_put",
+      "stack_out": []
+    },
+    "142": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "1"
+      ]
+    },
+    "143": {
+      "op": "return",
+      "stack_out": []
+    },
+    "144": {
+      "subroutine": "dapp.contract.PermissionDApp.delete_box[routing]",
+      "params": {},
+      "block": "delete_box",
+      "stack_in": [],
+      "op": "txna ApplicationArgs 1",
+      "defined_out": [
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0"
+      ]
+    },
+    "147": {
+      "op": "dup",
+      "defined_out": [
+        "box_name#0",
+        "box_name#0 (copy)"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "box_name#0 (copy)"
+      ]
+    },
+    "148": {
+      "op": "intc_2 // 0",
+      "defined_out": [
+        "0",
+        "box_name#0",
+        "box_name#0 (copy)"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "box_name#0 (copy)",
+        "0"
+      ]
+    },
+    "149": {
+      "error": "invalid array length header",
+      "op": "extract_uint16 // on error: invalid array length header",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0"
+      ]
+    },
+    "150": {
+      "op": "dup",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)"
+      ]
+    },
+    "151": {
+      "op": "intc_0 // 2",
+      "defined_out": [
+        "2",
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "actual_box_name_length#0 (copy)",
+        "2"
+      ]
+    },
+    "152": {
+      "op": "+",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "add%0#0",
+        "box_name#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "add%0#0"
+      ]
+    },
+    "153": {
+      "op": "dig 2",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "add%0#0",
+        "box_name#0 (copy)"
+      ]
+    },
+    "155": {
+      "op": "len",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "add%0#0",
+        "box_name#0",
+        "len%0#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "add%0#0",
+        "len%0#0"
+      ]
+    },
+    "156": {
+      "op": "==",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "eq%0#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "eq%0#0"
+      ]
+    },
+    "157": {
+      "error": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
+      "op": "assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0"
+      ]
+    },
+    "158": {
+      "op": "txn Sender",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "tmp%0#1"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "tmp%0#1"
+      ]
+    },
+    "160": {
+      "op": "global CreatorAddress",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "tmp%0#1",
+        "tmp%1#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "tmp%0#1",
+        "tmp%1#0"
+      ]
+    },
+    "162": {
+      "op": "==",
+      "defined_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "tmp%2#0"
+      ],
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0",
+        "tmp%2#0"
+      ]
+    },
+    "163": {
+      "error": "Only creator can delete boxes",
+      "op": "assert // Only creator can delete boxes",
+      "stack_out": [
+        "box_name#0",
+        "actual_box_name_length#0"
+      ]
+    },
+    "164": {
+      "op": "swap",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "box_name#0"
+      ]
+    },
+    "165": {
+      "op": "intc_0 // 2",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "2"
+      ]
+    },
+    "166": {
+      "op": "dig 2",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "box_name#0",
+        "2",
+        "actual_box_name_length#0 (copy)"
+      ]
+    },
+    "168": {
+      "op": "extract3",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0"
+      ],
+      "stack_out": [
+        "actual_box_name_length#0",
+        "actual_box_name#0"
+      ]
+    },
+    "169": {
+      "op": "swap",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0"
+      ]
+    },
+    "170": {
+      "op": "intc_3 // 32",
+      "defined_out": [
+        "32",
+        "actual_box_name#0",
+        "actual_box_name_length#0"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "32"
+      ]
+    },
+    "171": {
+      "op": "==",
+      "defined_out": [
+        "actual_box_name#0",
+        "tmp%5#0"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "tmp%5#0"
+      ]
+    },
+    "172": {
+      "error": "Box name must be exactly 32 bytes",
+      "op": "assert // Box name must be exactly 32 bytes",
+      "stack_out": [
+        "actual_box_name#0"
+      ]
+    },
+    "173": {
+      "op": "box_del",
+      "defined_out": [
+        "{box_del}"
+      ],
+      "stack_out": [
+        "{box_del}"
+      ]
+    },
+    "174": {
+      "op": "pop",
+      "stack_out": []
+    },
+    "175": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "1"
+      ]
+    },
+    "176": {
+      "op": "return",
+      "stack_out": []
+    }
+  }
+}

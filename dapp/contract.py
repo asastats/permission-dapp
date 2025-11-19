@@ -1,64 +1,97 @@
 """Permission dApp smart contract implemented with Algorand Python (puyapy)."""
 
-from algopy import Global, Txn, Bytes, Box, arc4, subroutine
+from algopy import ARC4Contract, arc4, Global, Txn, op
 
 
-@subroutine
-def assert_sender_is_creator() -> None:
-    assert Txn.sender == Global.creator_address, "Sender must be creator"
-
-
-class PermissionDapp(arc4.ARC4Contract):
+class PermissionDApp(ARC4Contract):
     """
-    Permissioned box storage:
-      - Only the creator may write or delete boxes.
-      - Box name = Algorand address (32 raw bytes).
-      - Box contents = arbitrary string.
+    A permission-based dApp that allows only the creator to manage boxes.
     """
 
-    @arc4.baremethod(create="require", allow_actions=["NoOp"])
+    def __init__(self) -> None:
+        """Initialize the contract state."""
+        pass
+
+    @arc4.baremethod(allow_actions=["NoOp"], create="require")
     def create_application(self) -> None:
-        return
+        """
+        Handles the application creation.
+        This method is called only once, when the contract is deployed.
+        """
+        # No state initialization needed for this contract
+        pass
 
     @arc4.baremethod(allow_actions=["UpdateApplication"])
     def update_application(self) -> None:
-        assert_sender_is_creator()
+        """
+        Allows only the creator to update the application.
+        """
+        assert (
+            Txn.sender == Global.creator_address
+        ), "Only creator can update application"
 
     @arc4.baremethod(allow_actions=["DeleteApplication"])
     def delete_application(self) -> None:
-        assert_sender_is_creator()
-
-    # ----------------------------------------------------------------------
-    #  writeBox
-    # ----------------------------------------------------------------------
-    @arc4.abimethod(name="writeBox")
-    def write_box(self, box_name: arc4.StaticBytes[arc4.Literal[32]], value: arc4.DynamicBytes) -> None:
-        assert_sender_is_creator()
-
-        key: Bytes = box_name.bytes
-        assert len(key) == 32
-
-        raw_value: Bytes = value.bytes  # already raw UTF-8 bytes
-
-        box = Box(Bytes, key=key)
-        box.value = raw_value
-
-    # ----------------------------------------------------------------------
-    #  deleteBox
-    # ----------------------------------------------------------------------
-    @arc4.abimethod(name="deleteBox")
-    def delete_box(self, box_name: arc4.Address) -> None:
         """
-        Deletes a box keyed by the raw 32-byte address.
+        Allows only the creator to delete the application.
         """
-        assert_sender_is_creator()
+        assert (
+            Txn.sender == Global.creator_address
+        ), "Only creator can delete application"
 
-        key: Bytes = box_name.bytes
+    @arc4.abimethod
+    def write_box(self, box_name: arc4.DynamicBytes, value: arc4.String) -> None:
+        """
+        Write a value to a box. Only the creator can call this method.
 
-        assert len(key) == 32, "Box name must be 32 bytes"
+        Args:
+            box_name: The name of the box (should be 32 bytes)
+            value: The string value to write to the box
+        """
+        assert Txn.sender == Global.creator_address, "Only creator can write to boxes"
 
-        box = Box(Bytes, key=key)
-        _, exists = box.maybe()
-        assert exists, "Box does not exist"
+        # Convert arc4 types to bytes for box operations
+        box_name_bytes = box_name.bytes
+        value_bytes = value.bytes
 
-        del box.value
+        # For DynamicBytes, the .bytes includes the length prefix, so we need to extract the actual content
+        # The first 2 bytes are the length prefix in big-endian
+        actual_box_name_length = op.extract_uint16(box_name_bytes, 0)
+        actual_box_name = op.extract(box_name_bytes, 2, actual_box_name_length)
+
+        # For String, the .bytes also includes the length prefix
+        actual_value_length = op.extract_uint16(value_bytes, 0)
+        actual_value = op.extract(value_bytes, 2, actual_value_length)
+
+        assert actual_box_name_length == 32, "Box name must be exactly 32 bytes"
+
+        # Simple approach: always delete the box first if it exists, then create it
+        # This avoids the length comparison issue
+        box_exists = op.Box.length(actual_box_name)
+        if box_exists:
+            op.Box.delete(actual_box_name)
+
+        # Write to box (create new box)
+        op.Box.put(actual_box_name, actual_value)
+
+    @arc4.abimethod
+    def delete_box(self, box_name: arc4.DynamicBytes) -> None:
+        """
+        Delete a box. Only the creator can call this method.
+
+        Args:
+            box_name: The name of the box to delete (should be 32 bytes)
+        """
+        assert Txn.sender == Global.creator_address, "Only creator can delete boxes"
+
+        # Convert arc4 type to bytes for box operations
+        box_name_bytes = box_name.bytes
+
+        # Extract the actual box name from the ARC4 encoded bytes
+        actual_box_name_length = op.extract_uint16(box_name_bytes, 0)
+        actual_box_name = op.extract(box_name_bytes, 2, actual_box_name_length)
+
+        assert actual_box_name_length == 32, "Box name must be exactly 32 bytes"
+
+        # Delete the box
+        op.Box.delete(actual_box_name)

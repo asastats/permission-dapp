@@ -1,0 +1,180 @@
+#pragma version 11
+#pragma typetrack false
+
+// algopy.arc4.ARC4Contract.approval_program() -> uint64:
+main:
+    intcblock 2 1 0 32
+    // dapp/contract.py:16
+    // class PermissionDApp(ARC4Contract):
+    txn NumAppArgs
+    bz main_bare_routing@11
+    txn OnCompletion
+    !
+    assert // OnCompletion must be NoOp
+    txn ApplicationID
+    assert
+    pushbytess 0xf9c83219 0x18a423db // method "write_box(byte[],string)void", method "delete_box(byte[])void"
+    txna ApplicationArgs 0
+    match write_box delete_box
+
+main_after_if_else@16:
+    // dapp/contract.py:16
+    // class PermissionDApp(ARC4Contract):
+    err
+
+main_bare_routing@11:
+    // dapp/contract.py:16
+    // class PermissionDApp(ARC4Contract):
+    txn OnCompletion
+    switch main_create_application@12 main_after_if_else@16 main_after_if_else@16 main_after_if_else@16 main_update_application@13 main_delete_application@14
+    err
+
+main_delete_application@14:
+    // dapp/contract.py:41
+    // @arc4.baremethod(allow_actions=["DeleteApplication"])
+    txn ApplicationID
+    assert // can only call when not creating
+    // dapp/contract.py:46
+    // assert Txn.sender == Global.creator_address, "Only creator can delete application"
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // Only creator can delete application
+    // dapp/contract.py:41
+    // @arc4.baremethod(allow_actions=["DeleteApplication"])
+    intc_1 // 1
+    return
+
+main_update_application@13:
+    // dapp/contract.py:34
+    // @arc4.baremethod(allow_actions=["UpdateApplication"])
+    txn ApplicationID
+    assert // can only call when not creating
+    // dapp/contract.py:39
+    // assert Txn.sender == Global.creator_address, "Only creator can update application"
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // Only creator can update application
+    // dapp/contract.py:34
+    // @arc4.baremethod(allow_actions=["UpdateApplication"])
+    intc_1 // 1
+    return
+
+main_create_application@12:
+    // dapp/contract.py:25
+    // @arc4.baremethod(allow_actions=["NoOp"], create="require")
+    txn ApplicationID
+    !
+    assert // can only call when creating
+    intc_1 // 1
+    return
+
+
+// dapp.contract.PermissionDApp.write_box[routing]() -> void:
+write_box:
+    // dapp/contract.py:48
+    // @arc4.abimethod
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    intc_0 // 2
+    +
+    dig 2
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    intc_0 // 2
+    +
+    dig 2
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    // dapp/contract.py:57
+    // assert Txn.sender == Global.creator_address, "Only creator can write to boxes"
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // Only creator can write to boxes
+    // dapp/contract.py:66
+    // actual_box_name = op.extract(box_name_bytes, 2, actual_box_name_length)
+    uncover 3
+    intc_0 // 2
+    dig 4
+    extract3
+    // dapp/contract.py:70
+    // actual_value = op.extract(value_bytes, 2, actual_value_length)
+    uncover 2
+    intc_0 // 2
+    uncover 3
+    extract3
+    // dapp/contract.py:72
+    // assert actual_box_name_length == 32, "Box name must be exactly 32 bytes"
+    uncover 2
+    intc_3 // 32
+    ==
+    assert // Box name must be exactly 32 bytes
+    // dapp/contract.py:78
+    // op.Box.delete(actual_box_name)
+    dig 1
+    box_del
+    pop
+    // dapp/contract.py:80-81
+    // # Write to box (create new box)
+    // op.Box.put(actual_box_name, actual_value)
+    box_put
+    // dapp/contract.py:48
+    // @arc4.abimethod
+    intc_1 // 1
+    return
+
+
+// dapp.contract.PermissionDApp.delete_box[routing]() -> void:
+delete_box:
+    // dapp/contract.py:83
+    // @arc4.abimethod
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    intc_0 // 2
+    +
+    dig 2
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    // dapp/contract.py:91
+    // assert Txn.sender == Global.creator_address, "Only creator can delete boxes"
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // Only creator can delete boxes
+    // dapp/contract.py:98
+    // actual_box_name = op.extract(box_name_bytes, 2, actual_box_name_length)
+    swap
+    intc_0 // 2
+    dig 2
+    extract3
+    // dapp/contract.py:100
+    // assert actual_box_name_length == 32, "Box name must be exactly 32 bytes"
+    swap
+    intc_3 // 32
+    ==
+    assert // Box name must be exactly 32 bytes
+    // dapp/contract.py:102-103
+    // # Delete the box
+    // op.Box.delete(actual_box_name)
+    box_del
+    pop
+    // dapp/contract.py:83
+    // @arc4.abimethod
+    intc_1 // 1
+    return
