@@ -98,23 +98,23 @@ Smart contract
 Compile
 ^^^^^^^
 
-After you activated the Python environment, you can compile smart contract by issuing the following commands:
+After you activated the Python environment, you can compile smart contract by issuing 
+the following commands:
 
 .. code-block:: bash
 
   algokit compile py contract.py --out-dir artifacts
 
 
-Deploy, fund, and setup dApp
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Deploy and fund Permission dApp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Here's a shortcat Django management command that will deploy generated smart contract on the blockchain,
-fund the related account with required ALGO, and finally set up the dApp with rewards token ID and
-claim period duration values retrieved from the environemnt variables:
+Issue the following command to deploy the smart contractdeploy generated smart contract 
+on the blockchain and fund the related account with required ALGO:
 
 .. code-block:: bash
 
-  python ........
+  python deploy.py
 
 
 Tests
