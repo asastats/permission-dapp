@@ -166,6 +166,6 @@ def fund_app(app_id, network, amount=1_000_000):
     print(f"Funded app {app_id} with {amount / 1_000_000} Algo in transaction {tx_id}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     app_id = deploy_app(network="testnet")
-    fund_app(app_id, network="testnet", amount=1_000_000)
+    fund_app(app_id, network="testnet", amount=20_000_000)

@@ -1,17 +1,41 @@
+"""Module with smart contract's utility functions ."""
+
 import base64
 import sys
 
 from algosdk.encoding import encode_address
 from algosdk.v2client.algod import AlgodClient
 
-from config import PERMISSION_APP_ID, PERMISSION_APP_ID_TESTNET
-from helpers import box_writing_parameters, environment_variables
+from helpers import box_writing_parameters, environment_variables, permission_dapp_id
 from network import delete_box, permission_dapp_values_from_boxes
 
 
 def delete_boxes():
+    """Delete all boxes from the Permission dApp on testnet.
+
+    This function:
+    1. Retrieves environment variables and creates an Algod client
+    2. Gets the application ID for the Permission dApp on testnet
+    3. Fetches all boxes associated with the application
+    4. Deletes each box by encoding the box name to an address
+
+    :var env: environment variables collection
+    :type env: dict
+    :var app_id: Permission dApp application ID on testnet
+    :type app_id: int
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var writing_parameters: transaction parameters for box operations
+    :type writing_parameters: :class:`transaction.SuggestedParams`
+    :var boxes: collection of boxes associated with the application
+    :type boxes: dict
+    :var box_name: base64 decoded box name
+    :type box_name: bytes
+    :var address: Algorand address derived from box name
+    :type address: str
+    """
     env = environment_variables()
-    app_id = PERMISSION_APP_ID_TESTNET
+    app_id = permission_dapp_id(network="testnet")
     client = AlgodClient(
         env.get("algod_token_testnet"), env.get("algod_address_testnet")
     )
@@ -26,11 +50,28 @@ def delete_boxes():
 
 
 def print_box_values(network="testnet"):
+    """Print all box values from the Permission dApp in sorted order.
+
+    Retrieves and displays permission values from application boxes,
+    sorted by the second value in descending order. Shows a message
+    if no boxes are found.
+
+    :param network: network to query (e.g., "testnet")
+    :type network: str
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var app_id: Permission dApp application ID
+    :type app_id: int
+    :var permissions: dictionary of address to permission values
+    :type permissions: dict
+    """
     env = environment_variables()
     client = AlgodClient(
         env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
     )
-    app_id = PERMISSION_APP_ID
+    app_id = permission_dapp_id(network=network)
     permissions = permission_dapp_values_from_boxes(client, app_id)
     if not permissions:
         print("There are no boxes!")
@@ -39,6 +80,32 @@ def print_box_values(network="testnet"):
 
 
 def check_test_box(app_id_str):
+    """Check and display test box contents for a given application ID.
+
+    Decodes and displays box contents for testing purposes, showing:
+    - The address associated with each box
+    - Hexadecimal representation of box values
+    - Parsed integer values in 16-byte chunks
+
+    :param app_id_str: application ID as string
+    :type app_id_str: str
+    :var app_id: application ID converted to integer
+    :type app_id: int
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var boxes: collection of boxes associated with the application
+    :type boxes: dict
+    :var box_name: base64 decoded box name
+    :type box_name: bytes
+    :var address: Algorand address derived from box name
+    :type address: str
+    :var response: box value response from the node
+    :type response: dict
+    :var hexed: hexadecimal representation of box value
+    :type hexed: str
+    """
     app_id = int(app_id_str)
     env = environment_variables()
     client = AlgodClient(
@@ -58,56 +125,8 @@ def check_test_box(app_id_str):
             print(start, value)
         print()
 
-        # # new test python utils.py check_test_box 731655204
 
-        # KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ
-        # 0 731655244
-        # 16 2
-        # 32 1735381835
-        # 48 1735468235
-        # 64 86400
-
-        # # old test
-
-        # KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ
-        # 0 730727847
-        # 16 2
-        # 32 1734003205
-        # 48 1734089605
-        # 64 86400
-
-        # OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I
-        # 0 730727773
-        # 16 2
-        # 32 1734003053
-        # 48 1734089453
-        # 64 86400
-
-        # # AFTER EXPIRATION EVERYTHING'S THE SAME:
-        # KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ
-        # 0 730727847
-        # 16 2
-        # 32 1734003205
-        # 48 1734089605
-        # 64 86400
-
-        # OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I
-        # 0 730727773
-        # 16 2
-        # 32 1734003053
-        # 48 1734089453
-        # 64 86400
-
-        # # AFTER CANCELING KGTSK..PSHPQ:
-        # OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I
-        # 0 730727773
-        # 16 2
-        # 32 1734003053
-        # 48 1734089453
-        # 64 86400
-
-
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     args = sys.argv
     if len(args) == 1:
         print_box_values()

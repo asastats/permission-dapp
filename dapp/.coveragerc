@@ -1,0 +1,14 @@
+[run]
+branch = True
+omit =
+    */tests/*
+
+[report]
+show_missing = True
+skip_covered = False
+fail_under = 92
+exclude_lines =
+    pragma: no cover
+
+[html]
+directory = htmlcov

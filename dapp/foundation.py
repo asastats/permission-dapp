@@ -314,7 +314,7 @@ def check_and_update_permission_dapp_boxes(network="testnet"):
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     prepare_and_write_data()
     # import time
 

@@ -39,6 +39,27 @@ class TestNetworkSubscriptionsFunctions:
     """Testing class for :py:mod:`network` subscriptions functions."""
 
     # # fetch_subscriptions_for_address``
+    def test_network_fetch_subscriptions_for_address_for_no_response(self, mocker):
+        client = mocker.MagicMock()
+        address = "OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I"
+        response1, response2, response3, response4 = None, None, None, None
+        client.application_box_by_name.side_effect = [
+            response1,
+            response2,
+            response3,
+            response4,
+        ]
+        returned = fetch_subscriptions_for_address(client, address)
+        assert returned == {}
+        calls = [
+            mocker.call(SUBTOPIA_INTRO_APP_ID, box_name_from_address(address)),
+            mocker.call(SUBTOPIA_ASASTATSER_APP_ID, box_name_from_address(address)),
+            mocker.call(SUBTOPIA_PROFESSIONAL_APP_ID, box_name_from_address(address)),
+            mocker.call(SUBTOPIA_CLUSTER_APP_ID, box_name_from_address(address)),
+        ]
+        client.application_box_by_name.assert_has_calls(calls, any_order=True)
+        assert client.application_box_by_name.call_count == 4
+
     def test_network_fetch_subscriptions_for_address_functionality(self, mocker):
         client = mocker.MagicMock()
         address = "OECZJTT5M2RTJMAWG7N3RBIJSU4M37O47DGHKLHLI6ZNHK5Q7ZDM2VMI6I"

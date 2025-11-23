@@ -220,6 +220,35 @@ class TestPermissionDApp:
         box_content = context.ledger.get_box(app.id, box_name)
         assert box_content == value2.encode("utf-8")
 
+    def test_permission_dapp_write_box_creates_new_box(
+        self, context: AlgopyTestContext
+    ) -> None:
+        """Test that write_box creates a new box if it doesn't exist."""
+        creator = context.default_sender
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDApp()
+            contract.create_application()
+
+        app = _app(context, contract)
+        box_name = context.any.bytes(32)
+        value = "new_box_value"
+
+        # Verify the box does not exist initially
+        box_content = context.ledger.get_box(app.id, box_name)
+        assert box_content in (None, b"", bytearray())
+
+        # Write to the new box
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract.write_box(
+                arc4.DynamicBytes(box_name),
+                arc4.String(value),
+            )
+
+        # Verify the box was created with the correct content
+        box_content = context.ledger.get_box(app.id, box_name)
+        assert box_content == value.encode("utf-8")
+
     # delete_box
     def test_permission_dapp_delete_box_by_creator(
         self, context: AlgopyTestContext

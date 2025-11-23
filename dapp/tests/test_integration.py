@@ -422,8 +422,40 @@ class TestContractWriteBox(BaseTestContract):
         )
         assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
 
+    def test_contract_permission_dapp_write_box_creates_new_box(
+        self,
+        creator_account: SigningAccount,
+    ) -> None:
+        """Test that write_box creates a new box if it doesn't exist."""
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
+        value = "new_box_value"
 
-class TestContractDeleteBox(BaseTestContract):
+        # Verify the box does not exist initially
+        with pytest.raises(AlgodHTTPError, match="box not found"):
+            self.permission_client.algorand.client.algod.application_box_by_name(
+                self.permission_client.app_id, box_name
+            )
+
+        # Write to the new box
+        self.permission_client.send.call(
+            AppClientMethodCallParams(
+                method="write_box",
+                args=[box_name, value],
+                sender=creator_account.address,
+                signer=creator_account.signer,
+                box_references=[box_name],
+            )
+        )
+
+        # Verify the box was created with the correct content
+        box_info = self.permission_client.algorand.client.algod.application_box_by_name(
+            self.permission_client.app_id, box_name
+        )
+        assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
+
+
+class TestContractDeleteBox(TestContractWriteBox):
     """Testing class for :class:`contract.contract.PermissionDApp` delete_box method."""
 
     name = "delete_box"
