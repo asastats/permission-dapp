@@ -8,7 +8,7 @@ from algosdk.logic import get_application_address
 from algosdk.transaction import PaymentTxn
 from algosdk.v2client.algod import AlgodClient
 
-
+from contract import PermissionDApp
 from helpers import (
     compile_program,
     environment_variables,
@@ -57,7 +57,7 @@ def deploy_app(network="testnet"):
     """
     env = environment_variables()
 
-    dapp_name = "PermissionDApp"
+    dapp_name = PermissionDApp._name
 
     client = AlgodClient(
         env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")

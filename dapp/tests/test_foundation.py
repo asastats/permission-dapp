@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import foundation
 from config import (
     CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
@@ -12,7 +13,6 @@ from config import (
     PERMISSION_APP_ID,
     STAKING_DOCS,
 )
-import foundation
 from foundation import (
     _calculate_and_update_votes_and_permissions,
     _initial_check,

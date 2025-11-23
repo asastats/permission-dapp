@@ -9,6 +9,7 @@ import pytest
 
 import helpers
 from config import INDEXER_ADDRESS, INDEXER_TOKEN, STAKING_APP_ID, STAKING_APP_MIN_ROUND
+from contract import PermissionDApp
 from helpers import (
     _application_transaction,
     _application_transactions,
@@ -377,13 +378,12 @@ class TestHelpersContractFunctions:
         contract_json = mocker.MagicMock()
         mocked_read = mocker.patch("helpers.read_json", return_value=contract_json)
         mocked_undictify = mocker.patch("helpers.Contract.undictify")
-        dapp_name = "PermissionDApp"
         returned = load_contract()
         assert returned == mocked_undictify.return_value
         mocked_read.assert_called_once_with(
             Path(helpers.__file__).resolve().parent
             / "artifacts"
-            / f"{dapp_name}.arc56.json"
+            / f"{PermissionDApp._name}.arc56.json"
         )
         mocked_undictify.assert_called_once_with(contract_json)
 

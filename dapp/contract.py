@@ -1,6 +1,6 @@
 """Permission dApp smart contract implemented with Algorand Python (puyapy)."""
 
-from algopy import ARC4Contract, arc4, Global, Txn, op
+from algopy import ARC4Contract, Global, Txn, arc4, op
 
 
 class PermissionDApp(ARC4Contract):

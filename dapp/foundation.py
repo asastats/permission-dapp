@@ -16,8 +16,8 @@ from config import (
     STAKING_DOCS_STARTING_INDEX,
 )
 from helpers import (
-    calculate_votes_and_permission,
     box_writing_parameters,
+    calculate_votes_and_permission,
     environment_variables,
     governance_staking_addresses,
     permission_for_amount,

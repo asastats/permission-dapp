@@ -9,10 +9,10 @@ from algosdk.error import AlgodHTTPError
 from config import (
     STAKING_KEY,
     SUBSCRIPTION_PERMISSIONS,
-    SUBTOPIA_INTRO_APP_ID,
     SUBTOPIA_ASASTATSER_APP_ID,
-    SUBTOPIA_PROFESSIONAL_APP_ID,
     SUBTOPIA_CLUSTER_APP_ID,
+    SUBTOPIA_INTRO_APP_ID,
+    SUBTOPIA_PROFESSIONAL_APP_ID,
 )
 from helpers import box_name_from_address
 from network import (
@@ -24,10 +24,10 @@ from network import (
     create_app,
     current_governance_staking_for_address,
     delete_app,
-    fetch_subscriptions_for_address,
-    fetch_subscriptions_from_boxes,
     delete_box,
     deserialized_permission_dapp_box_value,
+    fetch_subscriptions_for_address,
+    fetch_subscriptions_from_boxes,
     permission_dapp_values_from_boxes,
     write_box,
     write_foundation_boxes,
@@ -599,16 +599,12 @@ class TestNetworkPermissionDappFunctions:
         contract_json = mocker.MagicMock()
 
         sender_address = mocker.MagicMock()
-        mocker.patch(
-            "network.address_from_private_key", return_value=sender_address
-        )
+        mocker.patch("network.address_from_private_key", return_value=sender_address)
 
         mock_txn = mocker.MagicMock()
         mock_signed = mocker.MagicMock()
         mock_signed.transaction.get_txid.return_value = "txid123"
-        mocker.patch(
-            "network.transaction.ApplicationCreateTxn", return_value=mock_txn
-        )
+        mocker.patch("network.transaction.ApplicationCreateTxn", return_value=mock_txn)
         mock_txn.sign.return_value = mock_signed
 
         mocked_wait = mocker.patch("network.wait_for_confirmation")

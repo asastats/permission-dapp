@@ -2,7 +2,7 @@
 
 import base64
 from collections import defaultdict
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from algosdk import transaction
 from algosdk.account import address_from_private_key

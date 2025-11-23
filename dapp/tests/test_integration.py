@@ -1,7 +1,8 @@
 """Module with integration tests for the Permission dApp smart contract."""
 
+import base64
 import json
-import os
+import time
 from pathlib import Path
 
 import pytest
@@ -15,21 +16,22 @@ from algokit_utils import (
     SigningAccount,
 )
 from algokit_utils.applications import AppClient, AppClientParams
+from algosdk.account import generate_account
 from algosdk.error import AlgodHTTPError
-from algosdk.transaction import ApplicationUpdateTxn, ApplicationDeleteTxn
+from algosdk.transaction import ApplicationDeleteTxn, ApplicationUpdateTxn
 from dotenv import load_dotenv
 
 from contract import PermissionDApp
 from helpers import compile_program, wait_for_confirmation
-from network import create_app
+from network import box_name_from_address, create_app
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-dapp_name = PermissionDApp._name
-
 # Assume tests are run from the project root
 CONTRACT_PATH = Path(__file__).parent.parent / "artifacts"
-APP_SPEC_PATH = CONTRACT_PATH / f"{dapp_name}.arc56.json"
+APP_SPEC_PATH = CONTRACT_PATH / f"{PermissionDApp._name}.arc56.json"
+
+TEST_ADDRESS = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
 
 
 @pytest.fixture(scope="session")
@@ -124,6 +126,8 @@ class BaseTestContract:
 
         # Expose for tests (test methods can now reference self.permission_client)
         self.permission_client = permission_client
+        self.approval_program = approval_program
+        self.clear_program = clear_program
 
     @pytest.fixture
     def algorand_client(self) -> AlgorandClient:
@@ -177,13 +181,13 @@ class TestContractLifecycle(BaseTestContract):
             sender=creator_account.address,
             sp=params,
             index=self.permission_client.app_id,
-            approval_program=self.permission_client.approval_program,
-            clear_program=self.permission_client.clear_program,
+            approval_program=self.approval_program,
+            clear_program=self.clear_program,
         )
 
         signed_txn = update_txn.sign(creator_account.private_key)
         tx_id = algod.send_transaction(signed_txn)
-        
+
         # Wait for confirmation
         wait_for_confirmation(algod, tx_id)
 
@@ -201,12 +205,12 @@ class TestContractLifecycle(BaseTestContract):
             sender=user_account.address,
             sp=params,
             index=self.permission_client.app_id,
-            approval_program=self.permission_client.approval_program,
-            clear_program=self.permission_client.clear_program,
+            approval_program=self.approval_program,
+            clear_program=self.clear_program,
         )
 
         signed_txn = update_txn.sign(user_account.private_key)
-        
+
         with pytest.raises(Exception):  # Could be various error types
             tx_id = algod.send_transaction(signed_txn)
             wait_for_confirmation(algod, tx_id)
@@ -227,7 +231,7 @@ class TestContractLifecycle(BaseTestContract):
 
         signed_txn = delete_txn.sign(creator_account.private_key)
         tx_id = algod.send_transaction(signed_txn)
-        
+
         # Wait for confirmation
         wait_for_confirmation(algod, tx_id)
 
@@ -250,7 +254,7 @@ class TestContractLifecycle(BaseTestContract):
         )
 
         signed_txn = delete_txn.sign(user_account.private_key)
-        
+
         with pytest.raises(Exception):  # Could be various error types
             tx_id = algod.send_transaction(signed_txn)
             wait_for_confirmation(algod, tx_id)
@@ -266,7 +270,8 @@ class TestContractWriteBox(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test that creator can write to a box."""
-        box_name = b"test_box_123456789012345678901234"  # 32 bytes
+
+        box_name = box_name_from_address(TEST_ADDRESS)
         value = "test_value"
 
         self.permission_client.send.call(
@@ -276,7 +281,6 @@ class TestContractWriteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -284,15 +288,14 @@ class TestContractWriteBox(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["name"] == box_name
-        assert box_info["value"] == value.encode("utf-8")
+        assert base64.b64decode(box_info["name"]) == box_name
+        assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
 
     def test_contract_permission_dapp_write_box_fails_for_non_creator(
         self,
         user_account: SigningAccount,
     ) -> None:
-        """Test that non-creator cannot write to boxes."""
-        box_name = b"test_box_123456789012345678901234"  # 32 bytes
+        box_name = box_name_from_address(TEST_ADDRESS)
         value = "test_value"
 
         with pytest.raises(LogicError, match="Only creator can write to boxes"):
@@ -303,8 +306,7 @@ class TestContractWriteBox(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
     def test_contract_permission_dapp_write_box_fails_for_wrong_box_size(
@@ -312,7 +314,8 @@ class TestContractWriteBox(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test that box name must be exactly 32 bytes."""
-        box_name = b"too_short"  # Only 9 bytes
+
+        box_name = box_name_from_address(TEST_ADDRESS)[:9]
         value = "test_value"
 
         with pytest.raises(LogicError, match="Box name must be exactly 32 bytes"):
@@ -323,8 +326,7 @@ class TestContractWriteBox(BaseTestContract):
                     sender=creator_account.address,
                     signer=creator_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
     def test_contract_permission_dapp_write_box_overwrites_existing(
@@ -332,7 +334,7 @@ class TestContractWriteBox(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test that writing to existing box overwrites content."""
-        box_name = b"test_box_123456789012345678901234"  # 32 bytes
+        box_name = box_name_from_address(TEST_ADDRESS)
         value1 = "first_value"
         value2 = "second_value"
 
@@ -344,7 +346,6 @@ class TestContractWriteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -352,7 +353,7 @@ class TestContractWriteBox(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["value"] == value1.encode("utf-8")
+        assert base64.b64decode(box_info["value"]) == value1.encode("utf-8")
 
         # Write second value (overwrite)
         self.permission_client.send.call(
@@ -362,7 +363,6 @@ class TestContractWriteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -370,14 +370,15 @@ class TestContractWriteBox(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["value"] == value2.encode("utf-8")
+        assert base64.b64decode(box_info["value"]) == value2.encode("utf-8")
 
     def test_contract_permission_dapp_write_box_with_empty_string(
         self,
         creator_account: SigningAccount,
     ) -> None:
         """Test writing empty string to a box."""
-        box_name = b"empty_box_1234567890123456789012"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         value = ""
 
         self.permission_client.send.call(
@@ -387,7 +388,6 @@ class TestContractWriteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -395,14 +395,15 @@ class TestContractWriteBox(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["value"] == b""
+        assert base64.b64decode(box_info["value"]) == b""
 
     def test_contract_permission_dapp_write_box_with_unicode_string(
         self,
         creator_account: SigningAccount,
     ) -> None:
         """Test writing unicode string to a box."""
-        box_name = b"unicode_box_12345678901234567890"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         value = "Hello 世界 🌍"
 
         self.permission_client.send.call(
@@ -412,7 +413,6 @@ class TestContractWriteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -420,7 +420,7 @@ class TestContractWriteBox(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["value"] == value.encode("utf-8")
+        assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
 
 
 class TestContractDeleteBox(BaseTestContract):
@@ -433,7 +433,8 @@ class TestContractDeleteBox(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test that creator can delete a box."""
-        box_name = b"delete_box_123456789012345678901"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         value = "test_value"
 
         # First write a box
@@ -444,7 +445,6 @@ class TestContractDeleteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -452,7 +452,7 @@ class TestContractDeleteBox(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["name"] == box_name
+        assert base64.b64decode(box_info["name"]) == box_name
 
         # Delete the box
         self.permission_client.send.call(
@@ -462,7 +462,6 @@ class TestContractDeleteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -478,7 +477,8 @@ class TestContractDeleteBox(BaseTestContract):
         user_account: SigningAccount,
     ) -> None:
         """Test that non-creator cannot delete boxes."""
-        box_name = b"delete_box_123456789012345678901"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         value = "test_value"
 
         # First write a box (by creator)
@@ -489,7 +489,6 @@ class TestContractDeleteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -502,8 +501,7 @@ class TestContractDeleteBox(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
     def test_contract_permission_dapp_delete_box_fails_for_wrong_box_size(
@@ -511,7 +509,7 @@ class TestContractDeleteBox(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test that box name must be exactly 32 bytes for deletion."""
-        box_name = b"too_short"  # Only 9 bytes
+        box_name = box_name_from_address(TEST_ADDRESS)[:9]
 
         with pytest.raises(LogicError, match="Box name must be exactly 32 bytes"):
             self.permission_client.send.call(
@@ -521,8 +519,7 @@ class TestContractDeleteBox(BaseTestContract):
                     sender=creator_account.address,
                     signer=creator_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
     def test_contract_permission_dapp_delete_nonexistent_box(
@@ -530,7 +527,8 @@ class TestContractDeleteBox(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test deleting a box that doesn't exist."""
-        box_name = b"nonexistent_box_1234567890123456"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
 
         # This should succeed (box deletion is idempotent in Algorand)
         self.permission_client.send.call(
@@ -540,7 +538,6 @@ class TestContractDeleteBox(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -555,9 +552,12 @@ class TestContractMultipleBoxes(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test operations with multiple boxes."""
-        box1_name = b"box_one_123456789012345678901234"  # 32 bytes
+
+        _, address = generate_account()
+        box1_name = box_name_from_address(address)
         box1_value = "value1"
-        box2_name = b"box_two_123456789012345678901234"  # 32 bytes
+        _, address = generate_account()
+        box2_name = box_name_from_address(address)
         box2_value = "value2"
 
         # Write first box
@@ -568,7 +568,6 @@ class TestContractMultipleBoxes(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box1_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -580,20 +579,23 @@ class TestContractMultipleBoxes(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box2_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
         # Verify both boxes exist with correct values
-        box1_info = self.permission_client.algorand.client.algod.application_box_by_name(
-            self.permission_client.app_id, box1_name
+        box1_info = (
+            self.permission_client.algorand.client.algod.application_box_by_name(
+                self.permission_client.app_id, box1_name
+            )
         )
-        box2_info = self.permission_client.algorand.client.algod.application_box_by_name(
-            self.permission_client.app_id, box2_name
+        box2_info = (
+            self.permission_client.algorand.client.algod.application_box_by_name(
+                self.permission_client.app_id, box2_name
+            )
         )
-        
-        assert box1_info["value"] == box1_value.encode("utf-8")
-        assert box2_info["value"] == box2_value.encode("utf-8")
+
+        assert base64.b64decode(box1_info["value"]) == box1_value.encode("utf-8")
+        assert base64.b64decode(box2_info["value"]) == box2_value.encode("utf-8")
 
         # Delete first box
         self.permission_client.send.call(
@@ -603,7 +605,6 @@ class TestContractMultipleBoxes(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box1_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -613,10 +614,12 @@ class TestContractMultipleBoxes(BaseTestContract):
                 self.permission_client.app_id, box1_name
             )
 
-        box2_info = self.permission_client.algorand.client.algod.application_box_by_name(
-            self.permission_client.app_id, box2_name
+        box2_info = (
+            self.permission_client.algorand.client.algod.application_box_by_name(
+                self.permission_client.app_id, box2_name
+            )
         )
-        assert box2_info["value"] == box2_value.encode("utf-8")
+        assert base64.b64decode(box2_info["value"]) == box2_value.encode("utf-8")
 
 
 class TestContractBoxManagement(BaseTestContract):
@@ -629,7 +632,8 @@ class TestContractBoxManagement(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test complete box lifecycle: create → verify → delete → verify gone."""
-        box_name = b"lifecycle_box_123456789012345678"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         value = "lifecycle_test_value"
 
         # Create box
@@ -640,7 +644,6 @@ class TestContractBoxManagement(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -648,8 +651,8 @@ class TestContractBoxManagement(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["name"] == box_name
-        assert box_info["value"] == value.encode("utf-8")
+        assert base64.b64decode(box_info["name"]) == box_name
+        assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
 
         # Delete box
         self.permission_client.send.call(
@@ -659,7 +662,6 @@ class TestContractBoxManagement(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -674,13 +676,17 @@ class TestContractBoxManagement(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test multiple consecutive box operations on same box."""
-        box_name = b"consecutive_box_123456789012345"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
 
         # Write → Delete → Write → Delete
         values = ["first", "second", "third"]
-        
+        note_counter = 0
+
         for i, value in enumerate(values):
             # Write box
+            note = f"write_{note_counter}".encode()
+            note_counter += 1
             self.permission_client.send.call(
                 AppClientMethodCallParams(
                     method="write_box",
@@ -688,18 +694,22 @@ class TestContractBoxManagement(BaseTestContract):
                     sender=creator_account.address,
                     signer=creator_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
+                    note=note,
                 )
             )
 
             # Verify content
-            box_info = self.permission_client.algorand.client.algod.application_box_by_name(
-                self.permission_client.app_id, box_name
+            box_info = (
+                self.permission_client.algorand.client.algod.application_box_by_name(
+                    self.permission_client.app_id, box_name
+                )
             )
-            assert box_info["value"] == value.encode("utf-8")
+            assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
 
             # Delete box (except for last iteration)
             if i < len(values) - 1:
+                note = f"delete_{note_counter}".encode()
+                note_counter += 1
                 self.permission_client.send.call(
                     AppClientMethodCallParams(
                         method="delete_box",
@@ -707,7 +717,7 @@ class TestContractBoxManagement(BaseTestContract):
                         sender=creator_account.address,
                         signer=creator_account.signer,
                         box_references=[box_name],
-                        static_fee=AlgoAmount(micro_algo=2000),
+                        note=note,
                     )
                 )
 
@@ -730,7 +740,8 @@ class TestContractAccessControl(BaseTestContract):
         other_account: SigningAccount,
     ) -> None:
         """Test that only creator can perform box operations."""
-        box_name = b"access_box_1234567890123456789012"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         value = "test_value"
 
         # Creator can write
@@ -741,7 +752,6 @@ class TestContractAccessControl(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -754,8 +764,7 @@ class TestContractAccessControl(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
         # Other account cannot write
@@ -767,8 +776,7 @@ class TestContractAccessControl(BaseTestContract):
                     sender=other_account.address,
                     signer=other_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
         # User cannot delete
@@ -780,8 +788,7 @@ class TestContractAccessControl(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
         # Only creator can delete
@@ -792,7 +799,6 @@ class TestContractAccessControl(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -807,7 +813,8 @@ class TestContractEdgeCases(BaseTestContract):
         creator_account: SigningAccount,
     ) -> None:
         """Test writing large content to a box."""
-        box_name = b"large_box_1234567890123456789012"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         # Create a string that's ~1KB
         value = "x" * 1000
 
@@ -818,7 +825,6 @@ class TestContractEdgeCases(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -826,15 +832,16 @@ class TestContractEdgeCases(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["value"] == value.encode("utf-8")
-        assert len(box_info["value"]) == 1000
+        assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
+        assert len(base64.b64decode(box_info["value"])) == 1000
 
     def test_contract_permission_dapp_special_characters_in_content(
         self,
         creator_account: SigningAccount,
     ) -> None:
         """Test writing content with special characters."""
-        box_name = b"special_box_12345678901234567890"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
         value = "Line1\nLine2\tTabbed\x00Null\rReturn"
 
         self.permission_client.send.call(
@@ -844,7 +851,6 @@ class TestContractEdgeCases(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )
 
@@ -852,19 +858,20 @@ class TestContractEdgeCases(BaseTestContract):
         box_info = self.permission_client.algorand.client.algod.application_box_by_name(
             self.permission_client.app_id, box_name
         )
-        assert box_info["value"] == value.encode("utf-8")
+        assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
 
     def test_contract_permission_dapp_rapid_sequential_operations(
         self,
         creator_account: SigningAccount,
     ) -> None:
         """Test rapid sequential box operations."""
-        box_name = b"rapid_box_1234567890123456789012"  # 32 bytes
+        _, address = generate_account()
+        box_name = box_name_from_address(address)
 
         # Perform multiple operations quickly
         for i in range(5):
             value = f"value_{i}"
-            
+
             # Write
             self.permission_client.send.call(
                 AppClientMethodCallParams(
@@ -873,15 +880,16 @@ class TestContractEdgeCases(BaseTestContract):
                     sender=creator_account.address,
                     signer=creator_account.signer,
                     box_references=[box_name],
-                    static_fee=AlgoAmount(micro_algo=2000),
-                )
+                    )
             )
 
             # Verify
-            box_info = self.permission_client.algorand.client.algod.application_box_by_name(
-                self.permission_client.app_id, box_name
+            box_info = (
+                self.permission_client.algorand.client.algod.application_box_by_name(
+                    self.permission_client.app_id, box_name
+                )
             )
-            assert box_info["value"] == value.encode("utf-8")
+            assert base64.b64decode(box_info["value"]) == value.encode("utf-8")
 
         # Final delete
         self.permission_client.send.call(
@@ -891,6 +899,5 @@ class TestContractEdgeCases(BaseTestContract):
                 sender=creator_account.address,
                 signer=creator_account.signer,
                 box_references=[box_name],
-                static_fee=AlgoAmount(micro_algo=2000),
             )
         )

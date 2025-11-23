@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest import mock
 
 import deploy
+from contract import PermissionDApp
 from deploy import deploy_app, fund_app
 
 
@@ -18,7 +19,6 @@ class TestDeployFunctions:
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
-        dapp_name = "PermissionDApp"
         env = {
             "algod_token_mainnet": algod_token,
             "algod_address_mainnet": algod_address,
@@ -55,7 +55,7 @@ class TestDeployFunctions:
         contract_json_path = (
             Path(deploy.__file__).resolve().parent
             / "artifacts"
-            / f"{dapp_name}.arc56.json"
+            / f"{PermissionDApp._name}.arc56.json"
         )
         with mock.patch(
             "deploy.open",
@@ -67,12 +67,12 @@ class TestDeployFunctions:
                 mocker.call(
                     Path(deploy.__file__).resolve().parent
                     / "artifacts"
-                    / f"{dapp_name}.approval.teal"
+                    / f"{PermissionDApp._name}.approval.teal"
                 ),
                 mocker.call(
                     Path(deploy.__file__).resolve().parent
                     / "artifacts"
-                    / f"{dapp_name}.clear.teal"
+                    / f"{PermissionDApp._name}.clear.teal"
                 ),
                 mocker.call(contract_json_path, "w"),
             ]
@@ -105,7 +105,6 @@ class TestDeployFunctions:
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
-        dapp_name = "PermissionDApp"
         env = {
             "algod_token_mainnet": mocker.MagicMock(),
             "algod_address_mainnet": mocker.MagicMock(),
@@ -142,7 +141,7 @@ class TestDeployFunctions:
         contract_json_path = (
             Path(deploy.__file__).resolve().parent
             / "artifacts"
-            / f"{dapp_name}.arc56.json"
+            / f"{PermissionDApp._name}.arc56.json"
         )
         with mock.patch(
             "deploy.open",
@@ -161,12 +160,12 @@ class TestDeployFunctions:
                 mocker.call(
                     Path(deploy.__file__).resolve().parent
                     / "artifacts"
-                    / f"{dapp_name}.approval.teal"
+                    / f"{PermissionDApp._name}.approval.teal"
                 ),
                 mocker.call(
                     Path(deploy.__file__).resolve().parent
                     / "artifacts"
-                    / f"{dapp_name}.clear.teal"
+                    / f"{PermissionDApp._name}.clear.teal"
                 ),
                 mocker.call(contract_json_path, "w"),
             ]
