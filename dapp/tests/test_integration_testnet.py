@@ -30,8 +30,8 @@ class TestIntegrationForNonCreator:
         )
         app_id = PERMISSION_APP_ID_TESTNET
         address = "KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ"
-        env["creator_mnemonic_testnet"] = env["user_mnemonic"]
-        writing_parameters = box_writing_parameters(env, network_suffix="_testnet")
+        env["creator_testnet_mnemonic"] = env["user_testnet_mnemonic"]
+        writing_parameters = box_writing_parameters(env, network="testnet")
         with pytest.raises(AlgodHTTPError) as exception:
             delete_box(client, app_id, writing_parameters, address)
         assert "logic eval error" in str(exception.value)
@@ -45,7 +45,7 @@ class TestIntegrationForNonCreator:
         address = "KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ"
         values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
         value = serialize_values(values)
-        writing_parameters = box_writing_parameters(env, network_suffix="_testnet")
+        writing_parameters = box_writing_parameters(env, network="testnet")
         write_box(client, app_id, writing_parameters, address, value)
         box_name = box_name_from_address(address)
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)
@@ -61,7 +61,7 @@ class TestIntegrationForNonCreator:
             env.get("algod_token_testnet"), env.get("algod_address_testnet")
         )
         app_id = PERMISSION_APP_ID_TESTNET
-        user_private_key = private_key_from_mnemonic(env.get("user_mnemonic"))
+        user_private_key = private_key_from_mnemonic(env.get("user_testnet_mnemonic"))
         sender = address_from_private_key(user_private_key)
         signer = AccountTransactionSigner(user_private_key)
         contract = load_contract()
@@ -78,7 +78,7 @@ class TestIntegrationForNonCreator:
             env.get("algod_token_testnet"), env.get("algod_address_testnet")
         )
         app_id = PERMISSION_APP_ID_TESTNET
-        writing_parameters = box_writing_parameters(env, network_suffix="_testnet")
+        writing_parameters = box_writing_parameters(env, network="testnet")
         address = "2EVGZ4BGOSL3J64UYDE2BUGTNTBZZZLI54VUQQNZZLYCDODLY33UGXNSIU"
         box_name = box_name_from_address(address)
         returned = deserialized_permission_dapp_box_value(client, app_id, box_name)

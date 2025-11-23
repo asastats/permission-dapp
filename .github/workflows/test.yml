@@ -16,7 +16,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +36,8 @@ jobs:
           touch dapp/.env
           echo ALGOD_TOKEN_TESTNET="" >> dapp/.env
           echo ALGOD_ADDRESS_TESTNET="https://testnet-api.4160.nodely.dev" >> dapp/.env
-          echo CREATOR_MNEMONIC_TESTNET=${{ secrets.CREATOR_MNEMONIC_TESTNET }} >> dapp/.env
-          echo USER_MNEMONIC=${{ secrets.USER_MNEMONIC }} >> dapp/.env
+          echo CREATOR_TESTNET_MNEMONIC=${{ secrets.CREATOR_TESTNET_MNEMONIC }} >> dapp/.env
+          echo USER_TESTNET_MNEMONIC=${{ secrets.USER_TESTNET_MNEMONIC }} >> dapp/.env
 
       - name: Run Pytest
         run: |

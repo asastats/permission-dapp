@@ -286,14 +286,65 @@ class TestHelpersContractFunctions:
     """Testing class for :py:mod:`helpers` smart contract functions."""
 
     # # app_schemas
+    def test_helpers_app_schemas_for_no_state(self, mocker):
+        schema1, schema2 = mocker.MagicMock(), mocker.MagicMock()
+        mocked_schema = mocker.patch(
+            "helpers.StateSchema", side_effect=[schema1, schema2]
+        )
+        contract_json = {}
+        returned = app_schemas(contract_json)
+        assert returned == (schema1, schema2)
+        calls = [mocker.call(0, 0), mocker.call(0, 0)]
+        mocked_schema.assert_has_calls(calls, any_order=True)
+        assert mocked_schema.call_count == 2
+
+    def test_helpers_app_schemas_for_no_schema(self, mocker):
+        schema1, schema2 = mocker.MagicMock(), mocker.MagicMock()
+        mocked_schema = mocker.patch(
+            "helpers.StateSchema", side_effect=[schema1, schema2]
+        )
+        contract_json = {"state": {1: 2}}
+        returned = app_schemas(contract_json)
+        assert returned == (schema1, schema2)
+        calls = [mocker.call(0, 0), mocker.call(0, 0)]
+        mocked_schema.assert_has_calls(calls, any_order=True)
+        assert mocked_schema.call_count == 2
+
+    def test_helpers_app_schemas_for_no_local_schema(self, mocker):
+        schema1, schema2 = mocker.MagicMock(), mocker.MagicMock()
+        mocked_schema = mocker.patch(
+            "helpers.StateSchema", side_effect=[schema1, schema2]
+        )
+        contract_json = {"state": {"schema": {"global": {"ints": 2, "bytes": 1}}}}
+        returned = app_schemas(contract_json)
+        assert returned == (schema1, schema2)
+        calls = [mocker.call(2, 1), mocker.call(0, 0)]
+        mocked_schema.assert_has_calls(calls, any_order=True)
+        assert mocked_schema.call_count == 2
+
+    def test_helpers_app_schemas_for_no_global_schema(self, mocker):
+        schema1, schema2 = mocker.MagicMock(), mocker.MagicMock()
+        mocked_schema = mocker.patch(
+            "helpers.StateSchema", side_effect=[schema1, schema2]
+        )
+        contract_json = {"state": {"schema": {"local": {"ints": 1, "bytes": 2}}}}
+        returned = app_schemas(contract_json)
+        assert returned == (schema1, schema2)
+        calls = [mocker.call(0, 0), mocker.call(1, 2)]
+        mocked_schema.assert_has_calls(calls, any_order=True)
+        assert mocked_schema.call_count == 2
+
     def test_helpers_app_schemas_functionality(self, mocker):
         schema1, schema2 = mocker.MagicMock(), mocker.MagicMock()
         mocked_schema = mocker.patch(
             "helpers.StateSchema", side_effect=[schema1, schema2]
         )
-        returned = app_schemas()
+        contract_json = {
+            "state": {"schema": {"global": {"ints": 1}, "local": {"ints": 1}}}
+        }
+        returned = app_schemas(contract_json)
         assert returned == (schema1, schema2)
-        calls = [mocker.call(0, 0), mocker.call(0, 0)]
+        calls = [mocker.call(1, 0), mocker.call(1, 0)]
         mocked_schema.assert_has_calls(calls, any_order=True)
         assert mocked_schema.call_count == 2
 
@@ -308,14 +359,31 @@ class TestHelpersContractFunctions:
         assert returned == b"result"
 
     # # load_contract
+    def test_helpers_load_contract_provided_dapp_name(self, mocker):
+        contract_json = mocker.MagicMock()
+        mocked_read = mocker.patch("helpers.read_json", return_value=contract_json)
+        mocked_undictify = mocker.patch("helpers.Contract.undictify")
+        dapp_name = "Permission"
+        returned = load_contract(dapp_name=dapp_name)
+        assert returned == mocked_undictify.return_value
+        mocked_read.assert_called_once_with(
+            Path(helpers.__file__).resolve().parent
+            / "artifacts"
+            / f"{dapp_name}.arc56.json"
+        )
+        mocked_undictify.assert_called_once_with(contract_json)
+
     def test_helpers_load_contract_functionality(self, mocker):
         contract_json = mocker.MagicMock()
         mocked_read = mocker.patch("helpers.read_json", return_value=contract_json)
         mocked_undictify = mocker.patch("helpers.Contract.undictify")
+        dapp_name = "PermissionDApp"
         returned = load_contract()
         assert returned == mocked_undictify.return_value
         mocked_read.assert_called_once_with(
-            Path(helpers.__file__).resolve().parent / "artifacts" / "contract.json"
+            Path(helpers.__file__).resolve().parent
+            / "artifacts"
+            / f"{dapp_name}.arc56.json"
         )
         mocked_undictify.assert_called_once_with(contract_json)
 
@@ -631,10 +699,10 @@ class TestHelpersHelpersFunctions:
         assert returned == box_name
 
     # # box_writing_parameters
-    def test_helpers_box_writing_parameters_for_provided_network_suffix(self, mocker):
+    def test_helpers_box_writing_parameters_for_provided_network(self, mocker):
         mnemonic = "mnemonic1 mnemonic2"
-        env = {"creator_mnemonic_testnet": mnemonic, "foo": "bar"}
-        network_suffix = "_testnet"
+        env = {"creator_mainnet_mnemonic": mnemonic, "foo": "bar"}
+        network = "mainnet"
         private_key, sender, signer, contract = (
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -651,7 +719,7 @@ class TestHelpersHelpersFunctions:
             "helpers.AccountTransactionSigner", return_value=signer
         )
         mocked_contract = mocker.patch("helpers.load_contract", return_value=contract)
-        returned = box_writing_parameters(env, network_suffix=network_suffix)
+        returned = box_writing_parameters(env, network=network)
         assert returned == {"sender": sender, "signer": signer, "contract": contract}
         mocked_private_key.assert_called_once_with(mnemonic)
         mocked_address.assert_called_once_with(private_key)
@@ -660,7 +728,7 @@ class TestHelpersHelpersFunctions:
 
     def test_helpers_box_writing_parameters_functionality(self, mocker):
         mnemonic = "mnemonic1 mnemonic2"
-        env = {"creator_mnemonic": mnemonic, "foo": "bar"}
+        env = {"creator_testnet_mnemonic": mnemonic, "foo": "bar"}
         private_key, sender, signer, contract = (
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -692,67 +760,28 @@ class TestHelpersHelpersFunctions:
 
     # # environment_variables
     def test_helpers_environment_variables_functionality(self, mocker):
-        (
-            creator_mnemonic,
-            user_mnemonic,
-            algod_token,
-            algod_address,
-            algod_token_mainnet,
-            algod_address_mainnet,
-            algod_address_testnet,
-            algod_token_testnet,
-            creator_mnemonic_testnet,
-        ) = (
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-            mocker.MagicMock(),
-        )
+        mocks = {}
+        for var in (
+            "algod_token_testnet",
+            "algod_token_mainnet",
+            "algod_address_testnet",
+            "algod_address_mainnet",
+            "creator_testnet_mnemonic",
+            "creator_mainnet_mnemonic",
+            "user_testnet_mnemonic",
+            "user_mainnet_mnemonic",
+        ):
+            mocks[var] = mocker.MagicMock()
         mocked_load_dotenv = mocker.patch("helpers.load_dotenv")
         with mock.patch(
             "helpers.os.getenv",
-            side_effect=[
-                creator_mnemonic,
-                user_mnemonic,
-                algod_token,
-                algod_address,
-                algod_token_mainnet,
-                algod_address_mainnet,
-                algod_token_testnet,
-                algod_address_testnet,
-                creator_mnemonic_testnet,
-            ],
+            side_effect=list(mocks.values()),
         ) as mocked_getenv:
             returned = environment_variables()
-            assert returned == {
-                "creator_mnemonic": creator_mnemonic,
-                "user_mnemonic": user_mnemonic,
-                "algod_token": algod_token,
-                "algod_address": algod_address,
-                "algod_token_mainnet": algod_token_mainnet,
-                "algod_address_mainnet": algod_address_mainnet,
-                "algod_token_testnet": algod_token_testnet,
-                "algod_address_testnet": algod_address_testnet,
-                "creator_mnemonic_testnet": creator_mnemonic_testnet,
-            }
-            calls = [
-                mocker.call("CREATOR_MNEMONIC"),
-                mocker.call("USER_MNEMONIC"),
-                mocker.call("ALGOD_TOKEN"),
-                mocker.call("ALGOD_ADDRESS"),
-                mocker.call("ALGOD_TOKEN_MAINNET"),
-                mocker.call("ALGOD_ADDRESS_MAINNET"),
-                mocker.call("ALGOD_TOKEN_TESTNET"),
-                mocker.call("ALGOD_ADDRESS_TESTNET"),
-                mocker.call("CREATOR_MNEMONIC_TESTNET"),
-            ]
+            assert returned == mocks
+            calls = [mocker.call(var.upper()) for var in mocks]
             mocked_getenv.assert_has_calls(calls, any_order=True)
-            assert mocked_getenv.call_count == 9
+            assert mocked_getenv.call_count == len(mocks)
         mocked_load_dotenv.assert_called_once_with()
 
     # # pause

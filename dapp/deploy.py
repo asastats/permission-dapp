@@ -1,59 +1,171 @@
 """Module with functions for deploying Permission dApp smart contract to blockchain."""
 
+import json
 from pathlib import Path
 
+from algosdk.account import address_from_private_key
+from algosdk.logic import get_application_address
+from algosdk.transaction import PaymentTxn
 from algosdk.v2client.algod import AlgodClient
 
-from helpers import compile_program, environment_variables, private_key_from_mnemonic
+
+from helpers import (
+    compile_program,
+    environment_variables,
+    private_key_from_mnemonic,
+    read_json,
+    wait_for_confirmation,
+)
 from network import create_app
 
 
-def deploy_app():
-    """Compile Permission dApp smart contract and deploy it to blockchain.
+def deploy_app(network="testnet"):
+    """Compile Permisssion dApp smart contract, deploy it, and update the artifact.
 
+    This function orchestrates the deployment process by:
+    1. Compiling the TEAL approval and clear programs
+    2. Creating a new application on the specified network
+    3. Capturing the new app ID and the network's genesis hash
+    4. Updating the ARC-56 JSON artifact with the new network information
+
+    :param network: network to deploy to (e.g., "testnet")
+    :type network: str
     :var env: environment variables collection
     :type env: dict
-    :var client: Algorand Node client instance
+    :var dapp_name: name of the smart contract application
+    :type dapp_name: str
+    :var client: Algorand Node client
     :type client: :class:`AlgodClient`
-    :var creator_private_key: application creator's base64 encoded private key
+    :var creator_private_key: private key of the application creator
     :type creator_private_key: str
-    :var approval_program_source: approval program code
+    :var approval_program_source: approval program source code
     :type approval_program_source: bytes
-    :var clear_program_source: clear program code
+    :var clear_program_source: clear program source code
     :type clear_program_source: bytes
+    :var contract_json: ARC-56 smart contract specification
+    :type contract_json: dict
     :var approval_program: compiled approval program
     :type approval_program: str
     :var clear_program: compiled clear program
     :type clear_program: str
-    :var app_id: Permission dApp identifier
+    :var app_id: ID of the newly created application
     :type app_id: int
-    :return: int
+    :var genesis_hash: genesis hash of the network
+    :type genesis_hash: str
+    :return: ID of the newly created application
+    :rtype: int
     """
     env = environment_variables()
 
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-    creator_private_key = private_key_from_mnemonic(env.get("creator_mnemonic"))
+    dapp_name = "PermissionDApp"
+
+    client = AlgodClient(
+        env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+    )
+    creator_private_key = private_key_from_mnemonic(
+        env.get(f"creator_{network}_mnemonic")
+    )
 
     approval_program_source = (
-        open(Path(__file__).resolve().parent / "artifacts" / "approval.teal")
+        open(
+            Path(__file__).resolve().parent / "artifacts" / f"{dapp_name}.approval.teal"
+        )
         .read()
         .encode()
     )
     clear_program_source = (
-        open(Path(__file__).resolve().parent / "artifacts" / "clear.teal")
+        open(Path(__file__).resolve().parent / "artifacts" / f"{dapp_name}.clear.teal")
         .read()
         .encode()
     )
+    contract_json_path = (
+        Path(__file__).resolve().parent / "artifacts" / f"{dapp_name}.arc56.json"
+    )
+    contract_json = read_json(contract_json_path)
 
     # compile programs
     approval_program = compile_program(client, approval_program_source)
     clear_program = compile_program(client, clear_program_source)
 
     # create new application
-    app_id = create_app(client, creator_private_key, approval_program, clear_program)
+    app_id, genesis_hash = create_app(
+        client, creator_private_key, approval_program, clear_program, contract_json
+    )
+
+    # update networks section of smart contract
+    if "networks" not in contract_json:
+        contract_json["networks"] = {}
+
+    contract_json["networks"][genesis_hash] = {"appID": app_id}
+
+    # write to file
+    with open(contract_json_path, "w") as json_file:
+        json.dump(contract_json, json_file, indent=4)
+
     # print("App ID: ", app_id)
     return app_id
 
 
+def fund_app(app_id, network, amount=1_000_000):
+    """Fund the application escrow account with 0.2 Algo.
+
+    Creates an Algod client and sends a payment transaction from the
+    creator's account to the application escrow address. Waits for
+    confirmation before returning.
+
+    :param app_id: The smart contract application ID.
+    :type app_id: int
+    :param network: Network where the app is deployed (e.g., ``"testnet"``).
+    :type network: str
+    :var amount: amount in microAlgos to send to application's escrow
+    :type amount: int
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var creator_private_key: The private key of the application creator
+    :type creator_private_key: str
+    :var sender: Derived Algorand wallet address from private key
+    :type sender: str
+    :var app_address: Application escrow account address
+    :type app_address: str
+    :var sp: suggested transaction params
+    :type sp: :class:`transaction.SuggestedParams`
+    :var txn: payment transaction params
+    :type txn: :class:`transaction.PaymentTxn`
+    :var signed_txn: signed transaction instance
+    :type signed_txn: :class:`transaction.SignedTransaction`
+    :var tx_id: transaction's unique identifier
+    :type tx_id: int
+    """
+    env = environment_variables()
+
+    client = AlgodClient(
+        env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+    )
+    creator_private_key = private_key_from_mnemonic(
+        env.get(f"creator_{network}_mnemonic")
+    )
+    sender = address_from_private_key(creator_private_key)
+    app_address = get_application_address(app_id)
+    sp = client.suggested_params()
+    sp.flat_fee = True
+    sp.fee = 1000
+
+    txn = PaymentTxn(
+        sender=sender,
+        sp=sp,
+        receiver=app_address,
+        amt=amount,
+    )
+
+    signed_txn = txn.sign(creator_private_key)
+    tx_id = signed_txn.transaction.get_txid()
+    client.send_transactions([signed_txn])
+    wait_for_confirmation(client, tx_id)
+    print(f"Funded app {app_id} with {amount / 1_000_000} Algo in transaction {tx_id}")
+
+
 if __name__ == "__main__":
-    deploy_app()
+    app_id = deploy_app(network="testnet")
+    fund_app(app_id, network="testnet", amount=1_000_000)

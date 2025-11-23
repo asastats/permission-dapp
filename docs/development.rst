@@ -43,7 +43,7 @@ Copy provided .env.example file to a working copy:
   cd /home/ipaleka/dev/permission-dapp/dapp
   cp .env.example .env
 
-You have to update `CREATOR_MNEMONIC_TESTNET` variable in the newly created `.env`` file, 
+You have to update `CREATOR_TESTNET_MNEMONIC` variable in the newly created `.env`` file, 
 as well as the related `PERMISSION_APP_ID_TESTNET` application identifier after you deploy your own dapp on Testnet.
 
 

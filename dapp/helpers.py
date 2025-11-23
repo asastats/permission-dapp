@@ -160,11 +160,17 @@ def serialize_values(values):
 
 
 # # CONTRACT
-def app_schemas():
+def app_schemas(contract_json):
     """Return instances of state schemas for smart contract's global and local apps.
 
-    :param local_ints: total number of local uint states
-    :type local_ints: int
+    :param contract_json: full path to smart contract's JSON file
+    :type contract_json: dict
+    :var schema: smart contract's schema
+    :type schema: dict
+    :var global_schema: smart contract's global schema
+    :type global_schema: dict
+    :var local_schema: smart contract's local schema
+    :type local_schema: dict
     :var local_bytes: total number of local bytes states
     :type local_bytes: int
     :var global_ints: total number of global uint states
@@ -173,10 +179,15 @@ def app_schemas():
     :type global_bytes: int
     :return: two-tuple
     """
-    local_ints = 0
-    local_bytes = 0
-    global_ints = 0
-    global_bytes = 0
+    schema = contract_json.get("state", {}).get("schema", {})
+    global_schema = schema.get("global", {})
+    local_schema = schema.get("local", {})
+
+    global_ints = global_schema.get("ints", 0)
+    global_bytes = global_schema.get("bytes", 0)
+    local_ints = local_schema.get("ints", 0)
+    local_bytes = local_schema.get("bytes", 0)
+
     return StateSchema(global_ints, global_bytes), StateSchema(local_ints, local_bytes)
 
 
@@ -195,7 +206,7 @@ def compile_program(client, source_code):
     return base64.b64decode(compile_response["result"])
 
 
-def load_contract():
+def load_contract(dapp_name="PermissionDApp"):
     """Load from disk, instantiate and return Permission dApp smart contract object.
 
     :var contract_json: full path to Permission dApp smart contract file
@@ -203,7 +214,7 @@ def load_contract():
     :return: :class:`Contract`
     """
     contract_json = read_json(
-        Path(__file__).resolve().parent / "artifacts" / "contract.json"
+        Path(__file__).resolve().parent / "artifacts" / f"{dapp_name}.arc56.json"
     )
     return Contract.undictify(contract_json)
 
@@ -337,13 +348,13 @@ def box_name_from_address(address):
     return decode_address(address)
 
 
-def box_writing_parameters(env, network_suffix=""):
+def box_writing_parameters(env, network="testnet"):
     """Instantiate and return arguments needed for writing boxes to blockchain.
 
     :param env: environment variables collection
     :type env: dict
-    :param network_suffix: network suffix for environment variable keys
-    :type network_suffix: str
+    :param network: network suffix for environment variable keys
+    :type network: str
     :var creator_private_key: application creator's base64 encoded private key
     :type creator_private_key: str
     :var sender: application caller's address
@@ -355,7 +366,7 @@ def box_writing_parameters(env, network_suffix=""):
     :return: dict
     """
     creator_private_key = private_key_from_mnemonic(
-        env.get(f"creator_mnemonic{network_suffix}")
+        env.get(f"creator_{network}_mnemonic")
     )
     sender = address_from_private_key(creator_private_key)
     signer = AccountTransactionSigner(creator_private_key)
@@ -398,15 +409,14 @@ def environment_variables():
     """
     load_dotenv()
     return {
-        "creator_mnemonic": os.getenv("CREATOR_MNEMONIC"),
-        "user_mnemonic": os.getenv("USER_MNEMONIC"),
-        "algod_token": os.getenv("ALGOD_TOKEN"),
-        "algod_address": os.getenv("ALGOD_ADDRESS"),
-        "algod_token_mainnet": os.getenv("ALGOD_TOKEN_MAINNET"),
-        "algod_address_mainnet": os.getenv("ALGOD_ADDRESS_MAINNET"),
         "algod_token_testnet": os.getenv("ALGOD_TOKEN_TESTNET"),
+        "algod_token_mainnet": os.getenv("ALGOD_TOKEN_MAINNET"),
         "algod_address_testnet": os.getenv("ALGOD_ADDRESS_TESTNET"),
-        "creator_mnemonic_testnet": os.getenv("CREATOR_MNEMONIC_TESTNET"),
+        "algod_address_mainnet": os.getenv("ALGOD_ADDRESS_MAINNET"),
+        "creator_testnet_mnemonic": os.getenv("CREATOR_TESTNET_MNEMONIC"),
+        "creator_mainnet_mnemonic": os.getenv("CREATOR_MAINNET_MNEMONIC"),
+        "user_testnet_mnemonic": os.getenv("USER_TESTNET_MNEMONIC"),
+        "user_mainnet_mnemonic": os.getenv("USER_MAINNET_MNEMONIC"),
     }
 
 

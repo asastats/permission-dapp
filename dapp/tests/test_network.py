@@ -596,6 +596,7 @@ class TestNetworkPermissionDappFunctions:
         private_key = mocker.MagicMock()
         approval_program = mocker.MagicMock()
         clear_program = mocker.MagicMock()
+        contract_json = mocker.MagicMock()
 
         sender_address = mocker.MagicMock()
         mocker.patch(
@@ -612,12 +613,16 @@ class TestNetworkPermissionDappFunctions:
 
         mocked_wait = mocker.patch("network.wait_for_confirmation")
         client.pending_transaction_info.return_value = {"application-index": 99}
+        mock_params = mocker.MagicMock()
+        mock_params.gh = b"genesis_hash_value"
+        client.suggested_params.return_value = mock_params
 
-        returned = create_app(
-            client, private_key, approval_program, clear_program
+        returned_app_id, returned_genesis_hash = create_app(
+            client, private_key, approval_program, clear_program, contract_json
         )
 
-        assert returned == 99
+        assert returned_app_id == 99
+        assert returned_genesis_hash == b"genesis_hash_value"
         mock_txn.sign.assert_called_once_with(private_key)
         client.send_transactions.assert_called_once_with([mock_signed])
         mocked_wait.assert_called_once_with(client, "txid123")
@@ -629,16 +634,12 @@ class TestNetworkPermissionDappFunctions:
         index = 2000
 
         sender_address = mocker.MagicMock()
-        mocker.patch(
-            "network.address_from_private_key", return_value=sender_address
-        )
+        mocker.patch("network.address_from_private_key", return_value=sender_address)
 
         mock_txn = mocker.MagicMock()
         mock_signed = mocker.MagicMock()
         mock_signed.transaction.get_txid.return_value = "txid123"
-        mocker.patch(
-            "network.transaction.ApplicationDeleteTxn", return_value=mock_txn
-        )
+        mocker.patch("network.transaction.ApplicationDeleteTxn", return_value=mock_txn)
         mock_txn.sign.return_value = mock_signed
 
         mocked_wait = mocker.patch("network.wait_for_confirmation")
@@ -674,7 +675,7 @@ class TestNetworkPermissionDappFunctions:
         delete_box(client, app_id, writing_parameters, address)
         mocked_composer.assert_called_once_with()
         client.suggested_params.assert_called_once_with()
-        contract.get_method_by_name.assert_called_once_with("deleteBox")
+        contract.get_method_by_name.assert_called_once_with("delete_box")
         atc.add_method_call.assert_called_once_with(
             app_id=app_id,
             method=contract.get_method_by_name.return_value,
@@ -810,7 +811,7 @@ class TestNetworkPermissionDappFunctions:
         write_box(client, app_id, writing_parameters, address, value)
         mocked_composer.assert_called_once_with()
         client.suggested_params.assert_called_once_with()
-        contract.get_method_by_name.assert_called_once_with("writeBox")
+        contract.get_method_by_name.assert_called_once_with("write_box")
         atc.add_method_call.assert_called_once_with(
             app_id=app_id,
             method=contract.get_method_by_name.return_value,
