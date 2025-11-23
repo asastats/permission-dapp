@@ -15,7 +15,11 @@ from helpers import (
     private_key_from_mnemonic,
     serialize_values,
 )
-from network import delete_box, deserialized_permission_dapp_box_value, write_box
+from network import (
+    delete_box,
+    deserialized_permission_dapp_box_value,
+    write_box,
+)
 
 
 # # VALUES

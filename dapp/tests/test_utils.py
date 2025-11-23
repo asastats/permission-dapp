@@ -1,6 +1,6 @@
 """Testing module for :py:mod:`utils` module."""
 
-from utils import delete_boxes, print_box_values, check_test_box
+from utils import check_test_box, delete_boxes, print_box_values
 
 
 class TestUtilsFunctions:

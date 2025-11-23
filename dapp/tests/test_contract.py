@@ -439,3 +439,40 @@ class TestPermissionDApp:
         # Verify the box was written with correct content
         box_content = context.ledger.get_box(app.id, box_name)
         assert box_content == value.encode("utf-8")
+
+    def test_permission_dapp_write_box_overwrites_with_different_size(
+        self, context: AlgopyTestContext
+    ) -> None:
+        """Test that write_box correctly overwrites an existing box with a value of a different size."""
+        creator = context.default_sender
+
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDApp()
+            contract.create_application()
+
+        app = _app(context, contract)
+        box_name = context.any.bytes(32)
+        value1 = "short_value"  # Original value
+        value2 = "a_much_longer_value_that_is_different_in_size"  # New value with different size
+
+        # Write first value
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract.write_box(
+                arc4.DynamicBytes(box_name),
+                arc4.String(value1),
+            )
+
+        # Verify first value was written
+        box_content = context.ledger.get_box(app.id, box_name)
+        assert box_content == value1.encode("utf-8")
+
+        # Write second value (overwrite with different size)
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract.write_box(
+                arc4.DynamicBytes(box_name),
+                arc4.String(value2),
+            )
+
+        # Verify second value overwrote the first and has the new size
+        box_content = context.ledger.get_box(app.id, box_name)
+        assert box_content == value2.encode("utf-8")

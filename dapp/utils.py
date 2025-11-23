@@ -6,7 +6,11 @@ import sys
 from algosdk.encoding import encode_address
 from algosdk.v2client.algod import AlgodClient
 
-from helpers import box_writing_parameters, environment_variables, permission_dapp_id
+from helpers import (
+    box_writing_parameters,
+    environment_variables,
+    permission_dapp_id,
+)
 from network import delete_box, permission_dapp_values_from_boxes
 
 

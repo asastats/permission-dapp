@@ -67,8 +67,8 @@ class PermissionDApp(ARC4Contract):
 
         # Simple approach: always delete the box first if it exists, then create it
         # This avoids the length comparison issue
-        box_exists = op.Box.length(actual_box_name)
-        if box_exists:
+        _length, exists = op.Box.length(actual_box_name)
+        if exists:
             op.Box.delete(actual_box_name)
 
         # Write to box (create new box)
