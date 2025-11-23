@@ -11,6 +11,7 @@ from config import (
     DAO_DISCUSSIONS_DOCS,
     DOCS_STARTING_POSITION,
     PERMISSION_APP_ID,
+    PERMISSION_APP_ID_TESTNET,
     STAKING_DOCS,
 )
 from foundation import (
@@ -118,11 +119,31 @@ class TestFoundationHelpersFunctions:
         boxes = {"boxes": [1, 2, 3, 4]}
         client.application_boxes.return_value = boxes
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        env = {"algod_token": algod_token, "algod_address": algod_address}
+        env = {
+            "algod_token_testnet": algod_token,
+            "algod_address_testnet": algod_address,
+        }
         mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
         with pytest.raises(ValueError) as exception:
             _initial_check()
             assert str(exception.value) == "Some boxes are already populated!"
+        mocked_env.assert_called_once_with()
+        mocked_client.assert_called_once_with(algod_token, algod_address)
+        client.application_boxes.assert_called_once_with(PERMISSION_APP_ID_TESTNET)
+
+    def test_foundation_initial_check_for_provided_network(self, mocker):
+        client = mocker.MagicMock()
+        mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
+        boxes = {"boxes": []}
+        client.application_boxes.return_value = boxes
+        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
+        env = {
+            "algod_token_mainnet": algod_token,
+            "algod_address_mainnet": algod_address,
+        }
+        mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
+        returned = _initial_check(network="mainnet")
+        assert returned == (env, client)
         mocked_env.assert_called_once_with()
         mocked_client.assert_called_once_with(algod_token, algod_address)
         client.application_boxes.assert_called_once_with(PERMISSION_APP_ID)
@@ -133,13 +154,16 @@ class TestFoundationHelpersFunctions:
         boxes = {"boxes": []}
         client.application_boxes.return_value = boxes
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        env = {"algod_token": algod_token, "algod_address": algod_address}
+        env = {
+            "algod_token_testnet": algod_token,
+            "algod_address_testnet": algod_address,
+        }
         mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
         returned = _initial_check()
         assert returned == (env, client)
         mocked_env.assert_called_once_with()
         mocked_client.assert_called_once_with(algod_token, algod_address)
-        client.application_boxes.assert_called_once_with(PERMISSION_APP_ID)
+        client.application_boxes.assert_called_once_with(PERMISSION_APP_ID_TESTNET)
 
 
 # # FOUNDATION
@@ -347,6 +371,39 @@ class TestFoundationFoundationFunctions:
         assert mocked_load.call_count == len(items) * 2
 
     # # _prepare_data
+    def test_foundation_prepare_data_for_provided_network(self, mocker):
+        client = mocker.MagicMock()
+        mocked_foundation = mocker.patch("foundation._load_and_parse_foundation_data")
+        mocked_staking = mocker.patch("foundation._load_and_parse_staking_data")
+        mocked_client = mocker.patch("foundation.AlgodClient", return_value=client)
+        mocked_staking_foundation = mocker.patch(
+            "foundation._update_current_staking_for_foundation"
+        )
+        mocked_staking_non_foundation = mocker.patch(
+            "foundation._update_current_staking_for_non_foundation"
+        )
+        mocked_calculate = mocker.patch(
+            "foundation._calculate_and_update_votes_and_permissions"
+        )
+        data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
+        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
+        env = {
+            "algod_token_mainnet": algod_token,
+            "algod_address_mainnet": algod_address,
+        }
+        returned = _prepare_data(env, network="mainnet")
+        assert returned == data
+        mocked_foundation.assert_called_once_with(data, items=DAO_DISCUSSIONS_DOCS)
+        mocked_staking.assert_called_once_with(data, items=STAKING_DOCS)
+        mocked_client.assert_called_once_with(algod_token, algod_address)
+        mocked_staking_foundation.assert_called_once_with(
+            client, data, starting_position=CURRENT_STAKING_POSITION
+        )
+        mocked_staking_non_foundation.assert_called_once_with(
+            client, data, starting_position=CURRENT_STAKING_POSITION
+        )
+        mocked_calculate.assert_called_once_with(data)
+
     def test_foundation_prepare_data_functionality(self, mocker):
         client = mocker.MagicMock()
         mocked_foundation = mocker.patch("foundation._load_and_parse_foundation_data")
@@ -363,7 +420,10 @@ class TestFoundationFoundationFunctions:
         )
         data = defaultdict(lambda: [0] * DOCS_STARTING_POSITION)
         algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
-        env = {"algod_token": algod_token, "algod_address": algod_address}
+        env = {
+            "algod_token_testnet": algod_token,
+            "algod_address_testnet": algod_address,
+        }
         returned = _prepare_data(env)
         assert returned == data
         mocked_foundation.assert_called_once_with(data, items=DAO_DISCUSSIONS_DOCS)
@@ -378,6 +438,25 @@ class TestFoundationFoundationFunctions:
         mocked_calculate.assert_called_once_with(data)
 
     # # prepare_and_write_data
+    def test_foundation_prepare_and_write_data_for_provided_network(self, mocker):
+        env, client = mocker.MagicMock(), mocker.MagicMock()
+        mocked_initial = mocker.patch(
+            "foundation._initial_check", return_value=[env, client]
+        )
+        mocked_data = mocker.patch("foundation._prepare_data")
+        mocked_parameters = mocker.patch("foundation.box_writing_parameters")
+        mocked_write = mocker.patch("foundation.write_foundation_boxes")
+        prepare_and_write_data(network="mainnet")
+        mocked_initial.assert_called_once_with(network="mainnet")
+        mocked_data.assert_called_once_with(env, network="mainnet")
+        mocked_parameters.assert_called_once_with(env, network="mainnet")
+        mocked_write.assert_called_once_with(
+            client,
+            PERMISSION_APP_ID,
+            mocked_parameters.return_value,
+            mocked_data.return_value,
+        )
+
     def test_foundation_prepare_and_write_data_functionality(self, mocker):
         env, client = mocker.MagicMock(), mocker.MagicMock()
         mocked_initial = mocker.patch(
@@ -387,12 +466,12 @@ class TestFoundationFoundationFunctions:
         mocked_parameters = mocker.patch("foundation.box_writing_parameters")
         mocked_write = mocker.patch("foundation.write_foundation_boxes")
         prepare_and_write_data()
-        mocked_initial.assert_called_once_with()
-        mocked_data.assert_called_once_with(env)
-        mocked_parameters.assert_called_once_with(env)
+        mocked_initial.assert_called_once_with(network="testnet")
+        mocked_data.assert_called_once_with(env, network="testnet")
+        mocked_parameters.assert_called_once_with(env, network="testnet")
         mocked_write.assert_called_once_with(
             client,
-            PERMISSION_APP_ID,
+            PERMISSION_APP_ID_TESTNET,
             mocked_parameters.return_value,
             mocked_data.return_value,
         )
@@ -494,17 +573,106 @@ class TestFoundationUpdateFunctions:
     """Testing class for :py:mod:`foundation` update functions."""
 
     # # check_and_update_permission_dapp_boxes
-    def test_foundation_check_and_update_permission_dapp_boxes_functionality(
+    def test_foundation_check_and_update_permission_dapp_boxes_for_provided_network(
         self, mocker
     ):
-        algod_token, algod_address = mocker.MagicMock(), mocker.MagicMock()
         algod_token_mainnet, algod_address_mainnet = (
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
         env = {
-            "algod_token": algod_token,
-            "algod_address": algod_address,
+            "algod_token_mainnet": algod_token_mainnet,
+            "algod_address_mainnet": algod_address_mainnet,
+        }
+        mocked_env = mocker.patch("foundation.environment_variables", return_value=env)
+        client, mainnet_client = mocker.MagicMock(), mocker.MagicMock()
+        mocked_client = mocker.patch(
+            "foundation.AlgodClient", side_effect=[client, mainnet_client]
+        )
+        writing_parameters = mocker.MagicMock()
+        mocked_parameters = mocker.patch(
+            "foundation.box_writing_parameters", return_value=writing_parameters
+        )
+        mocked_subscriptions = mocker.patch("foundation.fetch_subscriptions_from_boxes")
+        address1, address2, address3 = "address1", "address2", "address3"
+        mocked_governance = mocker.patch(
+            "foundation.governance_staking_addresses",
+            return_value=[address1, address2, address3],
+        )
+        staking1, staking2, staking3 = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        mocked_staking = mocker.patch(
+            "foundation.current_governance_staking_for_address",
+            side_effect=[staking1, staking2, staking3],
+        )
+        mocked_permissions = mocker.patch(
+            "foundation.permission_dapp_values_from_boxes"
+        )
+        mocked_check_subscribers = mocker.patch(
+            "foundation.check_and_update_new_subscribers"
+        )
+        mocked_check_stakers = mocker.patch("foundation.check_and_update_new_stakers")
+        mocked_check_changed = mocker.patch(
+            "foundation.check_and_update_changed_subscriptions_and_staking"
+        )
+        check_and_update_permission_dapp_boxes(network="mainnet")
+        mocked_env.assert_called_once_with()
+        calls = [
+            mocker.call(algod_token_mainnet, algod_address_mainnet),
+        ]
+        mocked_client.assert_has_calls(calls, any_order=True)
+        assert mocked_client.call_count == 2
+        mocked_parameters.assert_called_once_with(env)
+        mocked_subscriptions.assert_called_once_with(client)
+        mocked_governance.assert_called_once_with()
+        calls = [
+            mocker.call(mainnet_client, address1),
+            mocker.call(mainnet_client, address2),
+            mocker.call(mainnet_client, address3),
+        ]
+        mocked_staking.assert_has_calls(calls, any_order=True)
+        assert mocked_staking.call_count == 3
+        mocked_permissions.assert_called_once_with(client, PERMISSION_APP_ID)
+        mocked_check_subscribers.assert_called_once_with(
+            client,
+            PERMISSION_APP_ID,
+            writing_parameters,
+            mocked_permissions.return_value,
+            mocked_subscriptions.return_value,
+        )
+        mocked_check_stakers.assert_called_once_with(
+            client,
+            PERMISSION_APP_ID,
+            writing_parameters,
+            mocked_permissions.return_value,
+            {address1: staking1, address2: staking2, address3: staking3},
+        )
+        mocked_check_changed.assert_called_once_with(
+            client,
+            PERMISSION_APP_ID,
+            writing_parameters,
+            mocked_permissions.return_value,
+            mocked_subscriptions.return_value,
+            {address1: staking1, address2: staking2, address3: staking3},
+        )
+
+    def test_foundation_check_and_update_permission_dapp_boxes_functionality(
+        self, mocker
+    ):
+        algod_token_testnet, algod_address_testnet = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        algod_token_mainnet, algod_address_mainnet = (
+            mocker.MagicMock(),
+            mocker.MagicMock(),
+        )
+        env = {
+            "algod_token_testnet": algod_token_testnet,
+            "algod_address_testnet": algod_address_testnet,
             "algod_token_mainnet": algod_token_mainnet,
             "algod_address_mainnet": algod_address_mainnet,
         }
@@ -545,7 +713,7 @@ class TestFoundationUpdateFunctions:
         check_and_update_permission_dapp_boxes()
         mocked_env.assert_called_once_with()
         calls = [
-            mocker.call(algod_token, algod_address),
+            mocker.call(algod_token_testnet, algod_address_testnet),
             mocker.call(algod_token_mainnet, algod_address_mainnet),
         ]
         mocked_client.assert_has_calls(calls, any_order=True)
@@ -560,24 +728,24 @@ class TestFoundationUpdateFunctions:
         ]
         mocked_staking.assert_has_calls(calls, any_order=True)
         assert mocked_staking.call_count == 3
-        mocked_permissions.assert_called_once_with(client, PERMISSION_APP_ID)
+        mocked_permissions.assert_called_once_with(client, PERMISSION_APP_ID_TESTNET)
         mocked_check_subscribers.assert_called_once_with(
             client,
-            PERMISSION_APP_ID,
+            PERMISSION_APP_ID_TESTNET,
             writing_parameters,
             mocked_permissions.return_value,
             mocked_subscriptions.return_value,
         )
         mocked_check_stakers.assert_called_once_with(
             client,
-            PERMISSION_APP_ID,
+            PERMISSION_APP_ID_TESTNET,
             writing_parameters,
             mocked_permissions.return_value,
             {address1: staking1, address2: staking2, address3: staking3},
         )
         mocked_check_changed.assert_called_once_with(
             client,
-            PERMISSION_APP_ID,
+            PERMISSION_APP_ID_TESTNET,
             writing_parameters,
             mocked_permissions.return_value,
             mocked_subscriptions.return_value,

@@ -22,6 +22,8 @@ from config import (
     INDEXER_ADDRESS,
     INDEXER_TOKEN,
     MANDATORY_VALUES_SIZE,
+    PERMISSION_APP_ID,
+    PERMISSION_APP_ID_TESTNET,
     STAKING_AMOUNT_VOTES,
     SUBSCRIPTION_POSITION,
 )
@@ -427,6 +429,16 @@ def pause(seconds=1):
     :type seconds: int
     """
     time.sleep(seconds)
+
+
+def permission_dapp_id(network="testnet"):
+    """Return Permission dApp identifier for provided `network`.
+
+    :param network: network to check the dapp ID for (e.g., "testnet")
+    :type network: str
+    :return: int
+    """
+    return PERMISSION_APP_ID if network == "mainnet" else PERMISSION_APP_ID_TESTNET
 
 
 def permission_for_amount(amount):

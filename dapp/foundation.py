@@ -11,7 +11,6 @@ from config import (
     DAO_DISCUSSIONS_DOCS_STARTING_INDEX,
     DOCS_STARTING_POSITION,
     MERGED_ACCOUNTS,
-    PERMISSION_APP_ID,
     STAKING_DOCS,
     STAKING_DOCS_STARTING_INDEX,
 )
@@ -20,6 +19,7 @@ from helpers import (
     calculate_votes_and_permission,
     environment_variables,
     governance_staking_addresses,
+    permission_dapp_id,
     permission_for_amount,
     read_json,
 )
@@ -55,12 +55,14 @@ def _calculate_and_update_votes_and_permissions(data):
         data[address][1] = permission
 
 
-def _initial_check():
+def _initial_check(network="testnet"):
     """Return environment variables and client instances.
 
     Raise ValueError if Permission dApp ID isn't set.
     Raise ValueError if there are existing dApp boxes.
 
+    :param network: network to deploy to (e.g., "testnet")
+    :type network: str
     :var env: environment variables collection
     :type env: dict
     :var client: Algorand Node client instance
@@ -70,8 +72,11 @@ def _initial_check():
     :return: two-tuple
     """
     env = environment_variables()
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
-    boxes = client.application_boxes(PERMISSION_APP_ID)
+    client = AlgodClient(
+        env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+    )
+
+    boxes = client.application_boxes(permission_dapp_id(network))
     if len(boxes.get("boxes", [])):
         raise ValueError("Some boxes are already populated!")
 
@@ -149,11 +154,13 @@ def _load_and_parse_staking_data(data, items):
             data[address].append(STAKING_DOCS_STARTING_INDEX + index)
 
 
-def _prepare_data(env):
+def _prepare_data(env, network="testnet"):
     """Collect and return collection of addresses and related values.
 
     :param env: environment variables collection
     :type env: dict
+    :param network: network to deploy to (e.g., "testnet")
+    :type network: str
     :var data: collection of addresses and related permission and votes values
     :type data: dict
     :var client: Algorand Node Mainnet client instance
@@ -164,7 +171,9 @@ def _prepare_data(env):
     _load_and_parse_foundation_data(data, items=DAO_DISCUSSIONS_DOCS)
     _load_and_parse_staking_data(data, items=STAKING_DOCS)
 
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    client = AlgodClient(
+        env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+    )
     _update_current_staking_for_foundation(
         client, data, starting_position=CURRENT_STAKING_POSITION
     )
@@ -176,9 +185,11 @@ def _prepare_data(env):
     return data
 
 
-def prepare_and_write_data():
+def prepare_and_write_data(network="testnet"):
     """Collect and write collection of DAO addresses and related values.
 
+    :param network: network to deploy to (e.g., "testnet")
+    :type network: str
     :var env: environment variables collection
     :type env: dict
     :var client: Algorand Node client instance
@@ -188,10 +199,12 @@ def prepare_and_write_data():
     :var writing_parameters: instances sneeded for writing boxes to blockchain
     :type writing_parameters: dict
     """
-    env, client = _initial_check()
-    data = _prepare_data(env)
-    writing_parameters = box_writing_parameters(env)
-    write_foundation_boxes(client, PERMISSION_APP_ID, writing_parameters, data)
+    env, client = _initial_check(network=network)
+    data = _prepare_data(env, network=network)
+    writing_parameters = box_writing_parameters(env, network=network)
+    write_foundation_boxes(
+        client, permission_dapp_id(network), writing_parameters, data
+    )
 
 
 # # STAKING
@@ -251,9 +264,11 @@ def _update_current_staking_for_non_foundation(client, data, starting_position):
 
 
 # # UPDATE
-def check_and_update_permission_dapp_boxes():
+def check_and_update_permission_dapp_boxes(network="testnet"):
     """Check and update boxes if staking and/or subscription values have changed.
 
+    :param network: network to deploy to (e.g., "testnet")
+    :type network: str
     :var env: environment variables collection
     :type env: dict
     :var client: Algorand Node client instance
@@ -272,8 +287,10 @@ def check_and_update_permission_dapp_boxes():
     :type permissions: dict
     """
     env = environment_variables()
-    app_id = PERMISSION_APP_ID
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    app_id = permission_dapp_id(network)
+    client = AlgodClient(
+        env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+    )
     mainnet_client = AlgodClient(
         env.get("algod_token_mainnet"), env.get("algod_address_mainnet")
     )

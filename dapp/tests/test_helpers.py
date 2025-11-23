@@ -8,7 +8,14 @@ from unittest import mock
 import pytest
 
 import helpers
-from config import INDEXER_ADDRESS, INDEXER_TOKEN, STAKING_APP_ID, STAKING_APP_MIN_ROUND
+from config import (
+    INDEXER_ADDRESS,
+    INDEXER_TOKEN,
+    PERMISSION_APP_ID,
+    PERMISSION_APP_ID_TESTNET,
+    STAKING_APP_ID,
+    STAKING_APP_MIN_ROUND,
+)
 from contract import PermissionDApp
 from helpers import (
     _application_transaction,
@@ -29,6 +36,7 @@ from helpers import (
     governance_staking_addresses,
     load_contract,
     pause,
+    permission_dapp_id,
     permission_for_amount,
     private_key_from_mnemonic,
     read_json,
@@ -795,6 +803,16 @@ class TestHelpersHelpersFunctions:
         with mock.patch("helpers.time.sleep") as mocked_sleep:
             pause()
             mocked_sleep.assert_called_once_with(1)
+
+    # # permission_dapp_id
+    def test_helpers_permission_dapp_id_for_mainnet(self):
+        assert permission_dapp_id(network="mainnet") == PERMISSION_APP_ID
+
+    def test_helpers_permission_dapp_id_for_testnet(self):
+        assert permission_dapp_id(network="testnet") == PERMISSION_APP_ID_TESTNET
+
+    def test_helpers_permission_dapp_id_functionality(self):
+        assert permission_dapp_id() == PERMISSION_APP_ID_TESTNET
 
     # # permission_for_amount
     @pytest.mark.parametrize(

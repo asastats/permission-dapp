@@ -25,9 +25,11 @@ def delete_boxes():
         delete_box(client, app_id, writing_parameters, address)
 
 
-def print_box_values():
+def print_box_values(network="testnet"):
     env = environment_variables()
-    client = AlgodClient(env.get("algod_token"), env.get("algod_address"))
+    client = AlgodClient(
+        env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+    )
     app_id = PERMISSION_APP_ID
     permissions = permission_dapp_values_from_boxes(client, app_id)
     if not permissions:

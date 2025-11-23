@@ -306,7 +306,7 @@ class TestContractWriteBox(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
     def test_contract_permission_dapp_write_box_fails_for_wrong_box_size(
@@ -326,7 +326,7 @@ class TestContractWriteBox(BaseTestContract):
                     sender=creator_account.address,
                     signer=creator_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
     def test_contract_permission_dapp_write_box_overwrites_existing(
@@ -501,7 +501,7 @@ class TestContractDeleteBox(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
     def test_contract_permission_dapp_delete_box_fails_for_wrong_box_size(
@@ -519,7 +519,7 @@ class TestContractDeleteBox(BaseTestContract):
                     sender=creator_account.address,
                     signer=creator_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
     def test_contract_permission_dapp_delete_nonexistent_box(
@@ -764,7 +764,7 @@ class TestContractAccessControl(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
         # Other account cannot write
@@ -776,7 +776,7 @@ class TestContractAccessControl(BaseTestContract):
                     sender=other_account.address,
                     signer=other_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
         # User cannot delete
@@ -788,7 +788,7 @@ class TestContractAccessControl(BaseTestContract):
                     sender=user_account.address,
                     signer=user_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
         # Only creator can delete
@@ -880,7 +880,7 @@ class TestContractEdgeCases(BaseTestContract):
                     sender=creator_account.address,
                     signer=creator_account.signer,
                     box_references=[box_name],
-                    )
+                )
             )
 
             # Verify
