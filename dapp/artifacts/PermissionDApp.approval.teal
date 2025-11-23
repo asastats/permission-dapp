@@ -117,26 +117,42 @@ write_box:
     intc_0 // 2
     dig 4
     extract3
+    dup
+    cover 2
+    cover 4
     // contract.py:64
     // actual_value = op.extract(value_bytes, 2, actual_value_length)
     uncover 2
     intc_0 // 2
-    uncover 3
+    uncover 2
     extract3
+    cover 2
     // contract.py:66
     // assert actual_box_name_length == 32, "Box name must be exactly 32 bytes"
-    uncover 2
+    swap
     intc_3 // 32
     ==
     assert // Box name must be exactly 32 bytes
+    // contract.py:68-70
+    // # Simple approach: always delete the box first if it exists, then create it
+    // # This avoids the length comparison issue
+    // _length, exists = op.Box.length(actual_box_name)
+    box_len
+    bury 1
+    // contract.py:71
+    // if exists:
+    bz write_box_after_if_else@3
     // contract.py:72
     // op.Box.delete(actual_box_name)
     dig 1
     box_del
     pop
+
+write_box_after_if_else@3:
     // contract.py:74-75
     // # Write to box (create new box)
     // op.Box.put(actual_box_name, actual_value)
+    dup2
     box_put
     // contract.py:42
     // @arc4.abimethod

@@ -3,7 +3,7 @@
   "sources": [
     "../contract.py"
   ],
-  "mappings": ";;;;;;;AAKA;;AAAA;;;AAAA;;AAAA;AAAA;AAAA;;AAAA;AAAA;;;;;;;;;;;;AAAA;;;AAAA;;;;;;AAAA;AAAA;;AAAA;;;;;;;;;;;;;;AAAA;AA2BK;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAAA;AAAA;AAAA;AA2BA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAAA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AASU;;AAAc;;AAAd;AAAP;AASkB;;AAA2B;AAA3B;;AAAA;AAIH;;AAAwB;AAAxB;;AAAA;AAER;;AAA0B;AAA1B;AAAP;AAMI;;AAAA;;AAGJ;AAjCH;AAAA;AAmCA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAQU;;AAAc;;AAAd;AAAP;AAOkB;AAA2B;AAA3B;;AAAA;AAEX;AAA0B;AAA1B;AAAP;AAGA;;AApBH;AAAA",
+  "mappings": ";;;;;;;AAKA;;AAAA;;;AAAA;;AAAA;AAAA;AAAA;;AAAA;AAAA;;;;;;;;;;;;AAAA;;;AAAA;;;;;;AAAA;AAAA;;AAAA;;;;;;;;;;;;;;AAAA;AA2BK;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAAA;AAAA;AAAA;AA2BA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAAA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AASU;;AAAc;;AAAd;AAAP;AASkB;;AAA2B;AAA3B;;AAAA;AAAA;AAAA;;AAAA;;AAIH;;AAAwB;AAAxB;;AAAA;AAAA;;AAER;AAA0B;AAA1B;AAAP;AAIkB;AAAA;;AAC1B;;;AACY;;AAAA;;AAGJ;AAAA;AAjCH;AAAA;AAmCA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAQU;;AAAc;;AAAd;AAAP;AAOkB;AAA2B;AAA3B;;AAAA;AAEX;AAA0B;AAA1B;AAAP;AAGA;;AApBH;AAAA",
   "op_pc_offset": 0,
   "pc_events": {
     "1": {
@@ -677,27 +677,66 @@
       ]
     },
     "126": {
-      "op": "uncover 2",
+      "op": "dup",
       "stack_out": [
         "actual_box_name_length#0",
+        "value#0",
         "actual_value_length#0",
         "actual_box_name#0",
+        "actual_box_name#0 (copy)"
+      ]
+    },
+    "127": {
+      "op": "cover 2",
+      "stack_out": [
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_box_name#0",
+        "actual_value_length#0",
+        "actual_box_name#0"
+      ]
+    },
+    "129": {
+      "op": "cover 4",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "actual_value_length#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "value#0",
+        "actual_box_name#0",
+        "actual_value_length#0"
+      ]
+    },
+    "131": {
+      "op": "uncover 2",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "actual_box_name#0",
+        "actual_value_length#0",
         "value#0"
       ]
     },
-    "128": {
+    "133": {
       "op": "intc_0 // 2",
       "stack_out": [
-        "actual_box_name_length#0",
-        "actual_value_length#0",
         "actual_box_name#0",
+        "actual_box_name_length#0",
+        "actual_box_name#0",
+        "actual_value_length#0",
         "value#0",
         "2"
       ]
     },
-    "129": {
-      "op": "uncover 3",
+    "134": {
+      "op": "uncover 2",
       "stack_out": [
+        "actual_box_name#0",
         "actual_box_name_length#0",
         "actual_box_name#0",
         "value#0",
@@ -705,7 +744,7 @@
         "actual_value_length#0"
       ]
     },
-    "131": {
+    "136": {
       "op": "extract3",
       "defined_out": [
         "actual_box_name#0",
@@ -713,20 +752,36 @@
         "actual_value#0"
       ],
       "stack_out": [
+        "actual_box_name#0",
         "actual_box_name_length#0",
         "actual_box_name#0",
         "actual_value#0"
       ]
     },
-    "132": {
-      "op": "uncover 2",
+    "137": {
+      "op": "cover 2",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_box_name_length#0",
+        "actual_value#0"
+      ],
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0",
+        "actual_box_name_length#0",
+        "actual_box_name#0"
+      ]
+    },
+    "139": {
+      "op": "swap",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "actual_box_name#0",
         "actual_box_name_length#0"
       ]
     },
-    "134": {
+    "140": {
       "op": "intc_3 // 32",
       "defined_out": [
         "32",
@@ -737,11 +792,12 @@
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0",
+        "actual_box_name#0",
         "actual_box_name_length#0",
         "32"
       ]
     },
-    "135": {
+    "141": {
       "op": "==",
       "defined_out": [
         "actual_box_name#0",
@@ -751,31 +807,58 @@
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0",
+        "actual_box_name#0",
         "tmp%7#0"
       ]
     },
-    "136": {
+    "142": {
       "error": "Box name must be exactly 32 bytes",
       "op": "assert // Box name must be exactly 32 bytes",
       "stack_out": [
         "actual_box_name#0",
-        "actual_value#0"
+        "actual_value#0",
+        "actual_box_name#0"
       ]
     },
-    "137": {
-      "op": "dig 1",
+    "143": {
+      "op": "box_len",
       "defined_out": [
+        "_length#0",
         "actual_box_name#0",
-        "actual_box_name#0 (copy)",
-        "actual_value#0"
+        "actual_value#0",
+        "exists#0"
       ],
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0",
-        "actual_box_name#0 (copy)"
+        "_length#0",
+        "exists#0"
       ]
     },
-    "139": {
+    "144": {
+      "op": "bury 1",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "exists#0"
+      ]
+    },
+    "146": {
+      "op": "bz write_box_after_if_else@3",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0"
+      ]
+    },
+    "149": {
+      "op": "dig 1",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "actual_box_name#0"
+      ]
+    },
+    "151": {
       "op": "box_del",
       "defined_out": [
         "actual_box_name#0",
@@ -788,31 +871,59 @@
         "{box_del}"
       ]
     },
-    "140": {
+    "152": {
       "op": "pop",
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0"
       ]
     },
-    "141": {
-      "op": "box_put",
-      "stack_out": []
-    },
-    "142": {
-      "op": "intc_1 // 1",
+    "153": {
+      "block": "write_box_after_if_else@3",
+      "stack_in": [
+        "actual_box_name#0",
+        "actual_value#0"
+      ],
+      "op": "dup2",
       "defined_out": [
-        "1"
+        "actual_box_name#0",
+        "actual_value#0"
       ],
       "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
+        "actual_box_name#0",
+        "actual_value#0"
+      ]
+    },
+    "154": {
+      "op": "box_put",
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0"
+      ]
+    },
+    "155": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1",
+        "actual_box_name#0",
+        "actual_value#0"
+      ],
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0",
         "1"
       ]
     },
-    "143": {
+    "156": {
       "op": "return",
-      "stack_out": []
+      "stack_out": [
+        "actual_box_name#0",
+        "actual_value#0"
+      ]
     },
-    "144": {
+    "157": {
       "subroutine": "dapp.contract.PermissionDApp.delete_box[routing]",
       "params": {},
       "block": "delete_box",
@@ -825,7 +936,7 @@
         "box_name#0"
       ]
     },
-    "147": {
+    "160": {
       "op": "dup",
       "defined_out": [
         "box_name#0",
@@ -836,7 +947,7 @@
         "box_name#0 (copy)"
       ]
     },
-    "148": {
+    "161": {
       "op": "intc_2 // 0",
       "defined_out": [
         "0",
@@ -849,7 +960,7 @@
         "0"
       ]
     },
-    "149": {
+    "162": {
       "error": "invalid array length header",
       "op": "extract_uint16 // on error: invalid array length header",
       "defined_out": [
@@ -861,7 +972,7 @@
         "actual_box_name_length#0"
       ]
     },
-    "150": {
+    "163": {
       "op": "dup",
       "defined_out": [
         "actual_box_name_length#0",
@@ -874,7 +985,7 @@
         "actual_box_name_length#0 (copy)"
       ]
     },
-    "151": {
+    "164": {
       "op": "intc_0 // 2",
       "defined_out": [
         "2",
@@ -889,7 +1000,7 @@
         "2"
       ]
     },
-    "152": {
+    "165": {
       "op": "+",
       "defined_out": [
         "actual_box_name_length#0",
@@ -902,7 +1013,7 @@
         "add%0#0"
       ]
     },
-    "153": {
+    "166": {
       "op": "dig 2",
       "stack_out": [
         "box_name#0",
@@ -911,7 +1022,7 @@
         "box_name#0 (copy)"
       ]
     },
-    "155": {
+    "168": {
       "op": "len",
       "defined_out": [
         "actual_box_name_length#0",
@@ -926,7 +1037,7 @@
         "len%0#0"
       ]
     },
-    "156": {
+    "169": {
       "op": "==",
       "defined_out": [
         "actual_box_name_length#0",
@@ -939,7 +1050,7 @@
         "eq%0#0"
       ]
     },
-    "157": {
+    "170": {
       "error": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "op": "assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "stack_out": [
@@ -947,7 +1058,7 @@
         "actual_box_name_length#0"
       ]
     },
-    "158": {
+    "171": {
       "op": "txn Sender",
       "defined_out": [
         "actual_box_name_length#0",
@@ -960,7 +1071,7 @@
         "tmp%0#1"
       ]
     },
-    "160": {
+    "173": {
       "op": "global CreatorAddress",
       "defined_out": [
         "actual_box_name_length#0",
@@ -975,7 +1086,7 @@
         "tmp%1#0"
       ]
     },
-    "162": {
+    "175": {
       "op": "==",
       "defined_out": [
         "actual_box_name_length#0",
@@ -988,7 +1099,7 @@
         "tmp%2#0"
       ]
     },
-    "163": {
+    "176": {
       "error": "Only creator can delete boxes",
       "op": "assert // Only creator can delete boxes",
       "stack_out": [
@@ -996,14 +1107,14 @@
         "actual_box_name_length#0"
       ]
     },
-    "164": {
+    "177": {
       "op": "swap",
       "stack_out": [
         "actual_box_name_length#0",
         "box_name#0"
       ]
     },
-    "165": {
+    "178": {
       "op": "intc_0 // 2",
       "stack_out": [
         "actual_box_name_length#0",
@@ -1011,7 +1122,7 @@
         "2"
       ]
     },
-    "166": {
+    "179": {
       "op": "dig 2",
       "stack_out": [
         "actual_box_name_length#0",
@@ -1020,7 +1131,7 @@
         "actual_box_name_length#0 (copy)"
       ]
     },
-    "168": {
+    "181": {
       "op": "extract3",
       "defined_out": [
         "actual_box_name#0",
@@ -1031,14 +1142,14 @@
         "actual_box_name#0"
       ]
     },
-    "169": {
+    "182": {
       "op": "swap",
       "stack_out": [
         "actual_box_name#0",
         "actual_box_name_length#0"
       ]
     },
-    "170": {
+    "183": {
       "op": "intc_3 // 32",
       "defined_out": [
         "32",
@@ -1051,7 +1162,7 @@
         "32"
       ]
     },
-    "171": {
+    "184": {
       "op": "==",
       "defined_out": [
         "actual_box_name#0",
@@ -1062,14 +1173,14 @@
         "tmp%5#0"
       ]
     },
-    "172": {
+    "185": {
       "error": "Box name must be exactly 32 bytes",
       "op": "assert // Box name must be exactly 32 bytes",
       "stack_out": [
         "actual_box_name#0"
       ]
     },
-    "173": {
+    "186": {
       "op": "box_del",
       "defined_out": [
         "{box_del}"
@@ -1078,11 +1189,11 @@
         "{box_del}"
       ]
     },
-    "174": {
+    "187": {
       "op": "pop",
       "stack_out": []
     },
-    "175": {
+    "188": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -1091,7 +1202,7 @@
         "1"
       ]
     },
-    "176": {
+    "189": {
       "op": "return",
       "stack_out": []
     }

@@ -625,7 +625,7 @@ class TestFoundationUpdateFunctions:
         ]
         mocked_client.assert_has_calls(calls, any_order=True)
         assert mocked_client.call_count == 2
-        mocked_parameters.assert_called_once_with(env)
+        mocked_parameters.assert_called_once_with(env, network="mainnet")
         mocked_subscriptions.assert_called_once_with(client)
         mocked_governance.assert_called_once_with()
         calls = [
@@ -718,7 +718,7 @@ class TestFoundationUpdateFunctions:
         ]
         mocked_client.assert_has_calls(calls, any_order=True)
         assert mocked_client.call_count == 2
-        mocked_parameters.assert_called_once_with(env)
+        mocked_parameters.assert_called_once_with(env, network="testnet")
         mocked_subscriptions.assert_called_once_with(client)
         mocked_governance.assert_called_once_with()
         calls = [

@@ -294,7 +294,7 @@ def check_and_update_permission_dapp_boxes(network="testnet"):
     mainnet_client = AlgodClient(
         env.get("algod_token_mainnet"), env.get("algod_address_mainnet")
     )
-    writing_parameters = box_writing_parameters(env)
+    writing_parameters = box_writing_parameters(env, network=network)
 
     subscriptions = fetch_subscriptions_from_boxes(client)
     stakings = {
