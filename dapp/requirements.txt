@@ -1,8 +1,8 @@
-algokit>=2.10.0
-puyapy>=5.6.0
-algorand-python>=3.3.0
+algokit>=2.10.2
+puyapy>=5.8.1
+algorand-python>=3.5.0
 algokit-utils>=4.2.3
-python-dotenv>=1.2.1
+python-dotenv>=1.2.2
 py-algorand-sdk>=2.11.1
 # development
 pytest>=9.0.2
@@ -15,7 +15,7 @@ black>=25.12.0
 pylint>=4.0.4
 rope>=1.14.0
 pyflakes>=3.4.0
-ruff>=0.14.10
+ruff>=0.15.16
 # documentation
 Sphinx>=8.2.3
 sphinx-rtd-theme>=3.0.2
