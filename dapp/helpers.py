@@ -412,9 +412,11 @@ def environment_variables():
     load_dotenv()
     return {
         "algod_token_testnet": os.getenv("ALGOD_TOKEN_TESTNET"),
-        "algod_token_mainnet": os.getenv("ALGOD_TOKEN_MAINNET"),
+        "algod_token_mainnet": os.getenv("ALGOD_TOKEN_MAINNET")
+        or os.getenv("ALGOD_TOKEN", ""),
         "algod_address_testnet": os.getenv("ALGOD_ADDRESS_TESTNET"),
-        "algod_address_mainnet": os.getenv("ALGOD_ADDRESS_MAINNET"),
+        "algod_address_mainnet": os.getenv("ALGOD_ADDRESS_MAINNET")
+        or os.getenv("ALGOD_URL"),
         "creator_testnet_mnemonic": os.getenv("CREATOR_TESTNET_MNEMONIC"),
         "creator_mainnet_mnemonic": os.getenv("CREATOR_MAINNET_MNEMONIC"),
         "user_testnet_mnemonic": os.getenv("USER_TESTNET_MNEMONIC"),
