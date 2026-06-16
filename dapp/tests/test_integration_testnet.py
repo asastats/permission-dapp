@@ -6,7 +6,7 @@ from algosdk.atomic_transaction_composer import AccountTransactionSigner
 from algosdk.error import AlgodHTTPError
 from algosdk.v2client.algod import AlgodClient
 
-from config import PERMISSION_APP_ID_TESTNET
+from configuration import PERMISSION_APP_ID_TESTNET
 from helpers import (
     box_name_from_address,
     box_writing_parameters,

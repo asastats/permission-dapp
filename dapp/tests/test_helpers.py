@@ -8,7 +8,7 @@ from unittest import mock
 import pytest
 
 import helpers
-from config import (
+from configuration import (
     INDEXER_ADDRESS,
     INDEXER_TOKEN,
     PERMISSION_APP_ID,

@@ -29,8 +29,8 @@ Adding an alias can be useful:
 .. code-block:: bash
   :caption: ~/.bashrc
 
-  alias 'dapp'='cd /home/ipaleka/dev/permission-dapp/dapp; \
-    source /home/ipaleka/dev/venvs/dapp/bin/activate'
+  alias 'dapp'='cd ~/dev/permission-dapp/dapp; \
+    source ~/dev/venvs/dapp/bin/activate'
 
 
 Environment variables
@@ -40,7 +40,7 @@ Copy provided .env.example file to a working copy:
 
 .. code-block:: bash
 
-  cd /home/ipaleka/dev/permission-dapp/dapp
+  cd ~/dev/permission-dapp/dapp
   cp .env.example .env
 
 You have to update `CREATOR_TESTNET_MNEMONIC` variable in the newly created `.env`` file, 
@@ -125,6 +125,6 @@ Python
 
 .. code-block:: bash
 
-  cd /home/ipaleka/dev/permission-dapp/dapp
-  source /home/ipaleka/dev/venvs/dapp/bin/activate
+  cd ~/dev/permission-dapp/dapp
+  source ~/dev/venvs/dapp/bin/activate
   python -m pytest -v  # or just `pytest -v`

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from algosdk.v2client.algod import AlgodClient
 
-from config import (
+from configuration import (
     CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DAO_DISCUSSIONS_DOCS_STARTING_INDEX,

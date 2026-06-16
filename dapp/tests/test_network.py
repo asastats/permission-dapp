@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 from algosdk.error import AlgodHTTPError
 
-from config import (
+from configuration import (
     STAKING_KEY,
     SUBSCRIPTION_PERMISSIONS,
     SUBTOPIA_ASASTATSER_APP_ID,

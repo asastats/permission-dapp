@@ -21,7 +21,7 @@ Structure
     ├── artifacts/
     ├── DAO/
     ├── tests/
-    ├── config.py
+    ├── configuration.py
     ├── contract.py
     ├── deploy.py
     ├── foundation.py
@@ -50,7 +50,7 @@ The initial creation of Algorand boxes for the ASA Stats DAO governors is done b
 `python foundation.py`. That process fills the boxes with the governors' seat votes
 (and calculated permissions) loaded from the JSON files found in the `DAO` directory.
 
-For checking the subscribers' data (as well as stakers' data if `config.STAKING_DOCS`
+For checking the subscribers' data (as well as stakers' data if `configuration.STAKING_DOCS`
 points to a JSON file in the DAO directory), the function `check_and_update_permission_dapp_boxes`
 from the `foundation` module is run in regular intervals. A dedicated SystemD service on one of 
 the ASA Stats servers has been installed for the purpose.

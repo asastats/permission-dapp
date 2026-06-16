@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import foundation
-from config import (
+from configuration import (
     CURRENT_STAKING_POSITION,
     DAO_DISCUSSIONS_DOCS,
     DOCS_STARTING_POSITION,

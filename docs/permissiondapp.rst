@@ -1,7 +1,7 @@
-:mod:`dapp.config` --Module with Permission dApp constants
-***********************************************************
+:mod:`dapp.configuration` --Module with Permission dApp constants
+*****************************************************************
 
-.. automodule:: config
+.. automodule:: configuration
   :members:
   :undoc-members:
   :show-inheritance:
