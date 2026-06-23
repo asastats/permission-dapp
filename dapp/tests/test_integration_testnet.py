@@ -35,6 +35,9 @@ class TestIntegrationForNonCreator:
         app_id = PERMISSION_APP_ID_TESTNET
         address = "KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ"
         env["creator_testnet_mnemonic"] = env["user_testnet_mnemonic"]
+        env["creator_testnet_address"] = (
+            "KGTSKYBFYC4WHYQ5PLP7FAMGET7OUWPE6AZXJWQAKTMCI4BMZ6FGCPSHPQ"
+        )
         writing_parameters = box_writing_parameters(env, network="testnet")
         with pytest.raises(AlgodHTTPError) as exception:
             delete_box(client, app_id, writing_parameters, address)

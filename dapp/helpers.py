@@ -357,23 +357,22 @@ def box_writing_parameters(env, network="testnet"):
     :type env: dict
     :param network: network suffix for environment variable keys
     :type network: str
-    :var creator_private_key: application creator's base64 encoded private key
-    :type creator_private_key: str
-    :var sender: application caller's address
+    :var signing_private_key: base64 encoded private key authorized to sign for creator
+    :type signing_private_key: str
+    :var sender: application creator's address (Global.CreatorAddress)
     :type sender: str
     :var signer: application caller's signer instance
     :type signer: :class:`AccountTransactionSigner`
-    :var contract: application caller's address
+    :var contract: application's ABI contract
     :type contract: :class:`Contract`
     :return: dict
     """
-    creator_private_key = private_key_from_mnemonic(
+    signing_private_key = private_key_from_mnemonic(
         env.get(f"creator_{network}_mnemonic")
     )
-    sender = address_from_private_key(creator_private_key)
-    signer = AccountTransactionSigner(creator_private_key)
+    sender = env.get(f"creator_{network}_address")
+    signer = AccountTransactionSigner(signing_private_key)
     contract = load_contract()
-
     return {"sender": sender, "signer": signer, "contract": contract}
 
 
@@ -419,6 +418,8 @@ def environment_variables():
         or os.getenv("ALGOD_URL"),
         "creator_testnet_mnemonic": os.getenv("CREATOR_TESTNET_MNEMONIC"),
         "creator_mainnet_mnemonic": os.getenv("CREATOR_MAINNET_MNEMONIC"),
+        "creator_testnet_address": os.getenv("CREATOR_TESTNET_ADDRESS"),
+        "creator_mainnet_address": os.getenv("CREATOR_MAINNET_ADDRESS"),
         "user_testnet_mnemonic": os.getenv("USER_TESTNET_MNEMONIC"),
         "user_mainnet_mnemonic": os.getenv("USER_MAINNET_MNEMONIC"),
     }

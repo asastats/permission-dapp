@@ -709,9 +709,14 @@ class TestHelpersHelpersFunctions:
     # # box_writing_parameters
     def test_helpers_box_writing_parameters_for_provided_network(self, mocker):
         mnemonic = "mnemonic1 mnemonic2"
-        env = {"creator_mainnet_mnemonic": mnemonic, "foo": "bar"}
+        creator_address = "creatoraddress"
+        env = {
+            "creator_mainnet_mnemonic": mnemonic,
+            "foo": "bar",
+            "creator_mainnet_address": creator_address,
+        }
         network = "mainnet"
-        private_key, sender, signer, contract = (
+        private_key, signing_key, signer, contract = (
             mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -719,26 +724,30 @@ class TestHelpersHelpersFunctions:
         )
         mocked_private_key = mocker.patch(
             "helpers.private_key_from_mnemonic", return_value=private_key
-        )
-        mocked_address = mocker.patch(
-            "helpers.address_from_private_key", return_value=sender
         )
         mocked_signer = mocker.patch(
             "helpers.AccountTransactionSigner", return_value=signer
         )
         mocked_contract = mocker.patch("helpers.load_contract", return_value=contract)
         returned = box_writing_parameters(env, network=network)
-        assert returned == {"sender": sender, "signer": signer, "contract": contract}
+        assert returned == {
+            "sender": creator_address,
+            "signer": signer,
+            "contract": contract,
+        }
         mocked_private_key.assert_called_once_with(mnemonic)
-        mocked_address.assert_called_once_with(private_key)
         mocked_signer.assert_called_once_with(private_key)
         mocked_contract.assert_called_once_with()
 
     def test_helpers_box_writing_parameters_functionality(self, mocker):
         mnemonic = "mnemonic1 mnemonic2"
-        env = {"creator_testnet_mnemonic": mnemonic, "foo": "bar"}
-        private_key, sender, signer, contract = (
-            mocker.MagicMock(),
+        creator_address = "creatoraddress"
+        env = {
+            "creator_testnet_mnemonic": mnemonic,
+            "foo": "bar",
+            "creator_testnet_address": creator_address,
+        }
+        private_key, signer, contract = (
             mocker.MagicMock(),
             mocker.MagicMock(),
             mocker.MagicMock(),
@@ -746,17 +755,17 @@ class TestHelpersHelpersFunctions:
         mocked_private_key = mocker.patch(
             "helpers.private_key_from_mnemonic", return_value=private_key
         )
-        mocked_address = mocker.patch(
-            "helpers.address_from_private_key", return_value=sender
-        )
         mocked_signer = mocker.patch(
             "helpers.AccountTransactionSigner", return_value=signer
         )
         mocked_contract = mocker.patch("helpers.load_contract", return_value=contract)
         returned = box_writing_parameters(env)
-        assert returned == {"sender": sender, "signer": signer, "contract": contract}
+        assert returned == {
+            "sender": creator_address,
+            "signer": signer,
+            "contract": contract,
+        }
         mocked_private_key.assert_called_once_with(mnemonic)
-        mocked_address.assert_called_once_with(private_key)
         mocked_signer.assert_called_once_with(private_key)
         mocked_contract.assert_called_once_with()
 
@@ -776,6 +785,8 @@ class TestHelpersHelpersFunctions:
             "algod_address_mainnet",
             "creator_testnet_mnemonic",
             "creator_mainnet_mnemonic",
+            "creator_testnet_address",
+            "creator_mainnet_address",
             "user_testnet_mnemonic",
             "user_mainnet_mnemonic",
         ):
