@@ -20,7 +20,7 @@ from network import create_app
 
 
 def deploy_app(network="testnet"):
-    """Compile Permisssion dApp smart contract, deploy it, and update the artifact.
+    """Compile Permission dApp smart contract, deploy it, and update the artifact.
 
     This function orchestrates the deployment process by:
     1. Compiling the TEAL approval and clear programs
@@ -167,5 +167,5 @@ def fund_app(app_id, network, amount=1_000_000):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    app_id = deploy_app(network="testnet")
-    fund_app(app_id, network="testnet", amount=20_000_000)
+    app_id = deploy_app(network="mainnet")
+    fund_app(app_id, network="mainnet", amount=5_000_000)

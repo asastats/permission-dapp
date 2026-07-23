@@ -10,7 +10,7 @@ main:
     bz main_bare_routing@11
     txn OnCompletion
     !
-    assert // OnCompletion must be NoOp
+    assert
     txn ApplicationID
     assert
     pushbytess 0xf9c83219 0x18a423db // method "write_box(byte[],string)void", method "delete_box(byte[])void"
@@ -33,7 +33,7 @@ main_delete_application@14:
     // contract.py:33
     // @arc4.baremethod(allow_actions=["DeleteApplication"])
     txn ApplicationID
-    assert // can only call when not creating
+    assert
     // contract.py:39
     // Txn.sender == Global.creator_address
     txn Sender
@@ -53,7 +53,7 @@ main_update_application@13:
     // contract.py:24
     // @arc4.baremethod(allow_actions=["UpdateApplication"])
     txn ApplicationID
-    assert // can only call when not creating
+    assert
     // contract.py:30
     // Txn.sender == Global.creator_address
     txn Sender
@@ -74,8 +74,6 @@ main_create_application@12:
     // @arc4.baremethod(allow_actions=["NoOp"], create="require")
     txn ApplicationID
     !
-    assert // can only call when creating
-    intc_1 // 1
     return
 
 

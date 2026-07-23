@@ -109,7 +109,7 @@ the following commands:
 Deploy and fund Permission dApp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Issue the following command to deploy the smart contractdeploy generated smart contract 
+Issue the following command to deploy the generated smart contract
 on the blockchain and fund the related account with required ALGO:
 
 .. code-block:: bash
