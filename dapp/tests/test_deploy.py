@@ -3,9 +3,11 @@
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 import deploy
 from contract import PermissionDApp
-from deploy import deploy_app, fund_app
+from deploy import deploy_app, fund_app, update_app
 
 
 # # VALUES
@@ -382,3 +384,68 @@ class TestDeployFunctions:
 
         client.send_transactions.assert_called_once_with([mock_signed])
         mocked_wait.assert_called_once_with(client, "tx123")
+
+    # # update_app
+    def _mocked_update(self, mocker, deployed):
+        env = {
+            "algod_token_testnet": "token",
+            "algod_address_testnet": "address",
+        }
+        mocker.patch("deploy.environment_variables", return_value=env)
+        client = mocker.MagicMock()
+        client.application_info.return_value = {
+            "params": {"approval-program": "AQID" if deployed else "BAUG"}
+        }
+        mocked_client = mocker.patch("deploy.AlgodClient", return_value=client)
+        signer = mocker.MagicMock()
+        mocked_parameters = mocker.patch(
+            "deploy.box_writing_parameters",
+            return_value={"sender": "CREATOR", "signer": signer},
+        )
+        mocker.patch("deploy.compile_program", side_effect=[b"\x01\x02\x03", b"clear"])
+        mocked_txn = mocker.patch("deploy.ApplicationUpdateTxn")
+        mocked_wait = mocker.patch("deploy.wait_for_confirmation")
+        return (
+            env,
+            client,
+            mocked_client,
+            signer,
+            mocked_parameters,
+            mocked_txn,
+            mocked_wait,
+        )
+
+    def test_deploy_update_app_updates_from_creator_address(self, mocker):
+        (
+            env,
+            client,
+            mocked_client,
+            signer,
+            mocked_parameters,
+            mocked_txn,
+            mocked_wait,
+        ) = self._mocked_update(mocker, deployed=True)
+
+        returned = update_app()
+
+        assert returned == client.send_transaction.return_value
+        mocked_client.assert_called_once_with("token", "address")
+        mocked_parameters.assert_called_once_with(env, network="testnet")
+        mocked_txn.assert_called_once_with(
+            "CREATOR",
+            client.suggested_params.return_value,
+            deploy.permission_dapp_id(network="testnet"),
+            b"\x01\x02\x03",
+            b"clear",
+        )
+        signer.sign_transactions.assert_called_once_with([mocked_txn.return_value], [0])
+        client.send_transaction.assert_called_once_with(
+            signer.sign_transactions.return_value[0]
+        )
+        mocked_wait.assert_called_once_with(client, returned)
+
+    def test_deploy_update_app_raises_when_program_differs(self, mocker):
+        self._mocked_update(mocker, deployed=False)
+
+        with pytest.raises(ValueError, match="doesn't hold the new approval program"):
+            update_app()

@@ -1,17 +1,20 @@
 """Module with functions for deploying Permission dApp smart contract to blockchain."""
 
+import base64
 import json
 from pathlib import Path
 
 from algosdk.account import address_from_private_key
 from algosdk.logic import get_application_address
-from algosdk.transaction import PaymentTxn
+from algosdk.transaction import ApplicationUpdateTxn, PaymentTxn
 from algosdk.v2client.algod import AlgodClient
 
 from contract import PermissionDApp
 from helpers import (
+    box_writing_parameters,
     compile_program,
     environment_variables,
+    permission_dapp_id,
     private_key_from_mnemonic,
     read_json,
     wait_for_confirmation,
@@ -164,6 +167,74 @@ def fund_app(app_id, network, amount=1_000_000):
     client.send_transactions([signed_txn])
     wait_for_confirmation(client, tx_id)
     print(f"Funded app {app_id} with {amount / 1_000_000} Algo in transaction {tx_id}")
+
+
+def update_app(network="testnet"):
+    """Update the deployed Permission dApp with the programs from artifacts.
+
+    The transaction is sent from the creator address and signed by the key the
+    creator account is rekeyed to. The application keeps its ID and its boxes.
+
+    :param network: network where the app is deployed (e.g., "testnet")
+    :type network: str
+    :var env: environment variables collection
+    :type env: dict
+    :var client: Algorand Node client instance
+    :type client: :class:`AlgodClient`
+    :var app_id: Permission dApp identifier
+    :type app_id: int
+    :var parameters: sender and signer of the creator
+    :type parameters: dict
+    :var artifacts: path to the directory with the compiled smart contract
+    :type artifacts: :class:`pathlib.Path`
+    :var approval_program: compiled approval program
+    :type approval_program: bytes
+    :var clear_program: compiled clear program
+    :type clear_program: bytes
+    :var txn: application update transaction
+    :type txn: :class:`transaction.ApplicationUpdateTxn`
+    :var tx_id: transaction's unique identifier
+    :type tx_id: str
+    :var deployed: approval program found on the blockchain after the update
+    :type deployed: bytes
+    :return: str
+    """
+    env = environment_variables()
+    client = AlgodClient(
+        env.get(f"algod_token_{network}"), env.get(f"algod_address_{network}")
+    )
+    app_id = permission_dapp_id(network=network)
+    parameters = box_writing_parameters(env, network=network)
+
+    artifacts = Path(__file__).resolve().parent / "artifacts"
+    dapp_name = PermissionDApp._name
+    approval_program = compile_program(
+        client, (artifacts / f"{dapp_name}.approval.teal").read_bytes()
+    )
+    clear_program = compile_program(
+        client, (artifacts / f"{dapp_name}.clear.teal").read_bytes()
+    )
+
+    txn = ApplicationUpdateTxn(
+        parameters["sender"],
+        client.suggested_params(),
+        app_id,
+        approval_program,
+        clear_program,
+    )
+    tx_id = client.send_transaction(
+        parameters["signer"].sign_transactions([txn], [0])[0]
+    )
+    wait_for_confirmation(client, tx_id)
+
+    deployed = base64.b64decode(
+        client.application_info(app_id)["params"]["approval-program"]
+    )
+    if deployed != approval_program:
+        raise ValueError(f"App {app_id} doesn't hold the new approval program!")
+
+    print(f"Updated app {app_id} on {network} in transaction {tx_id}")
+    return tx_id
 
 
 if __name__ == "__main__":  # pragma: no cover
