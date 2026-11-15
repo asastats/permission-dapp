@@ -30,7 +30,6 @@ DOCS_STARTING_POSITION = (
 
 DAO_DISCUSSIONS_DOCS = (
     "open-letter-1",
-    "update-5",
     "update-6",
     "update-9",
     "update-12",

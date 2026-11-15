@@ -7,29 +7,29 @@ main:
     // contract.py:6
     // class PermissionDApp(ARC4Contract):
     txn NumAppArgs
-    bz main_bare_routing@11
+    bz main_bare_routing@12
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf9c83219 0x18a423db // method "write_box(byte[],string)void", method "delete_box(byte[])void"
+    pushbytess 0xf9c83219 0x18a423db 0x127182cd // method "write_box(byte[],string)void", method "delete_box(byte[])void", method "votes_of(address)uint64"
     txna ApplicationArgs 0
-    match write_box delete_box
+    match write_box delete_box votes_of
 
-main_after_if_else@16:
+main_after_if_else@17:
     // contract.py:6
     // class PermissionDApp(ARC4Contract):
     err
 
-main_bare_routing@11:
+main_bare_routing@12:
     // contract.py:6
     // class PermissionDApp(ARC4Contract):
     txn OnCompletion
-    switch main_create_application@12 main_after_if_else@16 main_after_if_else@16 main_after_if_else@16 main_update_application@13 main_delete_application@14
+    switch main_create_application@13 main_after_if_else@17 main_after_if_else@17 main_after_if_else@17 main_update_application@14 main_delete_application@15
     err
 
-main_delete_application@14:
+main_delete_application@15:
     // contract.py:33
     // @arc4.baremethod(allow_actions=["DeleteApplication"])
     txn ApplicationID
@@ -49,7 +49,7 @@ main_delete_application@14:
     intc_1 // 1
     return
 
-main_update_application@13:
+main_update_application@14:
     // contract.py:24
     // @arc4.baremethod(allow_actions=["UpdateApplication"])
     txn ApplicationID
@@ -69,7 +69,7 @@ main_update_application@13:
     intc_1 // 1
     return
 
-main_create_application@12:
+main_create_application@13:
     // contract.py:15
     // @arc4.baremethod(allow_actions=["NoOp"], create="require")
     txn ApplicationID
@@ -150,7 +150,6 @@ write_box_after_if_else@3:
     // contract.py:74-75
     // # Write to box (create new box)
     // op.Box.put(actual_box_name, actual_value)
-    dup2
     box_put
     // contract.py:42
     // @arc4.abimethod
@@ -200,3 +199,49 @@ delete_box:
     // @arc4.abimethod
     intc_1 // 1
     return
+
+
+// dapp.contract.PermissionDApp.votes_of[routing]() -> void:
+votes_of:
+    // contract.py:99
+    // @arc4.abimethod(readonly=True)
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    // contract.py:110
+    // value, exists = op.Box.get(address.bytes)
+    box_get
+    // contract.py:111
+    // if not exists:
+    bnz votes_of_after_if_else@3
+    pop
+    // contract.py:112
+    // return arc4.UInt64(0)
+    intc_2 // 0
+    itob
+
+votes_of_after_inlined_dapp.contract.PermissionDApp.votes_of@4:
+    // contract.py:99
+    // @arc4.abimethod(readonly=True)
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+votes_of_after_if_else@3:
+    // contract.py:114-115
+    // # 12 base64 characters hold 9 bytes; `votes` is the first 8 of them
+    // raw = op.base64_decode(op.Base64.StdEncoding, op.extract(value, 0, 12))
+    extract 0 12
+    base64_decode StdEncoding
+    // contract.py:116
+    // return arc4.UInt64(op.extract_uint64(raw, 0))
+    extract 0 8
+    // contract.py:99
+    // @arc4.abimethod(readonly=True)
+    b votes_of_after_inlined_dapp.contract.PermissionDApp.votes_of@4

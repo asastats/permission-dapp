@@ -22,7 +22,7 @@ from algosdk.transaction import ApplicationDeleteTxn, ApplicationUpdateTxn
 from dotenv import load_dotenv
 
 from contract import PermissionDApp
-from helpers import compile_program, wait_for_confirmation
+from helpers import compile_program, serialize_values, wait_for_confirmation
 from network import box_name_from_address, create_app
 
 load_dotenv(Path(__file__).parent.parent / ".env")
@@ -933,3 +933,45 @@ class TestContractEdgeCases(BaseTestContract):
                 box_references=[box_name],
             )
         )
+
+
+class TestContractVotesOf(BaseTestContract):
+    """Testing class for :class:`contract.contract.PermissionDApp` votes_of method."""
+
+    name = "votes_of"
+
+    def _votes_of(self, account, address):
+        return self.permission_client.send.call(
+            AppClientMethodCallParams(
+                method="votes_of",
+                args=[address],
+                sender=account.address,
+                signer=account.signer,
+                box_references=[box_name_from_address(address)],
+            )
+        ).abi_return
+
+    def test_contract_permission_dapp_votes_of_for_any_caller(
+        self,
+        creator_account: SigningAccount,
+        user_account: SigningAccount,
+    ) -> None:
+        box_name = box_name_from_address(TEST_ADDRESS)
+        values = [7_654_321, 2, 3, 4, 5, 6, 7_654_321_000_000, 1]
+        self.permission_client.send.call(
+            AppClientMethodCallParams(
+                method="write_box",
+                args=[box_name, serialize_values(values)],
+                sender=creator_account.address,
+                signer=creator_account.signer,
+                box_references=[box_name],
+            )
+        )
+
+        assert self._votes_of(user_account, TEST_ADDRESS) == 7_654_321
+
+    def test_contract_permission_dapp_votes_of_is_zero_without_box(
+        self,
+        user_account: SigningAccount,
+    ) -> None:
+        assert self._votes_of(user_account, user_account.address) == 0

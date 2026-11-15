@@ -8,6 +8,7 @@ from algopy import arc4
 from algopy_testing import AlgopyTestContext, algopy_testing_context
 
 from contract import PermissionDApp
+from helpers import serialize_values
 
 
 def _app(context: AlgopyTestContext, contract: PermissionDApp):
@@ -476,3 +477,48 @@ class TestPermissionDApp:
         # Verify second value overwrote the first and has the new size
         box_content = context.ledger.get_box(app.id, box_name)
         assert box_content == value2.encode("utf-8")
+
+    # votes_of
+    def _contract_with_box(self, context, box_name, value):
+        creator = context.default_sender
+        with context.txn.create_group(active_txn_overrides={"sender": creator}):
+            contract = PermissionDApp()
+            contract.create_application()
+
+        if value is not None:
+            with context.txn.create_group(active_txn_overrides={"sender": creator}):
+                contract.write_box(arc4.DynamicBytes(box_name), arc4.String(value))
+
+        return contract
+
+    def test_permission_dapp_votes_of_returns_votes_from_box(
+        self, context: AlgopyTestContext
+    ) -> None:
+        box_name = context.any.bytes(32)
+        values = [1_234_567, 99, 0, 0, 0, 0, 5_000_000, 1]
+        contract = self._contract_with_box(context, box_name, serialize_values(values))
+
+        with context.txn.create_group(
+            active_txn_overrides={"sender": context.any.account()}
+        ):
+            returned = contract.votes_of(arc4.Address(box_name))
+
+        assert returned.native == 1_234_567
+
+    def test_permission_dapp_votes_of_returns_zero_for_missing_box(
+        self, context: AlgopyTestContext
+    ) -> None:
+        contract = self._contract_with_box(context, context.any.bytes(32), None)
+
+        returned = contract.votes_of(arc4.Address(context.any.bytes(32)))
+
+        assert returned.native == 0
+
+    def test_permission_dapp_votes_of_fails_for_short_box(
+        self, context: AlgopyTestContext
+    ) -> None:
+        box_name = context.any.bytes(32)
+        contract = self._contract_with_box(context, box_name, "AAAAAAA=")
+
+        with pytest.raises(Exception):
+            contract.votes_of(arc4.Address(box_name))

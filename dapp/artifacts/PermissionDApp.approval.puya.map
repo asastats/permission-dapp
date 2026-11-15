@@ -3,7 +3,7 @@
   "sources": [
     "../contract.py"
   ],
-  "mappings": ";;;;;;;AAKA;;AAAA;;;AAAA;;AAAA;AAAA;AAAA;;AAAA;AAAA;;;;;;;;;;;;AAAA;;;AAAA;;;;;;AAAA;AAAA;;AAAA;;;;;;;;;;;;;;AAAA;AA2BK;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAAA;AA2BA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAAA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AASU;;AAAc;;AAAd;AAAP;AASkB;;AAA2B;AAA3B;;AAAA;AAAA;AAAA;;AAAA;;AAIH;;AAAwB;AAAxB;;AAAA;AAAA;;AAER;AAA0B;AAA1B;AAAP;AAIkB;AAAA;;AAC1B;;;AACY;;AAAA;;AAGJ;AAAA;AAjCH;AAAA;AAmCA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAQU;;AAAc;;AAAd;AAAP;AAOkB;AAA2B;AAA3B;;AAAA;AAEX;AAA0B;AAA1B;AAAP;AAGA;;AApBH;AAAA",
+  "mappings": ";;;;;;;AAKA;;AAAA;;;AAAA;;AAAA;AAAA;AAAA;;AAAA;AAAA;;;;;;;;;;;;;;;;;AAAA;;;AAAA;;;;;;;;AAAA;AAAA;;AAAA;;;;;;;;;;;;;;AAAA;AA2BK;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAMO;;AAAc;;AAAd;AADJ;AALH;AAAA;AATA;;AAAA;AAAA;AA2BA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAAA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AASU;;AAAc;;AAAd;AAAP;AASkB;;AAA2B;AAA3B;;AAAA;AAAA;AAAA;;AAAA;;AAIH;;AAAwB;AAAxB;;AAAA;AAAA;;AAER;AAA0B;AAA1B;AAAP;AAIkB;AAAA;;AAC1B;;;AACY;;AAAA;;AAGJ;AAjCH;AAAA;AAmCA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;;AAAA;AAAA;AAAA;AAQU;;AAAc;;AAAd;AAAP;AAOkB;AAA2B;AAA3B;;AAAA;AAEX;AAA0B;AAA1B;AAAP;AAGA;;AApBH;AAAA;AAsBA;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAWmB;AACb;;;;AACQ;AAAA;AAbd;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAgBiD;;;AAAxC;;AACC;;;AAjBV",
   "op_pc_offset": 0,
   "pc_events": {
     "1": {
@@ -23,7 +23,7 @@
       ]
     },
     "9": {
-      "op": "bz main_bare_routing@11",
+      "op": "bz main_bare_routing@12",
       "stack_out": []
     },
     "12": {
@@ -62,40 +62,44 @@
       "stack_out": []
     },
     "19": {
-      "op": "pushbytess 0xf9c83219 0x18a423db // method \"write_box(byte[],string)void\", method \"delete_box(byte[])void\"",
+      "op": "pushbytess 0xf9c83219 0x18a423db 0x127182cd // method \"write_box(byte[],string)void\", method \"delete_box(byte[])void\", method \"votes_of(address)uint64\"",
       "defined_out": [
         "Method(delete_box(byte[])void)",
+        "Method(votes_of(address)uint64)",
         "Method(write_box(byte[],string)void)"
       ],
       "stack_out": [
         "Method(write_box(byte[],string)void)",
-        "Method(delete_box(byte[])void)"
+        "Method(delete_box(byte[])void)",
+        "Method(votes_of(address)uint64)"
       ]
     },
-    "31": {
+    "36": {
       "op": "txna ApplicationArgs 0",
       "defined_out": [
         "Method(delete_box(byte[])void)",
+        "Method(votes_of(address)uint64)",
         "Method(write_box(byte[],string)void)",
         "tmp%6#0"
       ],
       "stack_out": [
         "Method(write_box(byte[],string)void)",
         "Method(delete_box(byte[])void)",
+        "Method(votes_of(address)uint64)",
         "tmp%6#0"
       ]
     },
-    "34": {
-      "op": "match write_box delete_box",
+    "39": {
+      "op": "match write_box delete_box votes_of",
       "stack_out": []
     },
-    "40": {
-      "block": "main_after_if_else@16",
+    "47": {
+      "block": "main_after_if_else@17",
       "stack_in": [],
       "op": "err"
     },
-    "41": {
-      "block": "main_bare_routing@11",
+    "48": {
+      "block": "main_bare_routing@12",
       "stack_in": [],
       "op": "txn OnCompletion",
       "defined_out": [
@@ -105,15 +109,15 @@
         "tmp%7#0"
       ]
     },
-    "43": {
-      "op": "switch main_create_application@12 main_after_if_else@16 main_after_if_else@16 main_after_if_else@16 main_update_application@13 main_delete_application@14",
+    "50": {
+      "op": "switch main_create_application@13 main_after_if_else@17 main_after_if_else@17 main_after_if_else@17 main_update_application@14 main_delete_application@15",
       "stack_out": []
     },
-    "57": {
+    "64": {
       "op": "err"
     },
-    "58": {
-      "block": "main_delete_application@14",
+    "65": {
+      "block": "main_delete_application@15",
       "stack_in": [],
       "op": "txn ApplicationID",
       "defined_out": [
@@ -123,11 +127,11 @@
         "tmp%12#0"
       ]
     },
-    "60": {
+    "67": {
       "op": "assert",
       "stack_out": []
     },
-    "61": {
+    "68": {
       "op": "txn Sender",
       "defined_out": [
         "tmp%0#2"
@@ -136,7 +140,7 @@
         "tmp%0#2"
       ]
     },
-    "63": {
+    "70": {
       "op": "global CreatorAddress",
       "defined_out": [
         "tmp%0#2",
@@ -147,7 +151,7 @@
         "tmp%1#2"
       ]
     },
-    "65": {
+    "72": {
       "op": "==",
       "defined_out": [
         "tmp%2#1"
@@ -156,12 +160,12 @@
         "tmp%2#1"
       ]
     },
-    "66": {
+    "73": {
       "error": "Only creator can delete application",
       "op": "assert // Only creator can delete application",
       "stack_out": []
     },
-    "67": {
+    "74": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -170,12 +174,12 @@
         "1"
       ]
     },
-    "68": {
+    "75": {
       "op": "return",
       "stack_out": []
     },
-    "69": {
-      "block": "main_update_application@13",
+    "76": {
+      "block": "main_update_application@14",
       "stack_in": [],
       "op": "txn ApplicationID",
       "defined_out": [
@@ -185,11 +189,11 @@
         "tmp%10#0"
       ]
     },
-    "71": {
+    "78": {
       "op": "assert",
       "stack_out": []
     },
-    "72": {
+    "79": {
       "op": "txn Sender",
       "defined_out": [
         "tmp%0#2"
@@ -198,7 +202,7 @@
         "tmp%0#2"
       ]
     },
-    "74": {
+    "81": {
       "op": "global CreatorAddress",
       "defined_out": [
         "tmp%0#2",
@@ -209,7 +213,7 @@
         "tmp%1#2"
       ]
     },
-    "76": {
+    "83": {
       "op": "==",
       "defined_out": [
         "tmp%2#1"
@@ -218,12 +222,12 @@
         "tmp%2#1"
       ]
     },
-    "77": {
+    "84": {
       "error": "Only creator can update application",
       "op": "assert // Only creator can update application",
       "stack_out": []
     },
-    "78": {
+    "85": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -232,12 +236,12 @@
         "1"
       ]
     },
-    "79": {
+    "86": {
       "op": "return",
       "stack_out": []
     },
-    "80": {
-      "block": "main_create_application@12",
+    "87": {
+      "block": "main_create_application@13",
       "stack_in": [],
       "op": "txn ApplicationID",
       "defined_out": [
@@ -247,7 +251,7 @@
         "tmp%8#0"
       ]
     },
-    "82": {
+    "89": {
       "op": "!",
       "defined_out": [
         "tmp%9#0"
@@ -256,12 +260,12 @@
         "tmp%9#0"
       ]
     },
-    "83": {
+    "90": {
       "op": "return",
       "defined_out": [],
       "stack_out": []
     },
-    "84": {
+    "91": {
       "subroutine": "dapp.contract.PermissionDApp.write_box[routing]",
       "params": {},
       "block": "write_box",
@@ -274,7 +278,7 @@
         "box_name#0"
       ]
     },
-    "87": {
+    "94": {
       "op": "dup",
       "defined_out": [
         "box_name#0",
@@ -285,7 +289,7 @@
         "box_name#0 (copy)"
       ]
     },
-    "88": {
+    "95": {
       "op": "intc_2 // 0",
       "defined_out": [
         "0",
@@ -298,7 +302,7 @@
         "0"
       ]
     },
-    "89": {
+    "96": {
       "error": "invalid array length header",
       "op": "extract_uint16 // on error: invalid array length header",
       "defined_out": [
@@ -310,7 +314,7 @@
         "actual_box_name_length#0"
       ]
     },
-    "90": {
+    "97": {
       "op": "dup",
       "defined_out": [
         "actual_box_name_length#0",
@@ -323,7 +327,7 @@
         "actual_box_name_length#0 (copy)"
       ]
     },
-    "91": {
+    "98": {
       "op": "intc_0 // 2",
       "defined_out": [
         "2",
@@ -338,7 +342,7 @@
         "2"
       ]
     },
-    "92": {
+    "99": {
       "op": "+",
       "defined_out": [
         "actual_box_name_length#0",
@@ -351,7 +355,7 @@
         "add%0#0"
       ]
     },
-    "93": {
+    "100": {
       "op": "dig 2",
       "stack_out": [
         "box_name#0",
@@ -360,7 +364,7 @@
         "box_name#0 (copy)"
       ]
     },
-    "95": {
+    "102": {
       "op": "len",
       "defined_out": [
         "actual_box_name_length#0",
@@ -375,7 +379,7 @@
         "len%0#0"
       ]
     },
-    "96": {
+    "103": {
       "op": "==",
       "defined_out": [
         "actual_box_name_length#0",
@@ -388,7 +392,7 @@
         "eq%0#0"
       ]
     },
-    "97": {
+    "104": {
       "error": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "op": "assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "stack_out": [
@@ -396,7 +400,7 @@
         "actual_box_name_length#0"
       ]
     },
-    "98": {
+    "105": {
       "op": "txna ApplicationArgs 2",
       "defined_out": [
         "actual_box_name_length#0",
@@ -409,7 +413,7 @@
         "value#0"
       ]
     },
-    "101": {
+    "108": {
       "op": "dup",
       "defined_out": [
         "actual_box_name_length#0",
@@ -424,7 +428,7 @@
         "value#0 (copy)"
       ]
     },
-    "102": {
+    "109": {
       "op": "intc_2 // 0",
       "stack_out": [
         "box_name#0",
@@ -434,7 +438,7 @@
         "0"
       ]
     },
-    "103": {
+    "110": {
       "error": "invalid array length header",
       "op": "extract_uint16 // on error: invalid array length header",
       "defined_out": [
@@ -450,7 +454,7 @@
         "actual_value_length#0"
       ]
     },
-    "104": {
+    "111": {
       "op": "dup",
       "defined_out": [
         "actual_box_name_length#0",
@@ -467,7 +471,7 @@
         "actual_value_length#0 (copy)"
       ]
     },
-    "105": {
+    "112": {
       "op": "intc_0 // 2",
       "stack_out": [
         "box_name#0",
@@ -478,7 +482,7 @@
         "2"
       ]
     },
-    "106": {
+    "113": {
       "op": "+",
       "defined_out": [
         "actual_box_name_length#0",
@@ -495,7 +499,7 @@
         "add%1#0"
       ]
     },
-    "107": {
+    "114": {
       "op": "dig 2",
       "stack_out": [
         "box_name#0",
@@ -506,7 +510,7 @@
         "value#0 (copy)"
       ]
     },
-    "109": {
+    "116": {
       "op": "len",
       "defined_out": [
         "actual_box_name_length#0",
@@ -525,7 +529,7 @@
         "len%1#0"
       ]
     },
-    "110": {
+    "117": {
       "op": "==",
       "defined_out": [
         "actual_box_name_length#0",
@@ -542,7 +546,7 @@
         "eq%1#0"
       ]
     },
-    "111": {
+    "118": {
       "error": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "op": "assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "stack_out": [
@@ -552,7 +556,7 @@
         "actual_value_length#0"
       ]
     },
-    "112": {
+    "119": {
       "op": "txn Sender",
       "defined_out": [
         "actual_box_name_length#0",
@@ -569,7 +573,7 @@
         "tmp%0#1"
       ]
     },
-    "114": {
+    "121": {
       "op": "global CreatorAddress",
       "defined_out": [
         "actual_box_name_length#0",
@@ -588,7 +592,7 @@
         "tmp%1#1"
       ]
     },
-    "116": {
+    "123": {
       "op": "==",
       "defined_out": [
         "actual_box_name_length#0",
@@ -605,7 +609,7 @@
         "tmp%2#0"
       ]
     },
-    "117": {
+    "124": {
       "error": "Only creator can write to boxes",
       "op": "assert // Only creator can write to boxes",
       "stack_out": [
@@ -615,7 +619,7 @@
         "actual_value_length#0"
       ]
     },
-    "118": {
+    "125": {
       "op": "uncover 3",
       "stack_out": [
         "actual_box_name_length#0",
@@ -624,7 +628,7 @@
         "box_name#0"
       ]
     },
-    "120": {
+    "127": {
       "op": "intc_0 // 2",
       "stack_out": [
         "actual_box_name_length#0",
@@ -634,7 +638,7 @@
         "2"
       ]
     },
-    "121": {
+    "128": {
       "op": "dig 4",
       "stack_out": [
         "actual_box_name_length#0",
@@ -645,7 +649,7 @@
         "actual_box_name_length#0 (copy)"
       ]
     },
-    "123": {
+    "130": {
       "op": "extract3",
       "defined_out": [
         "actual_box_name#0",
@@ -660,7 +664,7 @@
         "actual_box_name#0"
       ]
     },
-    "124": {
+    "131": {
       "op": "dup",
       "stack_out": [
         "actual_box_name_length#0",
@@ -670,7 +674,7 @@
         "actual_box_name#0 (copy)"
       ]
     },
-    "125": {
+    "132": {
       "op": "cover 2",
       "stack_out": [
         "actual_box_name_length#0",
@@ -680,7 +684,7 @@
         "actual_box_name#0"
       ]
     },
-    "127": {
+    "134": {
       "op": "cover 4",
       "defined_out": [
         "actual_box_name#0",
@@ -696,7 +700,7 @@
         "actual_value_length#0"
       ]
     },
-    "129": {
+    "136": {
       "op": "uncover 2",
       "stack_out": [
         "actual_box_name#0",
@@ -706,7 +710,7 @@
         "value#0"
       ]
     },
-    "131": {
+    "138": {
       "op": "intc_0 // 2",
       "stack_out": [
         "actual_box_name#0",
@@ -717,7 +721,7 @@
         "2"
       ]
     },
-    "132": {
+    "139": {
       "op": "uncover 2",
       "stack_out": [
         "actual_box_name#0",
@@ -728,7 +732,7 @@
         "actual_value_length#0"
       ]
     },
-    "134": {
+    "141": {
       "op": "extract3",
       "defined_out": [
         "actual_box_name#0",
@@ -742,7 +746,7 @@
         "actual_value#0"
       ]
     },
-    "135": {
+    "142": {
       "op": "cover 2",
       "defined_out": [
         "actual_box_name#0",
@@ -756,7 +760,7 @@
         "actual_box_name#0"
       ]
     },
-    "137": {
+    "144": {
       "op": "swap",
       "stack_out": [
         "actual_box_name#0",
@@ -765,7 +769,7 @@
         "actual_box_name_length#0"
       ]
     },
-    "138": {
+    "145": {
       "op": "intc_3 // 32",
       "defined_out": [
         "32",
@@ -781,7 +785,7 @@
         "32"
       ]
     },
-    "139": {
+    "146": {
       "op": "==",
       "defined_out": [
         "actual_box_name#0",
@@ -795,7 +799,7 @@
         "tmp%7#0"
       ]
     },
-    "140": {
+    "147": {
       "error": "Box name must be exactly 32 bytes",
       "op": "assert // Box name must be exactly 32 bytes",
       "stack_out": [
@@ -804,7 +808,7 @@
         "actual_box_name#0"
       ]
     },
-    "141": {
+    "148": {
       "op": "box_len",
       "defined_out": [
         "_length#0",
@@ -819,7 +823,7 @@
         "exists#0"
       ]
     },
-    "142": {
+    "149": {
       "op": "bury 1",
       "stack_out": [
         "actual_box_name#0",
@@ -827,22 +831,27 @@
         "exists#0"
       ]
     },
-    "144": {
+    "151": {
       "op": "bz write_box_after_if_else@3",
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0"
       ]
     },
-    "147": {
+    "154": {
       "op": "dig 1",
+      "defined_out": [
+        "actual_box_name#0",
+        "actual_box_name#0 (copy)",
+        "actual_value#0"
+      ],
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0",
-        "actual_box_name#0"
+        "actual_box_name#0 (copy)"
       ]
     },
-    "149": {
+    "156": {
       "op": "box_del",
       "defined_out": [
         "actual_box_name#0",
@@ -855,59 +864,37 @@
         "{box_del}"
       ]
     },
-    "150": {
+    "157": {
       "op": "pop",
       "stack_out": [
         "actual_box_name#0",
         "actual_value#0"
       ]
     },
-    "151": {
+    "158": {
       "block": "write_box_after_if_else@3",
       "stack_in": [
         "actual_box_name#0",
         "actual_value#0"
       ],
-      "op": "dup2",
-      "defined_out": [
-        "actual_box_name#0",
-        "actual_value#0"
-      ],
-      "stack_out": [
-        "actual_box_name#0",
-        "actual_value#0",
-        "actual_box_name#0",
-        "actual_value#0"
-      ]
-    },
-    "152": {
       "op": "box_put",
-      "stack_out": [
-        "actual_box_name#0",
-        "actual_value#0"
-      ]
+      "defined_out": [],
+      "stack_out": []
     },
-    "153": {
+    "159": {
       "op": "intc_1 // 1",
       "defined_out": [
-        "1",
-        "actual_box_name#0",
-        "actual_value#0"
+        "1"
       ],
       "stack_out": [
-        "actual_box_name#0",
-        "actual_value#0",
         "1"
       ]
     },
-    "154": {
+    "160": {
       "op": "return",
-      "stack_out": [
-        "actual_box_name#0",
-        "actual_value#0"
-      ]
+      "stack_out": []
     },
-    "155": {
+    "161": {
       "subroutine": "dapp.contract.PermissionDApp.delete_box[routing]",
       "params": {},
       "block": "delete_box",
@@ -920,7 +907,7 @@
         "box_name#0"
       ]
     },
-    "158": {
+    "164": {
       "op": "dup",
       "defined_out": [
         "box_name#0",
@@ -931,7 +918,7 @@
         "box_name#0 (copy)"
       ]
     },
-    "159": {
+    "165": {
       "op": "intc_2 // 0",
       "defined_out": [
         "0",
@@ -944,7 +931,7 @@
         "0"
       ]
     },
-    "160": {
+    "166": {
       "error": "invalid array length header",
       "op": "extract_uint16 // on error: invalid array length header",
       "defined_out": [
@@ -956,7 +943,7 @@
         "actual_box_name_length#0"
       ]
     },
-    "161": {
+    "167": {
       "op": "dup",
       "defined_out": [
         "actual_box_name_length#0",
@@ -969,7 +956,7 @@
         "actual_box_name_length#0 (copy)"
       ]
     },
-    "162": {
+    "168": {
       "op": "intc_0 // 2",
       "defined_out": [
         "2",
@@ -984,7 +971,7 @@
         "2"
       ]
     },
-    "163": {
+    "169": {
       "op": "+",
       "defined_out": [
         "actual_box_name_length#0",
@@ -997,7 +984,7 @@
         "add%0#0"
       ]
     },
-    "164": {
+    "170": {
       "op": "dig 2",
       "stack_out": [
         "box_name#0",
@@ -1006,7 +993,7 @@
         "box_name#0 (copy)"
       ]
     },
-    "166": {
+    "172": {
       "op": "len",
       "defined_out": [
         "actual_box_name_length#0",
@@ -1021,7 +1008,7 @@
         "len%0#0"
       ]
     },
-    "167": {
+    "173": {
       "op": "==",
       "defined_out": [
         "actual_box_name_length#0",
@@ -1034,7 +1021,7 @@
         "eq%0#0"
       ]
     },
-    "168": {
+    "174": {
       "error": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "op": "assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>",
       "stack_out": [
@@ -1042,7 +1029,7 @@
         "actual_box_name_length#0"
       ]
     },
-    "169": {
+    "175": {
       "op": "txn Sender",
       "defined_out": [
         "actual_box_name_length#0",
@@ -1055,7 +1042,7 @@
         "tmp%0#1"
       ]
     },
-    "171": {
+    "177": {
       "op": "global CreatorAddress",
       "defined_out": [
         "actual_box_name_length#0",
@@ -1070,7 +1057,7 @@
         "tmp%1#0"
       ]
     },
-    "173": {
+    "179": {
       "op": "==",
       "defined_out": [
         "actual_box_name_length#0",
@@ -1083,7 +1070,7 @@
         "tmp%2#0"
       ]
     },
-    "174": {
+    "180": {
       "error": "Only creator can delete boxes",
       "op": "assert // Only creator can delete boxes",
       "stack_out": [
@@ -1091,14 +1078,14 @@
         "actual_box_name_length#0"
       ]
     },
-    "175": {
+    "181": {
       "op": "swap",
       "stack_out": [
         "actual_box_name_length#0",
         "box_name#0"
       ]
     },
-    "176": {
+    "182": {
       "op": "intc_0 // 2",
       "stack_out": [
         "actual_box_name_length#0",
@@ -1106,7 +1093,7 @@
         "2"
       ]
     },
-    "177": {
+    "183": {
       "op": "dig 2",
       "stack_out": [
         "actual_box_name_length#0",
@@ -1115,7 +1102,7 @@
         "actual_box_name_length#0 (copy)"
       ]
     },
-    "179": {
+    "185": {
       "op": "extract3",
       "defined_out": [
         "actual_box_name#0",
@@ -1126,14 +1113,14 @@
         "actual_box_name#0"
       ]
     },
-    "180": {
+    "186": {
       "op": "swap",
       "stack_out": [
         "actual_box_name#0",
         "actual_box_name_length#0"
       ]
     },
-    "181": {
+    "187": {
       "op": "intc_3 // 32",
       "defined_out": [
         "32",
@@ -1146,7 +1133,7 @@
         "32"
       ]
     },
-    "182": {
+    "188": {
       "op": "==",
       "defined_out": [
         "actual_box_name#0",
@@ -1157,14 +1144,14 @@
         "tmp%5#0"
       ]
     },
-    "183": {
+    "189": {
       "error": "Box name must be exactly 32 bytes",
       "op": "assert // Box name must be exactly 32 bytes",
       "stack_out": [
         "actual_box_name#0"
       ]
     },
-    "184": {
+    "190": {
       "op": "box_del",
       "defined_out": [
         "{box_del}"
@@ -1173,11 +1160,11 @@
         "{box_del}"
       ]
     },
-    "185": {
+    "191": {
       "op": "pop",
       "stack_out": []
     },
-    "186": {
+    "192": {
       "op": "intc_1 // 1",
       "defined_out": [
         "1"
@@ -1186,9 +1173,196 @@
         "1"
       ]
     },
-    "187": {
+    "193": {
       "op": "return",
       "stack_out": []
+    },
+    "194": {
+      "subroutine": "dapp.contract.PermissionDApp.votes_of[routing]",
+      "params": {},
+      "block": "votes_of",
+      "stack_in": [],
+      "op": "txna ApplicationArgs 1",
+      "defined_out": [
+        "address#0"
+      ],
+      "stack_out": [
+        "address#0"
+      ]
+    },
+    "197": {
+      "op": "dup",
+      "defined_out": [
+        "address#0",
+        "address#0 (copy)"
+      ],
+      "stack_out": [
+        "address#0",
+        "address#0 (copy)"
+      ]
+    },
+    "198": {
+      "op": "len",
+      "defined_out": [
+        "address#0",
+        "len%0#0"
+      ],
+      "stack_out": [
+        "address#0",
+        "len%0#0"
+      ]
+    },
+    "199": {
+      "op": "intc_3 // 32",
+      "defined_out": [
+        "32",
+        "address#0",
+        "len%0#0"
+      ],
+      "stack_out": [
+        "address#0",
+        "len%0#0",
+        "32"
+      ]
+    },
+    "200": {
+      "op": "==",
+      "defined_out": [
+        "address#0",
+        "eq%0#0"
+      ],
+      "stack_out": [
+        "address#0",
+        "eq%0#0"
+      ]
+    },
+    "201": {
+      "error": "invalid number of bytes for arc4.static_array<arc4.uint8, 32>",
+      "op": "assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>",
+      "stack_out": [
+        "address#0"
+      ]
+    },
+    "202": {
+      "op": "box_get",
+      "defined_out": [
+        "exists#0",
+        "value#0"
+      ],
+      "stack_out": [
+        "value#0",
+        "exists#0"
+      ]
+    },
+    "203": {
+      "op": "bnz votes_of_after_if_else@3",
+      "stack_out": [
+        "value#0"
+      ]
+    },
+    "206": {
+      "op": "pop",
+      "stack_out": []
+    },
+    "207": {
+      "op": "intc_2 // 0",
+      "stack_out": [
+        "0"
+      ]
+    },
+    "208": {
+      "op": "itob",
+      "defined_out": [
+        "tmp%1#0"
+      ],
+      "stack_out": [
+        "tmp%1#0"
+      ]
+    },
+    "209": {
+      "block": "votes_of_after_inlined_dapp.contract.PermissionDApp.votes_of@4",
+      "stack_in": [
+        "tmp%1#0"
+      ],
+      "op": "pushbytes 0x151f7c75",
+      "defined_out": [
+        "0x151f7c75"
+      ],
+      "stack_out": [
+        "tmp%1#0",
+        "0x151f7c75"
+      ]
+    },
+    "215": {
+      "op": "swap",
+      "defined_out": [
+        "0x151f7c75",
+        "tmp%1#0"
+      ],
+      "stack_out": [
+        "0x151f7c75",
+        "tmp%1#0"
+      ]
+    },
+    "216": {
+      "op": "concat",
+      "defined_out": [
+        "tmp%2#0"
+      ],
+      "stack_out": [
+        "tmp%2#0"
+      ]
+    },
+    "217": {
+      "op": "log",
+      "stack_out": []
+    },
+    "218": {
+      "op": "intc_1 // 1",
+      "defined_out": [
+        "1"
+      ],
+      "stack_out": [
+        "1"
+      ]
+    },
+    "219": {
+      "op": "return",
+      "stack_out": []
+    },
+    "220": {
+      "block": "votes_of_after_if_else@3",
+      "stack_in": [
+        "value#0"
+      ],
+      "op": "extract 0 12",
+      "defined_out": [
+        "tmp%3#0"
+      ],
+      "stack_out": [
+        "tmp%3#0"
+      ]
+    },
+    "223": {
+      "op": "base64_decode StdEncoding",
+      "defined_out": [
+        "raw#0"
+      ],
+      "stack_out": [
+        "raw#0"
+      ]
+    },
+    "225": {
+      "op": "extract 0 8",
+      "defined_out": [
+        "tmp%1#0"
+      ],
+      "stack_out": [
+        "tmp%1#0"
+      ]
+    },
+    "228": {
+      "op": "b votes_of_after_inlined_dapp.contract.PermissionDApp.votes_of@4"
     }
   }
 }

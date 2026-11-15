@@ -95,3 +95,22 @@ class PermissionDApp(ARC4Contract):
 
         # Delete the box
         op.Box.delete(actual_box_name)
+
+    @arc4.abimethod(readonly=True)
+    def votes_of(self, address: arc4.Address) -> arc4.UInt64:
+        """
+        Return the whole votes stored in the box of the provided address.
+
+        Args:
+            address: The governor seat address the box is named after
+
+        Returns:
+            The votes value, or 0 if the address has no box
+        """
+        value, exists = op.Box.get(address.bytes)
+        if not exists:
+            return arc4.UInt64(0)
+
+        # 12 base64 characters hold 9 bytes; `votes` is the first 8 of them
+        raw = op.base64_decode(op.Base64.StdEncoding, op.extract(value, 0, 12))
+        return arc4.UInt64(op.extract_uint64(raw, 0))
